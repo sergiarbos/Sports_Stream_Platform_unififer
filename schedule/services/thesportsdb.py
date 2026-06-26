@@ -43,7 +43,7 @@ LEAGUE_CONFIG = {
     "serie-a":          (4332, "2025-2026"),
     "bundesliga":       (4331, "2025-2026"),
     "ligue-1":          (4334, "2025-2026"),
-    "mundial-2026":     (4961, "2026"),
+    "mundial-2026":     (4429, "2026"),  # FIFA World Cup (national teams)
     # --- Basketball ---
     "nba":              (4387, "2025-2026"),
     # --- Motorsport ---
