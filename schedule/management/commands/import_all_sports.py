@@ -52,6 +52,7 @@ BROADCAST_MAP = {
     "ligue-1":          [("dazn", ES, True)],
     "mundial-2026":     [
         ("dazn", ES, True),
+        ("la-1", ES, True),         # Free-to-air on La 1 TVE (all WC 2026 matches)
         ("rtve-play", ES, True),
         ("vix", LA, True),
     ],
