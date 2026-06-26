@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+
+  <nav class="sport-tabs">
+    <a href="?sport=all" class="sport-tab {% if selected_sport_slug == 'all' %}active{% endif %}">Todos</a>
+    {% for sport in sports %}
+      <a href="?sport={{ sport.slug }}" class="sport-tab {% if selected_sport_slug == sport.slug %}active{% endif %}">
+        {{ sport.icon }} {{ sport.name }}
+      </a>
+    {% endfor %}
+  </nav>
+
+  <section class="section">
+    <div class="section-header live-header">
+      <span class="live-dot"></span> En directo ahora
+    </div>
+    {% if live_events %}
+      {% for event in live_events %}
+        {% include "schedule/_event_card.html" with card_type="live" %}
+      {% endfor %}
+    {% else %}
+      <div class="empty-note">No hay ningún evento con comentarios en español emitiéndose en directo en este momento.</div>
+    {% endif %}
+  </section>
+
+  <section class="section">
+    <div class="section-header">Próximos · calendario</div>
+    {% if upcoming_events %}
+      {% for event in upcoming_events %}
+        {% include "schedule/_event_card.html" with card_type="upcoming" %}
+      {% endfor %}
+    {% else %}
+      <div class="empty-note">No hay próximos eventos programados para este filtro todavía.</div>
+    {% endif %}
+  </section>
+
+  <section class="section">
+    <div class="section-header">Disponibles en diferido</div>
+    {% if past_events %}
+      {% for event in past_events %}
+        {% include "schedule/_event_card.html" with card_type="archive" %}
+      {% endfor %}
+    {% else %}
+      <div class="empty-note">No hay eventos pasados con repetición disponible en español para este filtro.</div>
+    {% endif %}
+  </section>
+
+</div>
+{% endblock %}

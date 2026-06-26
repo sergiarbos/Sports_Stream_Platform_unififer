@@ -1,0 +1,22 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}SportLink · Dónde ver cada evento{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+  <header class="topbar">
+    <div class="logo">Sport<span class="dot">Link</span></div>
+    <div class="tagline">Dónde ver cada partido, carrera o prueba — en directo, en calendario o en diferido.</div>
+  </header>
+  {% block content %}{% endblock %}
+  <footer>
+    SportLink &copy; 2026
+  </footer>
+</body>
+</html>
