@@ -1,0 +1,41 @@
+{% comment %}
+Tarjeta del "panel de enlaces" (columna derecha). Agrupa TODAS las
+retransmisiones en español de un evento como botones de redirección
+externa directos al evento (event_url / vod_url), nunca a la home de
+la plataforma. id="event-{{ event.id }}" es el destino de los enlaces
+"Ver enlaces" de la columna izquierda.
+{% endcomment %}
+<div
+  id="event-{{ event.id }}"
+  class="link-card is-{% if event.status == 'live' %}live{% elif event.status == 'finished' %}archive{% else %}upcoming{% endif %}"
+  data-search="{{ event.title|lower }} {{ event.competition.name|lower }}"
+>
+  <div class="link-card-head">
+    <div class="link-card-sport">
+      <span class="sport-emoji">{{ event.competition.sport.icon }}</span>
+      {% include "schedule/_competition_badge.html" with competition=event.competition %}
+    </div>
+    <div class="link-card-info">
+      <span class="status-pill status-{% if event.status == 'live' %}live{% elif event.status == 'finished' %}archive{% else %}upcoming{% endif %}">{{ event.status_label }}</span>
+      <div class="link-card-comp">{{ event.competition.name }}{% if event.round_name %} · {{ event.round_name }}{% endif %}</div>
+      <div class="link-card-title">{{ event.title }}</div>
+    </div>
+  </div>
+
+  <div class="link-card-grid">
+    {% for broadcast in event.broadcasts.all %}
+      {% if broadcast.language|slice:":2" == "es" %}
+        {% if event.status == "finished" and not broadcast.vod_available %}
+        {% else %}
+          {% with url=broadcast.direct_url %}
+          <{% if url %}a href="{{ url }}" target="_blank" rel="noopener noreferrer"{% else %}span{% endif %} class="redirect-btn {% if not url %}is-disabled{% endif %}">
+            <span class="platform-dot" style="background:{{ broadcast.platform.color }}"></span>
+            <span class="redirect-btn-name">{{ broadcast.platform.name }}{% if broadcast.is_latam %} · LATAM{% endif %}</span>
+            {% if url %}<span class="redirect-btn-arrow">Abrir ↗</span>{% else %}<span class="redirect-btn-arrow">Enlace no disponible</span>{% endif %}
+          </{% if url %}a{% else %}span{% endif %}>
+          {% endwith %}
+        {% endif %}
+      {% endif %}
+    {% endfor %}
+  </div>
+</div>

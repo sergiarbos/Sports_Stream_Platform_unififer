@@ -42,5 +42,5 @@ class EventAdmin(admin.ModelAdmin):
 
 @admin.register(Broadcast)
 class BroadcastAdmin(admin.ModelAdmin):
-    list_display = ("event", "platform", "language", "is_live_stream", "vod_available")
+    list_display = ("event", "platform", "language", "is_live_stream", "event_url", "vod_available", "vod_url")
     list_filter = ("platform", "language", "vod_available")

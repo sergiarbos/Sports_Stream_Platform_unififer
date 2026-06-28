@@ -1,0 +1,16 @@
+{% comment %}
+Tarjeta "destacado": sustituye los recuadros de imagen del wireframe
+original por un fondo degradado generado por categoría deportiva +
+emoji, evitando usar fotografías o logotipos con derechos de autor.
+{% endcomment %}
+<a href="#event-{{ event.id }}" class="featured-card {{ event.competition.sport.accent_class }}">
+  <div class="featured-art">
+    <span class="featured-emoji">{{ event.competition.sport.icon }}</span>
+  </div>
+  <div class="featured-body">
+    <span class="status-pill status-{% if event.status == 'live' %}live{% elif event.status == 'finished' %}archive{% else %}upcoming{% endif %}">{{ event.status_label }}</span>
+    <div class="featured-comp">{{ event.competition.name }}{% if event.round_name %} · {{ event.round_name }}{% endif %}</div>
+    <div class="featured-title">{{ event.title }}</div>
+    <div class="featured-cta">Ver enlaces ↓</div>
+  </div>
+</a>
