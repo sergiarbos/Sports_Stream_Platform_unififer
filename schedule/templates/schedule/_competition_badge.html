@@ -1,7 +1,9 @@
 {% comment %}
-Insignia visual de la competición: iniciales sobre un color por categoría
-deportiva. Es una alternativa deliberada a usar logotipos oficiales con
-derechos de autor (UEFA, NBA, F1...), que no se pueden alojar aquí.
+Insignia visual de la competición ("escudo"): iniciales sobre un
+emblema circular con degradado por categoría deportiva. Alternativa
+deliberada a usar logotipos oficiales con derechos de autor (UEFA,
+NBA, FIS, F1...), que no se pueden alojar aquí.
 Uso: {% include "schedule/_competition_badge.html" with competition=event.competition %}
+Uso grande: ... with competition=event.competition large=True %}
 {% endcomment %}
-<span class="comp-badge {{ competition.sport.accent_class }}">{{ competition.badge_initials }}</span>
+<span class="comp-badge {{ competition.sport.accent_class }}{% if large %} is-large{% endif %}">{{ competition.badge_initials }}</span>

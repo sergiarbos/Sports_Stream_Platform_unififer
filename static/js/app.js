@@ -55,7 +55,7 @@
     }
   }
 
-  document.querySelectorAll(".get-links-btn").forEach(function (btn) {
+  document.querySelectorAll('a[href^="#event-"]').forEach(function (btn) {
     btn.addEventListener("click", function (event) {
       event.preventDefault();
       const id = this.getAttribute("href").slice(1);

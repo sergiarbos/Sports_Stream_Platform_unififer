@@ -16,8 +16,7 @@ un pelín de JS marca esta fila como seleccionada mientras esté activa.
     <span class="time">{{ event.start_datetime|date:"H:i" }}</span>
   </div>
 
-  <div class="schedule-row-sport" title="{{ event.competition.sport.name }}">
-    <span class="sport-emoji">{{ event.competition.sport.icon }}</span>
+  <div class="schedule-row-sport" title="{{ event.competition.name }}">
     {% include "schedule/_competition_badge.html" with competition=event.competition %}
   </div>
 

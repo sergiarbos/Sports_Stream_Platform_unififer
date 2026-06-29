@@ -13,8 +13,7 @@ muta para mostrar SOLO ese evento, en grande — sin duplicar listas.
 
   <div class="link-card-head">
     <div class="link-card-sport">
-      <span class="sport-emoji">{{ event.competition.sport.icon }}</span>
-      {% include "schedule/_competition_badge.html" with competition=event.competition %}
+      {% include "schedule/_competition_badge.html" with competition=event.competition large=True %}
     </div>
     <div class="link-card-info">
       {% include "schedule/_status_pill.html" with event=event %}

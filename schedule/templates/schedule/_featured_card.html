@@ -1,11 +1,12 @@
 {% comment %}
 Tarjeta "destacado": sustituye los recuadros de imagen del wireframe
-original por un fondo degradado generado por categoría deportiva +
-emoji, evitando usar fotografías o logotipos con derechos de autor.
+original por un fondo degradado generado por categoría deportiva + el
+escudo de la competición, evitando usar fotografías o logotipos
+oficiales con derechos de autor.
 {% endcomment %}
 <a href="#event-{{ event.id }}" class="featured-card {{ event.competition.sport.accent_class }}">
   <div class="featured-art">
-    <span class="featured-emoji">{{ event.competition.sport.icon }}</span>
+    {% include "schedule/_competition_badge.html" with competition=event.competition large=True %}
   </div>
   <div class="featured-body">
     {% include "schedule/_status_pill.html" with event=event %}

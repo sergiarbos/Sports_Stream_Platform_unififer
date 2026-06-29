@@ -7,27 +7,28 @@
   <title>{% block title %}Dónde ver cada evento{% endblock %}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  {% comment %} El "?v=" fuerza al navegador a descargar la versión nueva
+  en vez de servir una copia cacheada antigua. Subir el número cada vez
+  que se edite style.css o app.js. {% endcomment %}
+  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=4">
 </head>
 <body>
   <header class="topbar">
     <div class="topbar-inner">
-      <div class="topbar-id">
-        <div class="tagline">Todos los enlaces son redirecciones externas a la web del proveedor. No alojamos ni emitimos contenido aquí.</div>
-      </div>
+      <div class="topbar-id"></div>
       <div class="topbar-tools">
         <label class="search-box" for="event-search">
           <svg class="search-icon" viewBox="0 0 20 20" aria-hidden="true"><circle cx="9" cy="9" r="6.5" stroke="currentColor" stroke-width="1.6" fill="none"/><line x1="14" y1="14" x2="18.5" y2="18.5" stroke="currentColor" stroke-width="1.6"/></svg>
           <input id="event-search" type="text" placeholder="Buscar equipo, piloto o competición..." autocomplete="off">
         </label>
-        <div class="live-bell" title="Eventos en directo ahora">
+        <a href="#live-section" class="live-bell" title="Ir a los eventos en directo ahora">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a6 6 0 0 0-6 6v3.2c0 .8-.3 1.6-.9 2.2L4 14.7c-.6.7-.1 1.8.8 1.8h14.4c.9 0 1.4-1.1.8-1.8l-1.1-1.3a3 3 0 0 1-.9-2.2V8a6 6 0 0 0-6-6z" fill="currentColor"/><path d="M9.5 19.5a2.5 2.5 0 0 0 5 0" stroke="currentColor" stroke-width="1.6" fill="none"/></svg>
           {% if live_count %}<span class="live-bell-count">{{ live_count }}</span>{% endif %}
-        </div>
+        </a>
       </div>
     </div>
   </header>
   {% block content %}{% endblock %}
-  <script src="{% static 'js/app.js' %}"></script>
+  <script src="{% static 'js/app.js' %}?v=4"></script>
 </body>
 </html>
