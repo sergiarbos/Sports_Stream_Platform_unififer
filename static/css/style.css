@@ -78,30 +78,23 @@ button, input { font-family: inherit; }
 
 .topbar {
   border-bottom: 1px solid var(--line);
-  padding: 18px 28px;
-  display: flex;
+}
+
+.topbar-inner {
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 18px 24px;
+  display: grid;
+  grid-template-columns: 1.7fr 1fr;
   align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  flex-wrap: wrap;
+  gap: 22px;
 }
 
-.topbar-id { min-width: 220px; }
-
-.topbar .logo {
-  font-size: 1.7rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-}
-
-.topbar .logo .dot {
-  color: var(--accent-live);
-}
+.topbar-id { min-width: 0; }
 
 .topbar .tagline {
   color: var(--text-muted);
   font-size: 0.78rem;
-  margin-top: 2px;
   max-width: 480px;
 }
 
@@ -109,9 +102,9 @@ button, input { font-family: inherit; }
   display: flex;
   align-items: center;
   gap: 14px;
-  flex: 1;
-  justify-content: flex-end;
-  min-width: 240px;
+  /* Mismo ancho/posición que la columna del panel de enlaces de abajo,
+     para que el buscador arranque exactamente donde arranca el panel. */
+  min-width: 0;
 }
 
 .search-box {
@@ -123,7 +116,6 @@ button, input { font-family: inherit; }
   border-radius: 999px;
   padding: 9px 14px;
   flex: 1;
-  max-width: 360px;
   color: var(--text-muted);
 }
 
@@ -321,6 +313,25 @@ button, input { font-family: inherit; }
   100% { box-shadow: 0 0 0 0 rgba(0, 224, 138, 0); }
 }
 
+/* Cuando no hay nada en directo, una línea fina en vez de cabecera +
+   recuadro vacío, para no robarle protagonismo a "Próximos". */
+.live-empty-strip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  padding: 2px 0;
+}
+
+.live-dot-static {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  flex-shrink: 0;
+}
+
 .empty-note {
   color: var(--text-muted);
   font-size: 0.88rem;
@@ -348,17 +359,26 @@ button, input { font-family: inherit; }
 .schedule-row.is-upcoming { border-left-color: var(--accent-upcoming); }
 .schedule-row.is-archive { border-left-color: var(--accent-archive); opacity: 0.88; }
 
+.schedule-row.is-selected {
+  border-color: var(--accent-upcoming);
+  background: var(--surface-raised);
+}
+
 .schedule-row-when {
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
   line-height: 1.2;
+  background: var(--surface-raised);
+  border-radius: 8px;
+  padding: 6px 4px;
 }
 
 .schedule-row-when .day {
   font-family: 'Oswald', sans-serif;
   font-size: 1.05rem;
+  color: var(--text-primary);
 }
 
 .schedule-row-when .month {
@@ -370,23 +390,24 @@ button, input { font-family: inherit; }
 
 .schedule-row-when .time {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.7rem;
-  color: var(--accent-upcoming);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #ffc670;
 }
 
-.schedule-row.is-live .schedule-row-when .time { color: var(--accent-live); }
+.schedule-row.is-live .schedule-row-when .time { color: #2dffac; }
 
 .schedule-row-when .live-tag {
   font-family: 'Oswald', sans-serif;
   font-size: 0.6rem;
   letter-spacing: 0.06em;
-  color: var(--accent-live);
+  color: #2dffac;
 }
 
 .schedule-row-when .archive-tag {
   font-family: 'Oswald', sans-serif;
-  font-size: 0.6rem;
-  color: var(--text-muted);
+  font-size: 0.62rem;
+  color: var(--text-primary);
   letter-spacing: 0.04em;
 }
 
@@ -437,7 +458,7 @@ button, input { font-family: inherit; }
   transition: border-color 0.15s, background 0.15s;
 }
 
-.get-links-btn svg { width: 11px; height: 11px; }
+.external-icon { width: 11px; height: 11px; flex-shrink: 0; vertical-align: -1px; }
 
 .get-links-btn:hover {
   border-color: var(--accent-upcoming);
@@ -480,100 +501,155 @@ button, input { font-family: inherit; }
 }
 
 .links-col-body {
-  padding: 14px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
   overflow-y: auto;
 }
 
+/* Patrón maestro-detalle: por defecto NINGUNA tarjeta se muestra. Solo
+   aparece la que coincide con el ancla activa (:target, funciona sin
+   JS) o la que el JS marca como .is-active (evita el salto de scroll
+   al hacer clic). El resultado es SIEMPRE una única tarjeta a la vez,
+   grande y sin listas duplicadas. */
+.link-card { display: none; }
+.link-card:target,
+.link-card.is-active { display: block; }
+
+.links-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  padding: 48px 22px;
+  line-height: 1.5;
+}
+
+.links-placeholder-icon { font-size: 1.8rem; opacity: 0.7; }
+
+.link-card:target ~ .links-placeholder,
+.link-card.is-active ~ .links-placeholder {
+  display: none;
+}
+
 .link-card {
+  position: relative;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-left: 3px solid var(--line);
-  border-radius: 10px;
-  padding: 12px 14px;
+  border-left: 4px solid var(--line);
+  border-radius: 12px;
+  padding: 22px 22px 18px;
   scroll-margin-top: 90px;
-  transition: box-shadow 0.2s, border-color 0.2s;
 }
 
 .link-card.is-live { border-left-color: var(--accent-live); }
 .link-card.is-upcoming { border-left-color: var(--accent-upcoming); }
-.link-card.is-archive { border-left-color: var(--accent-archive); opacity: 0.9; }
+.link-card.is-archive { border-left-color: var(--accent-archive); }
 
-.link-card:target {
-  border-color: var(--accent-upcoming);
-  box-shadow: 0 0 0 2px rgba(255, 182, 72, 0.35);
+.link-card-close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-raised);
+  border: 1px solid var(--line);
+  color: var(--text-muted);
+  font-size: 0.8rem;
 }
+
+.link-card-close:hover { color: var(--text-primary); border-color: var(--accent-upcoming); }
 
 .link-card-head {
   display: flex;
-  gap: 10px;
-  margin-bottom: 10px;
+  gap: 14px;
+  margin-bottom: 18px;
+  padding-right: 30px;
 }
 
 .link-card-sport {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   flex-shrink: 0;
 }
 
+.link-card-sport .sport-emoji { font-size: 1.6rem; }
+
 .link-card-info { min-width: 0; }
 
+/* Insignia de estado ÚNICA: mismo diseño en destacados y panel de
+   enlaces (color sólido por estado + texto oscuro, sin variantes). */
 .status-pill {
   display: inline-block;
   font-family: 'Oswald', sans-serif;
-  font-size: 0.6rem;
+  font-size: 0.62rem;
+  font-weight: 700;
   letter-spacing: 0.06em;
-  padding: 2px 7px;
+  padding: 3px 8px;
   border-radius: 999px;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 
-.status-pill.status-live { background: var(--accent-live-dim); color: var(--accent-live); }
-.status-pill.status-upcoming { background: #3a2a10; color: var(--accent-upcoming); }
-.status-pill.status-archive { background: #232c40; color: var(--accent-archive); }
+.status-pill.status-live { background: var(--accent-live); color: #04231a; }
+.status-pill.status-upcoming { background: var(--accent-upcoming); color: #2b1c02; }
+.status-pill.status-archive { background: var(--accent-archive); color: #11151f; }
+
+.link-card-when {
+  display: block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
 
 .link-card-comp {
-  font-size: 0.68rem;
+  font-size: 0.74rem;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   font-family: 'Oswald', sans-serif;
 }
 
-.link-card-title { font-size: 0.92rem; font-weight: 600; margin-top: 1px; }
+.link-card-title { font-size: 1.2rem; font-weight: 600; margin-top: 2px; }
 
 .link-card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: 7px;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 10px;
 }
 
 .redirect-btn {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 6px;
+  gap: 8px;
   border: 1px solid var(--line);
   background: var(--surface-raised);
-  border-radius: 7px;
-  padding: 7px 9px;
-  font-size: 0.72rem;
-  transition: border-color 0.15s, background 0.15s;
+  border-radius: 9px;
+  padding: 12px 14px;
+  font-size: 0.82rem;
+  transition: border-color 0.15s, background 0.15s, transform 0.15s;
 }
 
 .redirect-btn:not(.is-disabled):hover {
   border-color: var(--accent-upcoming);
   background: var(--surface);
+  transform: translateY(-1px);
 }
 
 .redirect-btn-name {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -587,8 +663,11 @@ button, input { font-family: inherit; }
 }
 
 .redirect-btn-arrow {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   color: var(--text-muted);
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -605,26 +684,20 @@ button, input { font-family: inherit; }
   opacity: 0.9;
 }
 
-footer {
-  text-align: center;
-  color: var(--text-muted);
-  font-size: 0.75rem;
-  padding: 20px;
-  border-top: 1px solid var(--line);
-}
-
 /* ---------- Responsive ---------- */
 
 @media (max-width: 980px) {
+  .topbar-inner { grid-template-columns: 1fr; gap: 12px; }
   .split-app { grid-template-columns: 1fr; }
   .links-col { position: static; max-height: none; margin-top: 8px; }
   .featured-strip { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 640px) {
-  .topbar { padding: 16px; }
-  .topbar-tools { width: 100%; }
+  .topbar-inner { padding: 16px; }
   .search-box { max-width: none; }
+  .link-card { padding: 18px 16px 16px; }
+  .link-card-title { font-size: 1.05rem; }
   .schedule-row {
     grid-template-columns: 1fr auto;
     grid-template-areas:

@@ -1,10 +1,10 @@
 {% comment %}
 Fila compacta de la agenda (columna izquierda). El botón "Ver enlaces"
-salta directamente a su tarjeta correspondiente en el panel de enlaces
-de la columna derecha (id="event-{{ event.id }}"), sin JavaScript: usa
-un ancla normal + scroll-behavior: smooth + :target en el CSS.
+activa el ancla #event-{{ event.id }}: el panel de enlaces (columna
+derecha) muta para mostrar SOLO ese evento (ver :target en el CSS), y
+un pelín de JS marca esta fila como seleccionada mientras esté activa.
 {% endcomment %}
-<div class="schedule-row is-{{ card_type }}" data-search="{{ event.title|lower }} {{ event.competition.name|lower }}">
+<div class="schedule-row is-{{ card_type }}" data-search="{{ event.title|lower }} {{ event.competition.name|lower }}" data-event-id="event-{{ event.id }}">
   <div class="schedule-row-when">
     {% if card_type == "live" %}
       <span class="live-tag">● DIRECTO</span>
@@ -28,6 +28,6 @@ un ancla normal + scroll-behavior: smooth + :target en el CSS.
 
   <a href="#event-{{ event.id }}" class="get-links-btn">
     Ver enlaces
-    <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2v10M8 12 4 8M8 12l4-4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    {% include "schedule/_external_icon.html" %}
   </a>
 </div>

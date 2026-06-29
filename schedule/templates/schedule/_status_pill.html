@@ -1,0 +1,7 @@
+{% comment %}
+Insignia de estado ÚNICA para toda la plataforma (DIRECTO / PRÓXIMO /
+DIFERIDO). Se incluye siempre igual, en destacados y en el panel de
+enlaces, para que el mismo estado se vea SIEMPRE con el mismo diseño.
+Uso: {% include "schedule/_status_pill.html" with event=event %}
+{% endcomment %}
+<span class="status-pill status-{% if event.status == 'live' %}live{% elif event.status == 'finished' %}archive{% else %}upcoming{% endif %}">{{ event.status_label }}</span>

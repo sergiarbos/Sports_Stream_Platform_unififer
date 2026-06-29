@@ -25,15 +25,15 @@
     <div class="schedule-col">
 
       <div class="schedule-section">
-        <div class="section-header live-header">
-          <span class="live-dot"></span> En directo ahora
-        </div>
         {% if live_events %}
+          <div class="section-header live-header">
+            <span class="live-dot"></span> En directo ahora
+          </div>
           {% for event in live_events %}
             {% include "schedule/_schedule_row.html" with card_type="live" %}
           {% endfor %}
         {% else %}
-          <div class="empty-note">No hay ningún evento con comentarios en español emitiéndose en directo en este momento.</div>
+          <div class="live-empty-strip"><span class="live-dot-static"></span> Nada en directo ahora mismo — mira los próximos eventos.</div>
         {% endif %}
       </div>
 
@@ -71,6 +71,10 @@
           {% for event in link_events %}
             {% include "schedule/_link_card.html" %}
           {% endfor %}
+          <div class="links-placeholder">
+            <span class="links-placeholder-icon">🔗</span>
+            Elige un evento y pulsa <strong>"Ver enlaces"</strong> para ver aquí sus enlaces directos.
+          </div>
         {% else %}
           <div class="empty-note">No hay enlaces disponibles para este filtro todavía.</div>
         {% endif %}

@@ -5,7 +5,7 @@ from .models import Event, Sport
 
 def home(request):
     """
-    Página principal de StreamSync (layout "Split Screen & Multi-View"):
+    Página principal (layout "Split Screen & Multi-View"):
       - Columna izquierda: agenda compacta (directo / próximos / diferido).
       - Columna derecha: panel fijo con los enlaces directos de cada evento.
 

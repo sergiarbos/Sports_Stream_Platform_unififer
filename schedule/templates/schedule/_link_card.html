@@ -1,22 +1,24 @@
 {% comment %}
-Tarjeta del "panel de enlaces" (columna derecha). Agrupa TODAS las
-retransmisiones en español de un evento como botones de redirección
-externa directos al evento (event_url / vod_url), nunca a la home de
-la plataforma. id="event-{{ event.id }}" es el destino de los enlaces
-"Ver enlaces" de la columna izquierda.
+Tarjeta del panel de enlaces (columna derecha). AHORA es una vista de
+detalle: por defecto está oculta (display:none) y solo se muestra
+cuando coincide con el ancla activa en la URL (#event-N), gracias a
+:target en el CSS. Así, al pulsar "Ver enlaces" en la agenda, el panel
+muta para mostrar SOLO ese evento, en grande — sin duplicar listas.
 {% endcomment %}
 <div
   id="event-{{ event.id }}"
   class="link-card is-{% if event.status == 'live' %}live{% elif event.status == 'finished' %}archive{% else %}upcoming{% endif %}"
-  data-search="{{ event.title|lower }} {{ event.competition.name|lower }}"
 >
+  <a href="#" class="link-card-close" aria-label="Cerrar y volver al panel de enlaces" title="Cerrar">✕</a>
+
   <div class="link-card-head">
     <div class="link-card-sport">
       <span class="sport-emoji">{{ event.competition.sport.icon }}</span>
       {% include "schedule/_competition_badge.html" with competition=event.competition %}
     </div>
     <div class="link-card-info">
-      <span class="status-pill status-{% if event.status == 'live' %}live{% elif event.status == 'finished' %}archive{% else %}upcoming{% endif %}">{{ event.status_label }}</span>
+      {% include "schedule/_status_pill.html" with event=event %}
+      <span class="link-card-when">{{ event.start_datetime|date:"d F, H:i" }}</span>
       <div class="link-card-comp">{{ event.competition.name }}{% if event.round_name %} · {{ event.round_name }}{% endif %}</div>
       <div class="link-card-title">{{ event.title }}</div>
     </div>
@@ -29,9 +31,15 @@ la plataforma. id="event-{{ event.id }}" es el destino de los enlaces
         {% else %}
           {% with url=broadcast.direct_url %}
           <{% if url %}a href="{{ url }}" target="_blank" rel="noopener noreferrer"{% else %}span{% endif %} class="redirect-btn {% if not url %}is-disabled{% endif %}">
-            <span class="platform-dot" style="background:{{ broadcast.platform.color }}"></span>
-            <span class="redirect-btn-name">{{ broadcast.platform.name }}{% if broadcast.is_latam %} · LATAM{% endif %}</span>
-            {% if url %}<span class="redirect-btn-arrow">Abrir ↗</span>{% else %}<span class="redirect-btn-arrow">Enlace no disponible</span>{% endif %}
+            <span class="redirect-btn-name">
+              <span class="platform-dot" style="background:{{ broadcast.platform.color }}"></span>
+              {{ broadcast.platform.name }}{% if broadcast.is_latam %} · LATAM{% endif %}
+            </span>
+            {% if url %}
+              <span class="redirect-btn-arrow">Abrir {% include "schedule/_external_icon.html" %}</span>
+            {% else %}
+              <span class="redirect-btn-arrow">Enlace no disponible</span>
+            {% endif %}
           </{% if url %}a{% else %}span{% endif %}>
           {% endwith %}
         {% endif %}
