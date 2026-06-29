@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.utils import timezone
 
 from .models import Event, Sport
 
@@ -21,7 +22,12 @@ def home(request):
     events_qs = (
         Event.objects.select_related("competition", "competition__sport")
         .prefetch_related("broadcasts__platform")
-        .all()
+        .exclude(
+            status=Event.STATUS_SCHEDULED,
+            start_datetime__gt=(
+                timezone.now() + timezone.timedelta(days=Event.UPCOMING_WINDOW_DAYS)
+            ),
+        )
     )
     if selected_sport_slug != "all":
         events_qs = events_qs.filter(competition__sport__slug=selected_sport_slug)

@@ -115,6 +115,10 @@ class Event(models.Model):
     # antes de desaparecer del listado (aunque siga teniendo VOD disponible).
     ARCHIVE_WINDOW_DAYS = 7
 
+    # Horizonte máximo hacia el futuro: eventos programados más allá de
+    # este número de días no aparecen en la agenda (evita listas infinitas).
+    UPCOMING_WINDOW_DAYS = 30
+
     competition = models.ForeignKey(Competition, on_delete=models.CASCADE, related_name="events")
     title = models.CharField(
         max_length=200,
