@@ -228,8 +228,15 @@ class Broadcast(models.Model):
     @property
     def direct_url(self):
         """
-        Link al que debe apuntar la insignia en la interfaz: SIEMPRE al
-        evento concreto (en directo/próximo -> event_url, diferido -> vod_url),
-        nunca a la home genérica de la plataforma (Platform.website_url).
+        Link al que debe apuntar la insignia en la interfaz.
+
+        Por ahora prioriza SIEMPRE Platform.website_url: las APIs no
+        siempre consiguen resolver el link exacto del evento dentro de
+        la plataforma (event_url/vod_url quedan vacíos), y eso dejaba
+        botones en "enlace no disponible" aunque el evento sí se
+        retransmitiera. Ir a lo seguro (la home, que siempre existe) es
+        mejor que un link exacto que puede fallar. Si en el futuro las
+        fuentes de datos resuelven bien el link profundo, basta con
+        cambiar el orden aquí para volver a priorizarlo.
         """
-        return self.vod_url or self.event_url
+        return self.platform.website_url or self.vod_url or self.event_url
