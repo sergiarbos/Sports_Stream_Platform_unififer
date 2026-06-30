@@ -3,7 +3,7 @@ from django.utils import timezone
 
 
 class Sport(models.Model):
-    """Categoría deportiva de alto nivel (Fútbol, Baloncesto, Motor, Tenis, Invierno...)."""
+    """Top-level sport category (Football, Basketball, Motorsport, Tennis, Winter Sports...)."""
 
     CATEGORY_FOOTBALL = "football"
     CATEGORY_BASKETBALL = "basketball"
@@ -12,11 +12,11 @@ class Sport(models.Model):
     CATEGORY_WINTER = "winter_sports"
 
     CATEGORY_CHOICES = [
-        (CATEGORY_FOOTBALL, "Fútbol"),
-        (CATEGORY_BASKETBALL, "Baloncesto"),
-        (CATEGORY_MOTORSPORT, "Motor"),
-        (CATEGORY_TENNIS, "Tenis"),
-        (CATEGORY_WINTER, "Deportes de invierno"),
+        (CATEGORY_FOOTBALL, "Football"),
+        (CATEGORY_BASKETBALL, "Basketball"),
+        (CATEGORY_MOTORSPORT, "Motorsport"),
+        (CATEGORY_TENNIS, "Tennis"),
+        (CATEGORY_WINTER, "Winter Sports"),
     ]
 
     name = models.CharField(max_length=100)
@@ -25,7 +25,7 @@ class Sport(models.Model):
     icon = models.CharField(
         max_length=10,
         blank=True,
-        help_text="Emoji usado como icono rápido en la interfaz (ej: ⚽).",
+        help_text="Emoji used as a quick icon in the UI (e.g. ⚽).",
     )
     order = models.PositiveSmallIntegerField(default=0)
 
@@ -37,12 +37,12 @@ class Sport(models.Model):
 
     @property
     def accent_class(self):
-        """Clase CSS de color por categoría, usada en monogramas y tarjetas destacadas."""
+        """CSS colour class by category, used in monograms and featured cards."""
         return f"accent-{self.category}"
 
 
 class Competition(models.Model):
-    """Competición concreta dentro de un deporte (Champions, NBA, F1...)."""
+    """A specific competition within a sport (Champions League, NBA, F1...)."""
 
     sport = models.ForeignKey(Sport, on_delete=models.CASCADE, related_name="competitions")
     name = models.CharField(max_length=150)
@@ -51,16 +51,16 @@ class Competition(models.Model):
         max_length=6,
         blank=True,
         help_text=(
-            "Siglas cortas para la insignia visual de la competición (ej: 'CL', "
-            "'NBA', 'F1'). Se usan en vez de logotipos con copyright."
+            "Short initials for the competition badge (e.g. 'CL', "
+            "'NBA', 'F1'). Used instead of copyrighted logos."
         ),
     )
-    # Identifica de qué fuente/adaptador de datos proviene esta competición.
-    # Ver schedule/services/adapters.py para la lista de fuentes soportadas.
+    # Identifies which data source/adapter this competition comes from.
+    # See schedule/services/adapters.py for the list of supported sources.
     source = models.CharField(
         max_length=50,
         blank=True,
-        help_text="Identificador del adaptador de datos (ej: 'api_football', 'jolpica_f1', 'manual').",
+        help_text="Data adapter identifier (e.g. 'api_football', 'jolpica_f1', 'manual').",
     )
     external_id = models.CharField(max_length=100, blank=True)
 
@@ -73,7 +73,7 @@ class Competition(models.Model):
 
     @property
     def badge_initials(self):
-        """Siglas a mostrar en la insignia visual si no se definió short_code."""
+        """Initials to display on the badge when no short_code is defined."""
         if self.short_code:
             return self.short_code
         words = [w for w in self.name.split() if w.lower() not in ("de", "del", "la", "el")]
@@ -81,13 +81,13 @@ class Competition(models.Model):
 
 
 class Platform(models.Model):
-    """Plataforma donde se puede ver el evento (DAZN, Movistar Plus+, ESPN, ViX...)."""
+    """Streaming platform where an event can be watched (DAZN, Movistar Plus+, ESPN, ViX...)."""
 
     name = models.CharField(max_length=100)
     slug = models.SlugField(unique=True)
     website_url = models.URLField(blank=True)
-    # Color en hexadecimal para pintar la insignia en la interfaz, evitando
-    # tener que alojar logotipos con derechos de autor de cada plataforma.
+    # Hex colour used to render the platform badge in the UI,
+    # avoiding the need to host copyrighted logos for each platform.
     color = models.CharField(max_length=7, default="#2563eb")
     requires_subscription = models.BooleanField(default=True)
 
@@ -99,30 +99,30 @@ class Platform(models.Model):
 
 
 class Event(models.Model):
-    """Un acontecimiento deportivo concreto: un partido, una carrera, una prueba..."""
+    """A concrete sporting event: a match, a race, a bout..."""
 
     STATUS_SCHEDULED = "scheduled"
     STATUS_LIVE = "live"
     STATUS_FINISHED = "finished"
 
     STATUS_CHOICES = [
-        (STATUS_SCHEDULED, "Programado"),
-        (STATUS_LIVE, "En directo"),
-        (STATUS_FINISHED, "Finalizado"),
+        (STATUS_SCHEDULED, "Scheduled"),
+        (STATUS_LIVE, "Live"),
+        (STATUS_FINISHED, "Finished"),
     ]
 
-    # Nº de días que un evento finalizado permanece en "Disponibles en diferido"
-    # antes de desaparecer del listado (aunque siga teniendo VOD disponible).
+    # Number of days a finished event remains in "On demand" before
+    # disappearing from the listing (even if a VOD is still available).
     ARCHIVE_WINDOW_DAYS = 7
 
-    # Horizonte máximo hacia el futuro: eventos programados más allá de
-    # este número de días no aparecen en la agenda (evita listas infinitas).
+    # Maximum forward horizon: scheduled events further away than this
+    # number of days are hidden from the schedule (prevents infinite lists).
     UPCOMING_WINDOW_DAYS = 30
 
     competition = models.ForeignKey(Competition, on_delete=models.CASCADE, related_name="events")
     title = models.CharField(
         max_length=200,
-        help_text="Ej: 'Real Madrid vs Manchester City' o 'Gran Premio de Mónaco'.",
+        help_text="E.g. 'Real Madrid vs Manchester City' or 'Monaco Grand Prix'.",
     )
     participant_home = models.CharField(max_length=120, blank=True)
     participant_away = models.CharField(max_length=120, blank=True)
@@ -130,7 +130,7 @@ class Event(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_SCHEDULED)
     external_id = models.CharField(max_length=100, blank=True)
     round_name = models.CharField(
-        max_length=120, blank=True, help_text="Ej: 'Jornada 12', 'Octavos de final', 'Clasificación'."
+        max_length=120, blank=True, help_text="E.g. 'Matchday 12', 'Round of 16', 'Qualifying'."
     )
 
     class Meta:
@@ -145,24 +145,24 @@ class Event(models.Model):
 
     @property
     def is_within_archive_window(self):
-        """¿Este evento finalizado cayó dentro de los últimos ARCHIVE_WINDOW_DAYS días?"""
+        """Did this finished event fall within the last ARCHIVE_WINDOW_DAYS days?"""
         cutoff = timezone.now() - timezone.timedelta(days=Event.ARCHIVE_WINDOW_DAYS)
         return self.start_datetime >= cutoff
 
     @property
     def spanish_broadcasts(self):
-        """Solo las retransmisiones con comentarios en español."""
+        """Only broadcasts with Spanish-language commentary."""
         return self.broadcasts.filter(language__startswith="es")
 
     @property
     def is_visible(self):
         """
-        Regla central del proyecto:
-        - Si el evento es futuro o está en directo -> se muestra siempre (con su horario).
-        - Si el evento ya ha pasado -> solo se muestra si existe AL MENOS una
-          retransmisión en español con repetición/VOD disponible, Y además
-          el evento ocurrió dentro de los últimos ARCHIVE_WINDOW_DAYS días
-          (pasado ese plazo, desaparece de "Disponibles en diferido").
+        Core visibility rule:
+        - If the event is upcoming or live -> always shown (with its scheduled time).
+        - If the event has already finished -> only shown if AT LEAST one
+          Spanish-language broadcast has a replay/VOD available, AND the
+          event occurred within the last ARCHIVE_WINDOW_DAYS days
+          (after that window it disappears from "On demand").
         """
         broadcasts = self.spanish_broadcasts
         if not broadcasts.exists():
@@ -174,21 +174,21 @@ class Event(models.Model):
     @property
     def status_label(self):
         if self.status == Event.STATUS_LIVE:
-            return "DIRECTO"
+            return "LIVE"
         if self.status == Event.STATUS_FINISHED:
-            return "DIFERIDO"
-        return "PRÓXIMO"
+            return "ON DEMAND"
+        return "UPCOMING"
 
 
 class Broadcast(models.Model):
-    """Relación evento <-> plataforma: dónde y cómo se puede ver/escuchar ese evento."""
+    """Event <-> platform relationship: where and how the event can be watched/heard."""
 
     LANGUAGE_ES_ES = "es-ES"
     LANGUAGE_ES_LA = "es-LA"
 
     LANGUAGE_CHOICES = [
-        (LANGUAGE_ES_ES, "Español (España)"),
-        (LANGUAGE_ES_LA, "Español (Latinoamérica)"),
+        (LANGUAGE_ES_ES, "Spanish (Spain)"),
+        (LANGUAGE_ES_LA, "Spanish (Latin America)"),
     ]
 
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name="broadcasts")
@@ -197,24 +197,24 @@ class Broadcast(models.Model):
     commentary_region = models.CharField(
         max_length=80,
         blank=True,
-        help_text="Opcional, ej: 'México', 'Argentina', 'Conjunta Latam'.",
+        help_text="Optional, e.g. 'Mexico', 'Argentina', 'Pan-LATAM'.",
     )
     is_live_stream = models.BooleanField(
-        default=True, help_text="¿Esta plataforma lo retransmite en directo?"
+        default=True, help_text="Does this platform stream it live?"
     )
     event_url = models.URLField(
         blank=True,
         help_text=(
-            "Link directo a ESTE evento concreto dentro de la plataforma "
-            "(no a la home general). Se usa para directo/próximos."
+            "Direct link to THIS specific event on the platform "
+            "(not to the platform homepage). Used for live/upcoming events."
         ),
     )
     vod_available = models.BooleanField(
         default=False,
-        help_text="¿Hay repetición/diferido disponible una vez finalizado el evento?",
+        help_text="Is a replay/on-demand version available after the event finishes?",
     )
     vod_url = models.URLField(
-        blank=True, help_text="Link directo a la repetición/diferido de ESTE evento."
+        blank=True, help_text="Direct link to the replay/on-demand version of THIS event."
     )
     notes = models.CharField(max_length=200, blank=True)
 
@@ -223,7 +223,7 @@ class Broadcast(models.Model):
         ordering = ["platform__name"]
 
     def __str__(self):
-        return f"{self.event} en {self.platform} ({self.get_language_display()})"
+        return f"{self.event} on {self.platform} ({self.get_language_display()})"
 
     @property
     def is_latam(self):
@@ -232,15 +232,15 @@ class Broadcast(models.Model):
     @property
     def direct_url(self):
         """
-        Link al que debe apuntar la insignia en la interfaz.
+        URL the badge should link to.
 
-        Por ahora prioriza SIEMPRE Platform.website_url: las APIs no
-        siempre consiguen resolver el link exacto del evento dentro de
-        la plataforma (event_url/vod_url quedan vacíos), y eso dejaba
-        botones en "enlace no disponible" aunque el evento sí se
-        retransmitiera. Ir a lo seguro (la home, que siempre existe) es
-        mejor que un link exacto que puede fallar. Si en el futuro las
-        fuentes de datos resuelven bien el link profundo, basta con
-        cambiar el orden aquí para volver a priorizarlo.
+        Currently always prioritises Platform.website_url: APIs don't
+        always resolve the exact per-event deep-link (event_url/vod_url
+        may be empty), which previously left buttons showing "link not
+        available" even though the event was being broadcast. Falling back
+        to the platform homepage (which always exists) is safer than an
+        exact link that might be missing. If data sources start reliably
+        providing deep-links in the future, just reorder the fallback chain
+        here to prioritise them again.
         """
         return self.platform.website_url or self.vod_url or self.event_url

@@ -1,5 +1,5 @@
-// Filtro de búsqueda + selección de un único evento en el panel de enlaces.
-// Sin frameworks, para mantener el proyecto sencillo.
+// Search filter + single-event selection in the links panel.
+// No frameworks, keeping the project simple.
 (function () {
   const input = document.getElementById("event-search");
   const rows = document.querySelectorAll(".schedule-row[data-search]");
@@ -16,27 +16,26 @@
     input.addEventListener("input", function () {
       const query = normalize(input.value.trim());
 
-      // El panel de enlaces ya no es una lista (solo muestra el evento
-      // seleccionado), así que la búsqueda solo necesita filtrar la
-      // agenda de la izquierda.
+      // The links panel is no longer a list (it only shows the selected
+      // event), so the search only needs to filter the left-hand schedule.
       rows.forEach(function (row) {
         const match = !query || normalize(row.dataset.search).includes(query);
         row.style.display = match ? "" : "none";
       });
 
-      // Mientras se busca, los destacados no aportan (no son resultado de
-      // búsqueda real), así que los ocultamos para no confundir.
+      // While searching, featured cards don't help (they are not real
+      // search results), so we hide them to avoid confusion.
       featured.forEach(function (card) {
         card.style.display = query ? "none" : "";
       });
     });
   }
 
-  // --- Panel de enlaces: muestra UN evento a la vez (patrón maestro-detalle) ---
-  // Base de funcionamiento sin JS: :target en el CSS (ver style.css).
-  // Con JS interceptamos el click para evitar el salto de scroll feo que
-  // provoca cambiar location.hash directamente, y para resaltar también
-  // la fila de la agenda que corresponde al evento mostrado.
+  // --- Links panel: shows ONE event at a time (master-detail pattern) ---
+  // Base behaviour without JS: :target in the CSS (see style.css).
+  // With JS we intercept the click to avoid the jarring scroll jump that
+  // changing location.hash directly causes, and to also highlight the
+  // corresponding schedule row for the event being shown.
   const linksCol = document.querySelector(".links-col");
   const allLinkCards = document.querySelectorAll(".link-card");
   const allRows = document.querySelectorAll(".schedule-row[data-event-id]");
@@ -76,7 +75,7 @@
     selectEvent(window.location.hash.slice(1), false);
   });
 
-  // Estado inicial: si se llega con #event-N en la URL (enlace
-  // compartido), seleccionamos esa tarjeta sin animar el scroll.
+  // Initial state: if the page is loaded with #event-N in the URL (shared
+  // link), select that card without animating the scroll.
   selectEvent(window.location.hash.slice(1), false);
 })();

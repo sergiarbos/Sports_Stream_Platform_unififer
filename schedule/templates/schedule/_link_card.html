@@ -9,7 +9,7 @@ muta para mostrar SOLO ese evento, en grande — sin duplicar listas.
   id="event-{{ event.id }}"
   class="link-card is-{% if event.status == 'live' %}live{% elif event.status == 'finished' %}archive{% else %}upcoming{% endif %}"
 >
-  <a href="#" class="link-card-close" aria-label="Cerrar y volver al panel de enlaces" title="Cerrar">✕</a>
+  <a href="#" class="link-card-close" aria-label="Close and return to the links panel" title="Close">✕</a>
 
   <div class="link-card-head">
     <div class="link-card-sport">
@@ -35,9 +35,9 @@ muta para mostrar SOLO ese evento, en grande — sin duplicar listas.
               {{ broadcast.platform.name }}{% if broadcast.is_latam %} · LATAM{% endif %}
             </span>
             {% if url %}
-              <span class="redirect-btn-arrow">Abrir {% include "schedule/_external_icon.html" %}</span>
+              <span class="redirect-btn-arrow">Open {% include "schedule/_external_icon.html" %}</span>
             {% else %}
-              <span class="redirect-btn-arrow">Enlace no disponible</span>
+              <span class="redirect-btn-arrow">Link not available</span>
             {% endif %}
           </{% if url %}a{% else %}span{% endif %}>
           {% endwith %}

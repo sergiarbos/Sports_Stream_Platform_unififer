@@ -1,26 +1,27 @@
 from django.shortcuts import render
+from django.utils import timezone
 
 from .models import Event, Platform, Sport
 
 
 def home(request):
     """
-    Página principal (layout "Split Screen & Multi-View"):
-      - Columna izquierda: agenda compacta (directo / próximos / diferido).
-      - Columna derecha: panel fijo con los enlaces directos de cada evento.
+    Home page ("Split Screen & Multi-View" layout):
+      - Left column: compact schedule (live / upcoming / on-demand).
+      - Right column: fixed links panel showing direct links for each event.
 
-    Reglas de negocio aplicadas aquí (ver Event.is_visible en models.py):
-      1. Solo se listan eventos con al menos una retransmisión en español.
-      2. Eventos futuros o en directo -> siempre visibles, con su horario.
-      3. Eventos pasados -> solo visibles si tienen repetición/VOD Y ocurrieron
-         dentro de los últimos Event.ARCHIVE_WINDOW_DAYS días.
+    Business rules applied here (see Event.is_visible in models.py):
+      1. Only events with at least one Spanish-language broadcast are listed.
+      2. Future or live events -> always visible, with their scheduled time.
+      3. Past events -> only visible if they have a replay/VOD AND occurred
+         within the last Event.ARCHIVE_WINDOW_DAYS days.
 
-    Filtros disponibles vía querystring:
-      ?sport=<slug>     filtra por deporte (o "all").
-      ?platform=<slug>  filtra a eventos retransmitidos en español por esa
-                        plataforma (o "all"). Solo se listan plataformas que
-                        realmente tengan al menos una retransmisión en
-                        español para no mostrar opciones vacías.
+    Available querystring filters:
+      ?sport=<slug>     filters by sport (or "all").
+      ?platform=<slug>  filters to events broadcast in Spanish on that
+                        platform (or "all"). Only platforms that actually
+                        have at least one Spanish broadcast are listed
+                        to avoid empty options.
     """
     sports = Sport.objects.all()
     platforms = Platform.objects.filter(
@@ -33,7 +34,12 @@ def home(request):
     events_qs = (
         Event.objects.select_related("competition", "competition__sport")
         .prefetch_related("broadcasts__platform")
-        .all()
+        .exclude(
+            status=Event.STATUS_SCHEDULED,
+            start_datetime__gt=(
+                timezone.now() + timezone.timedelta(days=Event.UPCOMING_WINDOW_DAYS)
+            ),
+        )
     )
     if selected_sport_slug != "all":
         events_qs = events_qs.filter(competition__sport__slug=selected_sport_slug)
@@ -57,12 +63,12 @@ def home(request):
     upcoming.sort(key=lambda e: e.start_datetime)
     past.sort(key=lambda e: e.start_datetime, reverse=True)
 
-    # Eventos destacados para la franja superior (prioriza lo que está en
-    # directo ahora mismo; si no hay suficiente, rellena con lo más próximo).
+    # Featured strip (top banner): prioritises currently live events;
+    # fills up with the nearest upcoming ones if there aren't enough.
     featured = (live + upcoming)[:2]
 
-    # Panel de enlaces (columna derecha): mismo orden que la agenda de la
-    # izquierda, para que el anclaje "Ver enlaces" siempre quede a la vista.
+    # Links panel (right column): same order as the left-hand schedule
+    # so that the "Get links" anchor always stays in view.
     link_events = live + upcoming + past
 
     context = {

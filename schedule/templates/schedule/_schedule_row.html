@@ -7,7 +7,7 @@ un pelín de JS marca esta fila como seleccionada mientras esté activa.
 <div class="schedule-row is-{{ card_type }}" data-search="{{ event.title|lower }} {{ event.competition.name|lower }}" data-event-id="event-{{ event.id }}">
   <div class="schedule-row-when">
     {% if card_type == "live" %}
-      <span class="live-tag">● DIRECTO</span>
+      <span class="live-tag">● LIVE</span>
     {% elif card_type == "archive" %}
       <span class="archive-tag">{{ event.start_datetime|date:"d M"|upper }}</span>
     {% else %}
@@ -26,7 +26,7 @@ un pelín de JS marca esta fila como seleccionada mientras esté activa.
   </div>
 
   <a href="#event-{{ event.id }}" class="get-links-btn">
-    Ver enlaces
+    Get links
     {% include "schedule/_external_icon.html" %}
   </a>
 </div>

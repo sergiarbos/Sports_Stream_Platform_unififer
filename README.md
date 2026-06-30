@@ -1,187 +1,178 @@
-# Agregador de retransmisiones deportivas
+# Sports Broadcast Aggregator
 
-Te dice en qué plataforma puedes ver un evento deportivo (con
-comentarios en español), si está en directo ahora mismo, cuándo es si todavía
-no ha empezado, o si puedes verlo en diferido en caso de que ya haya
-terminado. Si un evento pasado no tiene repetición disponible en ningún
-sitio, simplemente no se muestra.
+Tells you on which platform you can watch a sporting event (with
+Spanish-language commentary), whether it is live right now, when it starts if
+it hasn't begun yet, or whether you can watch a replay if it has already
+finished. If a past event has no replay available anywhere, it is simply not
+shown.
 
-Proyecto Django pensado para ejecutarse primero en local. Más adelante (fase
-2) se podrá envolver en una app de Android Studio que consuma los mismos
-datos.
+Django project designed to run locally first. Later (phase 2) it can be
+wrapped in an Android Studio app that consumes the same data.
 
-## Índice
+## Table of contents
 
-1. [Reglas del proyecto](#reglas-del-proyecto)
-2. [Arquitectura](#arquitectura)
-3. [Instalación y ejecución en local](#instalación-y-ejecución-en-local)
-4. [APIs utilizadas: cuáles puedes publicar y cuáles no](#apis-utilizadas-cuáles-puedes-publicar-y-cuáles-no)
-5. [Aviso legal sobre DAZN / Movistar Plus+](#aviso-legal-sobre-dazn--movistar-plus)
-6. [Subir el proyecto a GitHub](#subir-el-proyecto-a-github)
-7. [Fase 2: app de Android](#fase-2-app-de-android)
+1. [Project rules](#project-rules)
+2. [Architecture](#architecture)
+3. [Local installation and setup](#local-installation-and-setup)
+4. [APIs used: which ones you can publish and which ones you cannot](#apis-used-which-ones-you-can-publish-and-which-ones-you-cannot)
+5. [Legal notice regarding DAZN / Movistar Plus+](#legal-notice-regarding-dazn--movistar-plus)
+6. [Pushing the project to GitHub](#pushing-the-project-to-github)
+7. [Phase 2: Android app](#phase-2-android-app)
 
-## Reglas del proyecto
+## Project rules
 
-Implementadas en `schedule/models.py` (propiedades `Event.is_visible` y
+Implemented in `schedule/models.py` (properties `Event.is_visible` and
 `Event.spanish_broadcasts`):
 
-1. Solo se listan eventos con **al menos una retransmisión en español**
-   (España o Latinoamérica).
-2. Si la retransmisión es en español de Latinoamérica, se muestra un
-   pequeño icono junto al nombre de la plataforma (`Broadcast.language ==
-   "es-LA"`).
-3. Eventos **futuros o en directo** → siempre visibles, con su fecha/hora
-   (sección "Próximos · calendario") o con la etiqueta "● DIRECTO".
-4. Eventos **pasados** → solo visibles si existe diferido/repetición
-   (`vod_available=True`) en alguna plataforma. Si no, se ocultan.
+1. Only events with **at least one Spanish-language broadcast** are listed
+   (Spain or Latin America).
+2. If the broadcast is in Latin American Spanish, a small icon is shown next
+   to the platform name (`Broadcast.language == "es-LA"`).
+3. **Upcoming or live** events → always visible, with their date/time
+   (section "Upcoming · schedule") or with the "● LIVE" badge.
+4. **Past** events → only visible if a replay/on-demand version is available
+   (`vod_available=True`) on some platform. Otherwise they are hidden.
 
-Deportes y competiciones incluidas de ejemplo: Fútbol (Champions League,
-Europa League, Mundial 2026, LaLiga, Premier League, Serie A, Bundesliga,
-Ligue 1), Baloncesto (NBA), Motor (F1, MotoGP), Tenis (Wimbledon) y Deportes
-de invierno (esquí alpino/slalom, salto de esquí, esquí de fondo).
+Sports and competitions included as examples: Football (Champions League,
+Europa League, 2026 World Cup, LaLiga, Premier League, Serie A, Bundesliga,
+Ligue 1), Basketball (NBA), Motorsport (F1, MotoGP), Tennis (Wimbledon) and
+Winter Sports (alpine/slalom skiing, ski jumping, cross-country skiing).
 
-## Arquitectura
+## Architecture
 
 ```
 streamsync_repo/
 ├── manage.py
 ├── requirements.txt
-├── .env.example          <- plantilla pública (SÍ se sube al repo)
-├── .gitignore             <- aquí está excluido el .env real
-├── streamsync/            <- configuración del proyecto (settings, urls)
-├── templates/base.html    <- plantilla compartida (cabecera, fuentes, CSS)
-├── static/css/style.css   <- toda la identidad visual
-└── schedule/               <- la app principal
+├── .env.example          <- public template (IS committed to the repo)
+├── .gitignore             <- the real .env is excluded here
+├── streamsync/            <- project configuration (settings, urls)
+├── templates/base.html    <- shared template (header, fonts, CSS)
+├── static/css/style.css   <- all visual identity
+└── schedule/               <- the main app
     ├── models.py           <- Sport, Competition, Platform, Event, Broadcast
-    ├── views.py            <- vista única que agrupa directo/próximos/diferido
-    ├── admin.py            <- para introducir/editar eventos a mano
-    ├── templates/schedule/  <- home.html + partials (tarjeta de evento, icono LatAm)
-    ├── services/            <- un adaptador por cada fuente de datos externa
-    │   ├── adapters.py      <- interfaz común (BaseSourceAdapter)
-    │   ├── jolpica_f1.py    <- REAL y funcional, F1, sin clave
-    │   ├── api_football.py  <- esqueleto, fútbol, requiere clave privada
-    │   ├── thesportsdb.py   <- esqueleto, NBA/MotoGP, clave pública de pruebas
-    │   └── api_tennis.py    <- esqueleto, tenis, requiere clave privada
+    ├── views.py            <- single view that groups live/upcoming/on-demand
+    ├── admin.py            <- for adding/editing events manually
+    ├── templates/schedule/  <- home.html + partials (event card, LatAm icon)
+    ├── services/            <- one adapter per external data source
+    │   ├── adapters.py      <- common interface (BaseSourceAdapter)
+    │   ├── jolpica_f1.py    <- REAL and functional, F1, no key required
+    │   ├── api_football.py  <- skeleton, football, requires a private key
+    │   ├── thesportsdb.py   <- skeleton, NBA/MotoGP, public test key
+    │   └── api_tennis.py    <- skeleton, tennis, requires a private key
     └── management/commands/
-        ├── seed_demo_data.py     <- datos de ejemplo (no necesita ninguna API)
-        └── import_f1_calendar.py <- demuestra el adaptador de F1 funcionando de verdad
+        ├── seed_demo_data.py     <- demo data (no API required)
+        └── import_f1_calendar.py <- demonstrates the F1 adapter working for real
 ```
 
-Cada fuente de datos (API de pago, API gratuita, o algo que tú añadas más
-adelante) es un **adaptador** independiente con un único método
-`fetch_events()`. Así puedes añadir o cambiar fuentes sin tocar las vistas
-ni las plantillas: solo conectas el resultado del adaptador con
-`Event.objects.update_or_create(...)`, tal como hace
-`import_f1_calendar.py`.
+Each data source (paid API, free API, or anything you add later) is an
+independent **adapter** with a single `fetch_events()` method. This lets you
+add or swap sources without touching the views or templates: you simply feed
+the adapter's output into `Event.objects.update_or_create(...)`, exactly as
+`import_f1_calendar.py` does.
 
-## Instalación y ejecución en local
+## Local installation and setup
 
-Necesitas Python 3.11+.
+You need Python 3.11+.
 
 ```bash
-git clone <tu-repositorio>
+git clone <your-repository>
 cd streamsync
 
 python -m venv venv
-source venv/bin/activate        # En Windows: venv\Scripts\activate
+source venv/bin/activate        # On Windows: venv\Scripts\activate
 
 pip install -r requirements.txt
 
-cp .env.example .env            # y rellena las claves que quieras usar (opcional al principio)
+cp .env.example .env            # then fill in the keys you want to use (optional at first)
 
 python manage.py migrate
-python manage.py seed_demo_data # crea deportes, plataformas y ~19 eventos de ejemplo
+python manage.py seed_demo_data # creates sports, platforms and ~19 demo events
 
 python manage.py runserver
 ```
 
-Abre `http://127.0.0.1:8000/` y ya deberías ver la web funcionando con datos
-de ejemplo, sin haber configurado ninguna API todavía.
+Open `http://127.0.0.1:8000/` and you should see the site running with demo
+data, without having configured any API yet.
 
-Para entrar al panel de administración y añadir/editar eventos a mano:
+To access the admin panel and add/edit events manually:
 
 ```bash
 python manage.py createsuperuser
 ```
 
-y entra en `http://127.0.0.1:8000/admin/`.
+then go to `http://127.0.0.1:8000/admin/`.
 
-Para probar que el sistema también funciona con una API real (no requiere
-ninguna clave):
+To verify the system also works with a real API (no key required):
 
 ```bash
 python manage.py import_f1_calendar
 ```
 
-## APIs utilizadas: cuáles puedes publicar y cuáles no
+## APIs used: which ones you can publish and which ones you cannot
 
-DAZN y Movistar Plus+ no tienen una API pública, así que la programación se
-reconstruye combinando varias APIs deportivas reales que sí son abiertas,
-más lo que añadas a mano desde `/admin/`. Resumen:
+Neither DAZN nor Movistar Plus+ offers a public API for their schedules. The
+only way to pull that data directly from their sites would be through
+*scraping* (reading their HTML), and that:
 
-| Fuente | Cubre | ¿Clave necesaria? | ¿Se puede publicar en GitHub? |
+- may violate their Terms of Service,
+- breaks every time they redesign their site,
+- is not something to automate without first reviewing their legal conditions
+  yourself.
+
+For those reasons this project does **not** include a ready-to-use
+DAZN/Movistar+ scraper. Instead:
+
+- Use the real sports APIs in the table above to find out **what** the event
+  is and **when** it takes place.
+- You add manually, via `/admin/`, **which platform** it can be watched on
+  (information you look up yourself on their websites/apps, as you normally
+  would).
+- If you ever decide to write your own scraper under your own responsibility,
+  the place it would fit into the architecture is `ManualSourceAdapter` in
+  `schedule/services/adapters.py`.
+
+| Source | Covers | Key required? | Safe to publish on GitHub? |
 |---|---|---|---|
-| **Jolpica F1** (sucesora de Ergast) | Calendario de F1 | No | ✅ Sí — no hay ninguna clave, es 100% abierta |
-| **TheSportsDB** | NBA, MotoGP | Clave de pruebas pública: `3` | ✅ Sí, esa clave de pruebas es oficialmente pública y compartida. Si en el futuro pasas a una clave Patreon de pago (más peticiones, datos en directo), esa ya **no** se publica |
-| **API-Football** | Champions, Europa League, Mundial, LaLiga, Premier, Serie A, Bundesliga, Ligue 1 | Clave personal (capa gratuita: 100 peticiones/día) | ❌ No — identifica tu cuenta y tu cuota. Solo en `.env` |
-| **Proveedor de tenis** (a elegir, ej. api-tennis.com) | Wimbledon, ATP, WTA | Clave personal | ❌ No — solo en `.env` |
-| Deportes de invierno (esquí alpino, salto, fondo) | — | — | No hay una API gratuita decente; se introducen a mano desde `/admin/` (adaptador `ManualSourceAdapter`) |
+| **Jolpica F1** (successor to Ergast) | F1 calendar | No | ✅ Yes — no key at all, 100% open |
+| **TheSportsDB** | NBA, MotoGP | Public test key: `3` | ✅ Yes, that test key is officially public and shared. If you later upgrade to a paid Patreon key (more requests, live data), that one **must not** be published |
+| **API-Football** | Champions, Europa League, World Cup, LaLiga, Premier, Serie A, Bundesliga, Ligue 1 | Personal key (free tier: 100 requests/day) | ❌ No — it identifies your account and quota. Keep it in `.env` only |
+| **Tennis provider** (your choice, e.g. api-tennis.com) | Wimbledon, ATP, WTA | Personal key | ❌ No — `.env` only |
+| Winter sports (alpine skiing, ski jumping, cross-country) | — | — | No decent free API exists; events are added manually via `/admin/` (`ManualSourceAdapter`) |
 
-Regla general: **cualquier clave que identifique tu cuenta personal o tu
-cuota de peticiones es privada** y va solo en tu `.env` real (que está en
-`.gitignore` y nunca se sube). Las claves de pruebas que el propio proveedor
-publica como compartidas (como el `3` de TheSportsDB) sí son seguras de
-tener en el repositorio, aunque igualmente las dejamos en `.env` por
-limpieza y para poder cambiarlas fácilmente.
+General rule: **any key that identifies your personal account or your request
+quota is private** and must go only in your real `.env` file (which is in
+`.gitignore` and is never committed). Test keys that the provider itself
+publishes as shared (like TheSportsDB's `3`) are safe to keep in the
+repository, though we still put them in `.env` for cleanliness and easy
+rotation.
 
-## Aviso legal sobre DAZN / Movistar Plus+
-
-Ninguna de las dos plataformas ofrece una API pública para consultar su
-programación. La única forma de sacar esos datos directamente de sus webs
-sería mediante *scraping* (leer su HTML), y eso:
-
-- puede incumplir sus Términos de Servicio,
-- se rompe cada vez que cambian el diseño de la web,
-- no es algo que conviniera automatizar sin que tú decidas hacerlo y revises
-  antes sus condiciones legales.
-
-Por eso este proyecto **no** incluye un scraper de DAZN/Movistar+ listo
-para usar. En su lugar:
-
-- Usa las APIs deportivas reales de la tabla anterior para saber **qué**
-  evento es y **cuándo** es.
-- Tú añades manualmente, desde `/admin/`, **en qué plataforma** se puede
-  ver (eso lo consultas tú mismo en sus webs/apps, como haces normalmente).
-- Si en el futuro decides programar tú mismo un scraper bajo tu propia
-  responsabilidad, el sitio donde encajaría en la arquitectura es
-  `ManualSourceAdapter` en `schedule/services/adapters.py`.
-
-## Subir el proyecto a GitHub
+## Pushing the project to GitHub
 
 ```bash
 git init
 git add .
-git commit -m "Primera versión"
+git commit -m "First version"
 git branch -M main
-git remote add origin <url-de-tu-repositorio>
+git remote add origin <your-repository-url>
 git push -u origin main
 ```
 
-Antes de subirlo, comprueba que `.env` (tu archivo real, con tus claves) NO
-aparece en `git status`. Si aparece, revisa que `.gitignore` esté en la raíz
-del proyecto.
+Before pushing, check that `.env` (your real file, with your keys) does NOT
+appear in `git status`. If it does, make sure `.gitignore` is at the project
+root.
 
-## Fase 2: app de Android
+## Phase 2: Android app
 
-Tal como se pidió, esta primera entrega es solo la web. Cuando llegue el
-momento de la app en Android Studio, lo natural es:
+As requested, this first delivery is the web only. When it is time for the
+Android Studio app, the natural path is:
 
-1. Añadir una pequeña API REST de solo lectura encima de estos mismos
-   modelos (con Django REST Framework), reutilizando toda la lógica de
-   `Event.is_visible` que ya existe.
-2. Consumir esa API desde la app Android con Retrofit + Kotlin, mostrando
-   las mismas tres secciones (directo / próximos / diferido).
+1. Add a small read-only REST API on top of these same models (using Django
+   REST Framework), reusing all the `Event.is_visible` logic that already
+   exists.
+2. Consume that API from the Android app with Retrofit + Kotlin, showing the
+   same three sections (live / upcoming / on demand).
 
-No es necesario decidir nada de esto ahora: los modelos y la lógica de
-negocio ya están separados de las plantillas, así que añadir esa API más
-adelante no debería requerir tocar lo que ya funciona.
+There is no need to decide any of this now: the models and business logic are
+already decoupled from the templates, so adding that API later should not
+require touching anything that already works.

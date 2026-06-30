@@ -4,7 +4,7 @@
 <div class="container">
 
   <nav class="sport-tabs">
-    <a href="?sport=all&amp;platform={{ selected_platform_slug }}" class="sport-tab {% if selected_sport_slug == 'all' %}active{% endif %}">Todos</a>
+    <a href="?sport=all&amp;platform={{ selected_platform_slug }}" class="sport-tab {% if selected_sport_slug == 'all' %}active{% endif %}">All</a>
     {% for sport in sports %}
       <a href="?sport={{ sport.slug }}&amp;platform={{ selected_platform_slug }}" class="sport-tab {% if selected_sport_slug == sport.slug %}active{% endif %}">
         {{ sport.icon }} {{ sport.name }}
@@ -14,7 +14,7 @@
 
   {% if platforms %}
   <nav class="platform-tabs">
-    <a href="?sport={{ selected_sport_slug }}&amp;platform=all" class="platform-tab {% if selected_platform_slug == 'all' %}active{% endif %}">Todas las plataformas</a>
+    <a href="?sport={{ selected_sport_slug }}&amp;platform=all" class="platform-tab {% if selected_platform_slug == 'all' %}active{% endif %}">All platforms</a>
     {% for platform in platforms %}
       <a href="?sport={{ selected_sport_slug }}&amp;platform={{ platform.slug }}" class="platform-tab {% if selected_platform_slug == platform.slug %}active{% endif %}">
         <span class="platform-dot" style="background:{{ platform.color }}"></span>
@@ -39,35 +39,35 @@
       <div class="schedule-section" id="live-section">
         {% if live_events %}
           <div class="section-header live-header">
-            <span class="live-dot"></span> En directo ahora
+            <span class="live-dot"></span> Live now
           </div>
           {% for event in live_events %}
             {% include "schedule/_schedule_row.html" with card_type="live" %}
           {% endfor %}
         {% else %}
-          <div class="live-empty-strip"><span class="live-dot-static"></span> Nada en directo ahora mismo — mira los próximos eventos.</div>
+          <div class="live-empty-strip"><span class="live-dot-static"></span> Nothing live right now — check upcoming events.</div>
         {% endif %}
       </div>
 
       <div class="schedule-section">
-        <div class="section-header">Próximos · calendario</div>
+        <div class="section-header">Upcoming · schedule</div>
         {% if upcoming_events %}
           {% for event in upcoming_events %}
             {% include "schedule/_schedule_row.html" with card_type="upcoming" %}
           {% endfor %}
         {% else %}
-          <div class="empty-note">No hay próximos eventos programados para este filtro todavía.</div>
+          <div class="empty-note">No upcoming events scheduled for this filter yet.</div>
         {% endif %}
       </div>
 
       <div class="schedule-section">
-        <div class="section-header">Disponibles en diferido · últimos {{ archive_window_days }} días</div>
+        <div class="section-header">On demand · last {{ archive_window_days }} days</div>
         {% if past_events %}
           {% for event in past_events %}
             {% include "schedule/_schedule_row.html" with card_type="archive" %}
           {% endfor %}
         {% else %}
-          <div class="empty-note">No hay eventos de los últimos {{ archive_window_days }} días con repetición disponible en español para este filtro.</div>
+          <div class="empty-note">No events from the last {{ archive_window_days }} days with a replay available in Spanish for this filter.</div>
         {% endif %}
       </div>
 
@@ -75,8 +75,8 @@
 
     <aside class="links-col">
       <div class="links-col-head">
-        <span class="links-col-title">Panel de enlaces</span>
-        <span class="links-col-sub">Pulsa "Ver enlaces" en la agenda o elige directamente la plataforma</span>
+        <span class="links-col-title">Links panel</span>
+        <span class="links-col-sub">Click "Get links" on the schedule or pick a platform directly</span>
       </div>
       <div class="links-col-body">
         {% if link_events %}
@@ -85,10 +85,10 @@
           {% endfor %}
           <div class="links-placeholder">
             <span class="links-placeholder-icon">🔗</span>
-            Elige un evento y pulsa <strong>"Ver enlaces"</strong> para ver aquí sus enlaces directos.
+            Choose an event and click <strong>"Get links"</strong> to see its direct links here.
           </div>
         {% else %}
-          <div class="empty-note">No hay enlaces disponibles para este filtro todavía.</div>
+          <div class="empty-note">No links available for this filter yet.</div>
         {% endif %}
       </div>
     </aside>
