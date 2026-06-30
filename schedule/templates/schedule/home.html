@@ -4,13 +4,25 @@
 <div class="container">
 
   <nav class="sport-tabs">
-    <a href="?sport=all" class="sport-tab {% if selected_sport_slug == 'all' %}active{% endif %}">Todos</a>
+    <a href="?sport=all&amp;platform={{ selected_platform_slug }}" class="sport-tab {% if selected_sport_slug == 'all' %}active{% endif %}">Todos</a>
     {% for sport in sports %}
-      <a href="?sport={{ sport.slug }}" class="sport-tab {% if selected_sport_slug == sport.slug %}active{% endif %}">
+      <a href="?sport={{ sport.slug }}&amp;platform={{ selected_platform_slug }}" class="sport-tab {% if selected_sport_slug == sport.slug %}active{% endif %}">
         {{ sport.icon }} {{ sport.name }}
       </a>
     {% endfor %}
   </nav>
+
+  {% if platforms %}
+  <nav class="platform-tabs">
+    <a href="?sport={{ selected_sport_slug }}&amp;platform=all" class="platform-tab {% if selected_platform_slug == 'all' %}active{% endif %}">Todas las plataformas</a>
+    {% for platform in platforms %}
+      <a href="?sport={{ selected_sport_slug }}&amp;platform={{ platform.slug }}" class="platform-tab {% if selected_platform_slug == platform.slug %}active{% endif %}">
+        <span class="platform-dot" style="background:{{ platform.color }}"></span>
+        {{ platform.name }}
+      </a>
+    {% endfor %}
+  </nav>
+  {% endif %}
 
   {% if featured_events %}
   <section class="featured-strip">

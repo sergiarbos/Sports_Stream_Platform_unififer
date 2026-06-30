@@ -220,6 +220,43 @@ button, input { font-family: inherit; }
   border-color: var(--text-primary);
 }
 
+/* ---------- Platform tabs ---------- */
+
+.platform-tabs {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+  margin-bottom: 22px;
+}
+
+.platform-tab {
+  border: 1px solid var(--line);
+  background: var(--surface-sunken);
+  color: var(--text-muted);
+  padding: 6px 13px;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.platform-tab:hover { border-color: var(--accent-upcoming); color: var(--text-primary); }
+
+.platform-tab.active {
+  background: var(--surface-raised);
+  color: var(--text-primary);
+  border-color: var(--text-primary);
+}
+
+.platform-tab .platform-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
 /* ---------- Destacados (sustituye las imágenes del wireframe) ---------- */
 
 .featured-strip {

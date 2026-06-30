@@ -1,7 +1,6 @@
 from django.shortcuts import render
-from django.utils import timezone
 
-from .models import Event, Sport
+from .models import Event, Platform, Sport
 
 
 def home(request):
@@ -15,22 +14,34 @@ def home(request):
       2. Eventos futuros o en directo -> siempre visibles, con su horario.
       3. Eventos pasados -> solo visibles si tienen repetición/VOD Y ocurrieron
          dentro de los últimos Event.ARCHIVE_WINDOW_DAYS días.
+
+    Filtros disponibles vía querystring:
+      ?sport=<slug>     filtra por deporte (o "all").
+      ?platform=<slug>  filtra a eventos retransmitidos en español por esa
+                        plataforma (o "all"). Solo se listan plataformas que
+                        realmente tengan al menos una retransmisión en
+                        español para no mostrar opciones vacías.
     """
     sports = Sport.objects.all()
+    platforms = Platform.objects.filter(
+        broadcasts__language__startswith="es"
+    ).distinct().order_by("name")
+
     selected_sport_slug = request.GET.get("sport", "all")
+    selected_platform_slug = request.GET.get("platform", "all")
 
     events_qs = (
         Event.objects.select_related("competition", "competition__sport")
         .prefetch_related("broadcasts__platform")
-        .exclude(
-            status=Event.STATUS_SCHEDULED,
-            start_datetime__gt=(
-                timezone.now() + timezone.timedelta(days=Event.UPCOMING_WINDOW_DAYS)
-            ),
-        )
+        .all()
     )
     if selected_sport_slug != "all":
         events_qs = events_qs.filter(competition__sport__slug=selected_sport_slug)
+    if selected_platform_slug != "all":
+        events_qs = events_qs.filter(
+            broadcasts__platform__slug=selected_platform_slug,
+            broadcasts__language__startswith="es",
+        ).distinct()
 
     live, upcoming, past = [], [], []
     for event in events_qs:
@@ -56,7 +67,9 @@ def home(request):
 
     context = {
         "sports": sports,
+        "platforms": platforms,
         "selected_sport_slug": selected_sport_slug,
+        "selected_platform_slug": selected_platform_slug,
         "live_events": live,
         "upcoming_events": upcoming,
         "past_events": past,
