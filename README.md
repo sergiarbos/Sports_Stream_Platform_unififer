@@ -30,7 +30,7 @@ Implemented in `schedule/models.py` (properties `Event.is_visible` and
    to the platform name (`Broadcast.language == "es-LA"`).
 3. **Upcoming or live** events → always visible (up to 365 days in the future), with their date/time
    (section "Upcoming · schedule") or with the "● LIVE" badge.
-4. **Past** events → visible by default for **14 days** (in the "On Demand" section). If a replay/on-demand version is explicitly confirmed to be available (`vod_available=True`) on a platform, they will remain visible **indefinitely**, bypassing the 14-day limit. Otherwise, they disappear after 14 days.
+4. **Past** events → visible by default for **14 days** (in the "On Demand" section). After 14 days, they disappear automatically without exception.
 
 Sports and competitions included as examples: Football (Champions League,
 Europa League, 2026 World Cup, LaLiga, Premier League, Serie A, Bundesliga,

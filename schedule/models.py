@@ -167,7 +167,7 @@ class Event(models.Model):
         if not broadcasts.exists():
             return False
         if self.status == Event.STATUS_FINISHED:
-            return self.is_within_archive_window or broadcasts.filter(vod_available=True).exists()
+            return self.is_within_archive_window
         return True
 
     @property
