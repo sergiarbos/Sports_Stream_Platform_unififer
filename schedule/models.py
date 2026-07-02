@@ -113,11 +113,11 @@ class Event(models.Model):
 
     # Number of days a finished event remains in "On demand" before
     # disappearing from the listing (even if a VOD is still available).
-    ARCHIVE_WINDOW_DAYS = 7
+    ARCHIVE_WINDOW_DAYS = 14
 
     # Maximum forward horizon: scheduled events further away than this
     # number of days are hidden from the schedule (prevents infinite lists).
-    UPCOMING_WINDOW_DAYS = 30
+    UPCOMING_WINDOW_DAYS = 365
 
     competition = models.ForeignKey(Competition, on_delete=models.CASCADE, related_name="events")
     title = models.CharField(
@@ -159,8 +159,7 @@ class Event(models.Model):
         """
         Core visibility rule:
         - If the event is upcoming or live -> always shown (with its scheduled time).
-        - If the event has already finished -> only shown if AT LEAST one
-          Spanish-language broadcast has a replay/VOD available, AND the
+        - If the event has already finished -> only shown if the
           event occurred within the last ARCHIVE_WINDOW_DAYS days
           (after that window it disappears from "On demand").
         """
@@ -168,7 +167,7 @@ class Event(models.Model):
         if not broadcasts.exists():
             return False
         if self.status == Event.STATUS_FINISHED:
-            return broadcasts.filter(vod_available=True).exists() and self.is_within_archive_window
+            return self.is_within_archive_window or broadcasts.filter(vod_available=True).exists()
         return True
 
     @property

@@ -30,6 +30,7 @@ from django.utils import timezone
 from schedule.models import Broadcast, Competition, Event, Platform
 from schedule.services.jolpica_f1 import JolpicaF1Adapter
 from schedule.services.thesportsdb import TheSportsDBAdapter
+from schedule.services.static_calendar import StaticCalendarAdapter
 
 # ---------------------------------------------------------------------------
 # Competition slug → [(platform_slug, language, is_live_stream)]
@@ -52,8 +53,6 @@ BROADCAST_MAP = {
     "ligue-1":          [("dazn", ES, True)],
     "mundial-2026":     [
         ("dazn", ES, True),
-        ("la-1", ES, True),         # Free-to-air on La 1 TVE (all WC 2026 matches)
-        ("rtve-play", ES, True),
         ("vix", LA, True),
     ],
     # Basketball
@@ -75,8 +74,8 @@ BROADCAST_MAP = {
 IMPORT_PLAN = [
     # F1 — Jolpica
     ("f1", "jolpica_f1", {"season": "2026"}),
-    # Motorsport — TheSportsDB
-    ("motogp", "thesportsdb", {"competition_slug": "motogp"}),
+    # Motorsport — Static Calendar (to bypass API limits)
+    ("motogp", "static_calendar", {"competition_slug": "motogp"}),
     # Football — TheSportsDB
     ("champions-league", "thesportsdb", {"competition_slug": "champions-league"}),
     ("europa-league",    "thesportsdb", {"competition_slug": "europa-league"}),
@@ -85,7 +84,8 @@ IMPORT_PLAN = [
     ("serie-a",          "thesportsdb", {"competition_slug": "serie-a"}),
     ("bundesliga",       "thesportsdb", {"competition_slug": "bundesliga"}),
     ("ligue-1",          "thesportsdb", {"competition_slug": "ligue-1"}),
-    ("mundial-2026",     "thesportsdb", {"competition_slug": "mundial-2026"}),
+    # World Cup — Static Calendar (to bypass API limits)
+    ("mundial-2026",     "static_calendar", {"competition_slug": "mundial-2026"}),
     # Basketball — TheSportsDB
     ("nba",              "thesportsdb", {"competition_slug": "nba"}),
     # Tennis — TheSportsDB
@@ -121,6 +121,7 @@ class Command(BaseCommand):
         adapters = {
             "jolpica_f1": JolpicaF1Adapter(),
             "thesportsdb": TheSportsDBAdapter(),
+            "static_calendar": StaticCalendarAdapter(),
         }
 
         total_imported = 0

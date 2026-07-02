@@ -28,10 +28,9 @@ Implemented in `schedule/models.py` (properties `Event.is_visible` and
    (Spain or Latin America).
 2. If the broadcast is in Latin American Spanish, a small icon is shown next
    to the platform name (`Broadcast.language == "es-LA"`).
-3. **Upcoming or live** events → always visible, with their date/time
+3. **Upcoming or live** events → always visible (up to 365 days in the future), with their date/time
    (section "Upcoming · schedule") or with the "● LIVE" badge.
-4. **Past** events → only visible if a replay/on-demand version is available
-   (`vod_available=True`) on some platform. Otherwise they are hidden.
+4. **Past** events → visible by default for **14 days** (in the "On Demand" section). If a replay/on-demand version is explicitly confirmed to be available (`vod_available=True`) on a platform, they will remain visible **indefinitely**, bypassing the 14-day limit. Otherwise, they disappear after 14 days.
 
 Sports and competitions included as examples: Football (Champions League,
 Europa League, 2026 World Cup, LaLiga, Premier League, Serie A, Bundesliga,
@@ -58,10 +57,12 @@ streamsync_repo/
     │   ├── adapters.py      <- common interface (BaseSourceAdapter)
     │   ├── jolpica_f1.py    <- REAL and functional, F1, no key required
     │   ├── api_football.py  <- skeleton, football, requires a private key
-    │   ├── thesportsdb.py   <- skeleton, NBA/MotoGP, public test key
+    │   ├── thesportsdb.py   <- skeleton, NBA, public test key
+    │   ├── static_calendar.py <- static local calendar for MotoGP and World Cup to bypass API limits
     │   └── api_tennis.py    <- skeleton, tennis, requires a private key
     └── management/commands/
         ├── seed_demo_data.py     <- demo data (no API required)
+        ├── import_all_sports.py  <- imports events from all configured APIs and static calendars
         └── import_f1_calendar.py <- demonstrates the F1 adapter working for real
 ```
 
@@ -135,8 +136,9 @@ DAZN/Movistar+ scraper. Instead:
 | Source | Covers | Key required? | Safe to publish on GitHub? |
 |---|---|---|---|
 | **Jolpica F1** (successor to Ergast) | F1 calendar | No | ✅ Yes — no key at all, 100% open |
-| **TheSportsDB** | NBA, MotoGP | Public test key: `3` | ✅ Yes, that test key is officially public and shared. If you later upgrade to a paid Patreon key (more requests, live data), that one **must not** be published |
-| **API-Football** | Champions, Europa League, World Cup, LaLiga, Premier, Serie A, Bundesliga, Ligue 1 | Personal key (free tier: 100 requests/day) | ❌ No — it identifies your account and quota. Keep it in `.env` only |
+| **TheSportsDB** | NBA | Public test key: `3` | ✅ Yes, that test key is officially public and shared. If you later upgrade to a paid Patreon key (more requests, live data), that one **must not** be published |
+| **API-Football** | Champions, Europa League, LaLiga, Premier, Serie A, Bundesliga, Ligue 1 | Personal key (free tier: 100 requests/day) | ❌ No — it identifies your account and quota. Keep it in `.env` only |
+| **Static Calendar** | MotoGP, 2026 World Cup | No | ✅ Yes — local Python dictionary to bypass TheSportsDB free tier limitations |
 | **Tennis provider** (your choice, e.g. api-tennis.com) | Wimbledon, ATP, WTA | Personal key | ❌ No — `.env` only |
 | Winter sports (alpine skiing, ski jumping, cross-country) | — | — | No decent free API exists; events are added manually via `/admin/` (`ManualSourceAdapter`) |
 
