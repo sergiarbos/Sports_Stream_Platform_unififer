@@ -1,0 +1,21 @@
+[
+    {"title": "España vs Austria", "start": "2026-07-02T21:00:00", "round": "Dieciseisavos de final", "home": "España", "away": "Austria"},
+    {"title": "Portugal vs Croacia", "start": "2026-07-03T01:00:00", "round": "Dieciseisavos de final", "home": "Portugal", "away": "Croacia"},
+    {"title": "Suiza vs Argelia", "start": "2026-07-03T05:00:00", "round": "Dieciseisavos de final", "home": "Suiza", "away": "Argelia"},
+    {"title": "Australia vs Egipto", "start": "2026-07-03T20:00:00", "round": "Dieciseisavos de final", "home": "Australia", "away": "Egipto"},
+    {"title": "Argentina vs Cabo Verde", "start": "2026-07-04T00:00:00", "round": "Dieciseisavos de final", "home": "Argentina", "away": "Cabo Verde"},
+    {"title": "Colombia vs Ghana", "start": "2026-07-04T03:30:00", "round": "Dieciseisavos de final", "home": "Colombia", "away": "Ghana"},
+    {"title": "Canadá vs Marruecos", "start": "2026-07-04T19:00:00", "round": "Octavos de final", "home": "Canadá", "away": "Marruecos"},
+    {"title": "Paraguay vs Francia", "start": "2026-07-04T23:00:00", "round": "Octavos de final", "home": "Paraguay", "away": "Francia"},
+    {"title": "Brasil vs Noruega", "start": "2026-07-05T22:00:00", "round": "Octavos de final", "home": "Brasil", "away": "Noruega"},
+    {"title": "México vs Inglaterra", "start": "2026-07-06T02:00:00", "round": "Octavos de final", "home": "México", "away": "Inglaterra"},
+    {"title": "Estados Unidos vs Bélgica", "start": "2026-07-07T02:00:00", "round": "Octavos de final", "home": "Estados Unidos", "away": "Bélgica"},
+    {"title": "TBD vs TBD", "start": "2026-07-07T18:00:00", "round": "Octavos de final", "home": "TBD", "away": "TBD"},
+    {"title": "TBD vs TBD", "start": "2026-07-07T22:00:00", "round": "Octavos de final", "home": "TBD", "away": "TBD"},
+    {"title": "TBD vs TBD", "start": "2026-07-09T22:00:00", "round": "Cuartos de final", "home": "TBD", "away": "TBD"},
+    {"title": "TBD vs TBD", "start": "2026-07-10T21:00:00", "round": "Cuartos de final", "home": "TBD", "away": "TBD"},
+    {"title": "TBD vs TBD", "start": "2026-07-11T23:00:00", "round": "Cuartos de final", "home": "TBD", "away": "TBD"},
+    {"title": "TBD vs TBD", "start": "2026-07-12T03:00:00", "round": "Cuartos de final", "home": "TBD", "away": "TBD"},
+    {"title": "TBD vs TBD", "start": "2026-07-14T21:00:00", "round": "Semifinal", "home": "TBD", "away": "TBD"},
+    {"title": "TBD vs TBD", "start": "2026-07-15T21:00:00", "round": "Semifinal", "home": "TBD", "away": "TBD"}
+]

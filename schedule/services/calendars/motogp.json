@@ -1,0 +1,302 @@
+[
+    {
+        "title": "Gp De Alemania (Sachsenring) - Libres 1 (FP1)",
+        "start": "2026-07-10T10:45:00",
+        "round": "Pr\u00e1ctica"
+    },
+    {
+        "title": "Gp De Alemania (Sachsenring) - Pr\u00e1ctica",
+        "start": "2026-07-10T15:00:00",
+        "round": "Pr\u00e1ctica"
+    },
+    {
+        "title": "Gp De Alemania (Sachsenring) - Libres 2 (FP2)",
+        "start": "2026-07-11T10:10:00",
+        "round": "Pr\u00e1ctica"
+    },
+    {
+        "title": "Gp De Alemania (Sachsenring) - Carrera Sprint",
+        "start": "2026-07-11T15:00:00",
+        "round": "Sprint"
+    },
+    {
+        "title": "Gp De Alemania (Sachsenring) - Carrera Principal",
+        "start": "2026-07-12T14:00:00",
+        "round": "Carrera"
+    },
+    {
+        "title": "Gp De Gran Breta\u00f1a (Silverstone) - Libres 1 (FP1)",
+        "start": "2026-07-31T11:45:00",
+        "round": "Pr\u00e1ctica"
+    },
+    {
+        "title": "Gp De Gran Breta\u00f1a (Silverstone) - Pr\u00e1ctica",
+        "start": "2026-07-31T16:00:00",
+        "round": "Pr\u00e1ctica"
+    },
+    {
+        "title": "Gp De Gran Breta\u00f1a (Silverstone) - Libres 2 (FP2)",
+        "start": "2026-08-01T11:10:00",
+        "round": "Pr\u00e1ctica"
+    },
+    {
+        "title": "Gp De Gran Breta\u00f1a (Silverstone) - Carrera Sprint",
+        "start": "2026-08-01T16:00:00",
+        "round": "Sprint"
+    },
+    {
+        "title": "Gp De Gran Breta\u00f1a (Silverstone) - Carrera Principal",
+        "start": "2026-08-02T14:00:00",
+        "round": "Carrera"
+    },
+    {
+        "title": "Gp De Arag\u00f3n (Motorland) - Libres 1 (FP1)",
+        "start": "2026-08-28T10:45:00",
+        "round": "Pr\u00e1ctica"
+    },
+    {
+        "title": "Gp De Arag\u00f3n (Motorland) - Pr\u00e1ctica",
+        "start": "2026-08-28T15:00:00",
+        "round": "Pr\u00e1ctica"
+    },
+    {
+        "title": "Gp De Arag\u00f3n (Motorland) - Libres 2 (FP2)",
+        "start": "2026-08-29T10:10:00",
+        "round": "Pr\u00e1ctica"
+    },
+    {
+        "title": "Gp De Arag\u00f3n (Motorland) - Carrera Sprint",
+        "start": "2026-08-29T15:00:00",
+        "round": "Sprint"
+    },
+    {
+        "title": "Gp De Arag\u00f3n (Motorland) - Carrera Principal",
+        "start": "2026-08-30T14:00:00",
+        "round": "Carrera"
+    },
+    {
+        "title": "Gp De San Marino (Misano) - Libres 1 (FP1)",
+        "start": "2026-09-11T10:45:00",
+        "round": "Pr\u00e1ctica"
+    },
+    {
+        "title": "Gp De San Marino (Misano) - Pr\u00e1ctica",
+        "start": "2026-09-11T15:00:00",
+        "round": "Pr\u00e1ctica"
+    },
+    {
+        "title": "Gp De San Marino (Misano) - Libres 2 (FP2)",
+        "start": "2026-09-12T10:10:00",
+        "round": "Pr\u00e1ctica"
+    },
+    {
+        "title": "Gp De San Marino (Misano) - Carrera Sprint",
+        "start": "2026-09-12T15:00:00",
+        "round": "Sprint"
+    },
+    {
+        "title": "Gp De San Marino (Misano) - Carrera Principal",
+        "start": "2026-09-13T14:00:00",
+        "round": "Carrera"
+    },
+    {
+        "title": "Gp De Austria (Red Bull Ring) - Libres 1 (FP1)",
+        "start": "2026-09-18T10:45:00",
+        "round": "Pr\u00e1ctica"
+    },
+    {
+        "title": "Gp De Austria (Red Bull Ring) - Pr\u00e1ctica",
+        "start": "2026-09-18T15:00:00",
+        "round": "Pr\u00e1ctica"
+    },
+    {
+        "title": "Gp De Austria (Red Bull Ring) - Libres 2 (FP2)",
+        "start": "2026-09-19T10:10:00",
+        "round": "Pr\u00e1ctica"
+    },
+    {
+        "title": "Gp De Austria (Red Bull Ring) - Carrera Sprint",
+        "start": "2026-09-19T15:00:00",
+        "round": "Sprint"
+    },
+    {
+        "title": "Gp De Austria (Red Bull Ring) - Carrera Principal",
+        "start": "2026-09-20T14:00:00",
+        "round": "Carrera"
+    },
+    {
+        "title": "Gp De Jap\u00f3n (Motegi) - Libres 1 (FP1)",
+        "start": "2026-10-02T03:45:00",
+        "round": "Pr\u00e1ctica"
+    },
+    {
+        "title": "Gp De Jap\u00f3n (Motegi) - Pr\u00e1ctica",
+        "start": "2026-10-02T08:00:00",
+        "round": "Pr\u00e1ctica"
+    },
+    {
+        "title": "Gp De Jap\u00f3n (Motegi) - Libres 2 (FP2)",
+        "start": "2026-10-03T03:10:00",
+        "round": "Pr\u00e1ctica"
+    },
+    {
+        "title": "Gp De Jap\u00f3n (Motegi) - Carrera Sprint",
+        "start": "2026-10-03T08:00:00",
+        "round": "Sprint"
+    },
+    {
+        "title": "Gp De Jap\u00f3n (Motegi) - Carrera Principal",
+        "start": "2026-10-04T07:00:00",
+        "round": "Carrera"
+    },
+    {
+        "title": "Gp De Indonesia (Mandalika) - Libres 1 (FP1)",
+        "start": "2026-10-16T04:45:00",
+        "round": "Pr\u00e1ctica"
+    },
+    {
+        "title": "Gp De Indonesia (Mandalika) - Pr\u00e1ctica",
+        "start": "2026-10-16T09:00:00",
+        "round": "Pr\u00e1ctica"
+    },
+    {
+        "title": "Gp De Indonesia (Mandalika) - Libres 2 (FP2)",
+        "start": "2026-10-17T04:10:00",
+        "round": "Pr\u00e1ctica"
+    },
+    {
+        "title": "Gp De Indonesia (Mandalika) - Carrera Sprint",
+        "start": "2026-10-17T09:00:00",
+        "round": "Sprint"
+    },
+    {
+        "title": "Gp De Indonesia (Mandalika) - Carrera Principal",
+        "start": "2026-10-18T08:00:00",
+        "round": "Carrera"
+    },
+    {
+        "title": "Gp De Australia (Phillip Island) - Libres 1 (FP1)",
+        "start": "2026-10-23T01:45:00",
+        "round": "Pr\u00e1ctica"
+    },
+    {
+        "title": "Gp De Australia (Phillip Island) - Pr\u00e1ctica",
+        "start": "2026-10-23T06:00:00",
+        "round": "Pr\u00e1ctica"
+    },
+    {
+        "title": "Gp De Australia (Phillip Island) - Libres 2 (FP2)",
+        "start": "2026-10-24T01:10:00",
+        "round": "Pr\u00e1ctica"
+    },
+    {
+        "title": "Gp De Australia (Phillip Island) - Carrera Sprint",
+        "start": "2026-10-24T06:00:00",
+        "round": "Sprint"
+    },
+    {
+        "title": "Gp De Australia (Phillip Island) - Carrera Principal",
+        "start": "2026-10-25T05:00:00",
+        "round": "Carrera"
+    },
+    {
+        "title": "Gp De Malasia (Sepang) - Libres 1 (FP1)",
+        "start": "2026-10-30T03:45:00",
+        "round": "Pr\u00e1ctica"
+    },
+    {
+        "title": "Gp De Malasia (Sepang) - Pr\u00e1ctica",
+        "start": "2026-10-30T08:00:00",
+        "round": "Pr\u00e1ctica"
+    },
+    {
+        "title": "Gp De Malasia (Sepang) - Libres 2 (FP2)",
+        "start": "2026-10-31T03:10:00",
+        "round": "Pr\u00e1ctica"
+    },
+    {
+        "title": "Gp De Malasia (Sepang) - Carrera Sprint",
+        "start": "2026-10-31T08:00:00",
+        "round": "Sprint"
+    },
+    {
+        "title": "Gp De Malasia (Sepang) - Carrera Principal",
+        "start": "2026-11-01T08:00:00",
+        "round": "Carrera"
+    },
+    {
+        "title": "Gp De Catar (Lusail) - Libres 1 (FP1)",
+        "start": "2026-11-06T13:45:00",
+        "round": "Pr\u00e1ctica"
+    },
+    {
+        "title": "Gp De Catar (Lusail) - Pr\u00e1ctica",
+        "start": "2026-11-06T18:00:00",
+        "round": "Pr\u00e1ctica"
+    },
+    {
+        "title": "Gp De Catar (Lusail) - Libres 2 (FP2)",
+        "start": "2026-11-07T13:10:00",
+        "round": "Pr\u00e1ctica"
+    },
+    {
+        "title": "Gp De Catar (Lusail) - Carrera Sprint",
+        "start": "2026-11-07T18:00:00",
+        "round": "Sprint"
+    },
+    {
+        "title": "Gp De Catar (Lusail) - Carrera Principal",
+        "start": "2026-11-08T18:00:00",
+        "round": "Carrera"
+    },
+    {
+        "title": "Gp De Portugal (Portimao) - Libres 1 (FP1)",
+        "start": "2026-11-13T11:45:00",
+        "round": "Pr\u00e1ctica"
+    },
+    {
+        "title": "Gp De Portugal (Portimao) - Pr\u00e1ctica",
+        "start": "2026-11-13T16:00:00",
+        "round": "Pr\u00e1ctica"
+    },
+    {
+        "title": "Gp De Portugal (Portimao) - Libres 2 (FP2)",
+        "start": "2026-11-14T11:10:00",
+        "round": "Pr\u00e1ctica"
+    },
+    {
+        "title": "Gp De Portugal (Portimao) - Carrera Sprint",
+        "start": "2026-11-14T16:00:00",
+        "round": "Sprint"
+    },
+    {
+        "title": "Gp De Portugal (Portimao) - Carrera Principal",
+        "start": "2026-11-15T15:00:00",
+        "round": "Carrera"
+    },
+    {
+        "title": "Gp De Valencia (Ricardo Tormo) - Libres 1 (FP1)",
+        "start": "2026-11-20T10:45:00",
+        "round": "Pr\u00e1ctica"
+    },
+    {
+        "title": "Gp De Valencia (Ricardo Tormo) - Pr\u00e1ctica",
+        "start": "2026-11-20T15:00:00",
+        "round": "Pr\u00e1ctica"
+    },
+    {
+        "title": "Gp De Valencia (Ricardo Tormo) - Libres 2 (FP2)",
+        "start": "2026-11-21T10:10:00",
+        "round": "Pr\u00e1ctica"
+    },
+    {
+        "title": "Gp De Valencia (Ricardo Tormo) - Carrera Sprint",
+        "start": "2026-11-21T15:00:00",
+        "round": "Sprint"
+    },
+    {
+        "title": "Gp De Valencia (Ricardo Tormo) - Carrera Principal",
+        "start": "2026-11-22T14:00:00",
+        "round": "Carrera"
+    }
+]
