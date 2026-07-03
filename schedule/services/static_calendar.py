@@ -49,6 +49,9 @@ class StaticCalendarAdapter(BaseSourceAdapter):
                 "start_datetime": start,
                 "external_id": f"static-{competition_slug}-{i}",
                 "status": status,
+                "score_home": item.get("score_home"),
+                "score_away": item.get("score_away"),
+                "result_text": item.get("result_text", ""),
             })
 
         return events

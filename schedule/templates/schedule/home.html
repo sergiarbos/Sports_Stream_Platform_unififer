@@ -3,20 +3,25 @@
 {% block content %}
 <div class="container">
 
+  <nav class="mode-tabs" style="display:flex; gap:10px; margin-bottom: 20px;">
+    <a href="?view_mode=links&amp;sport={{ selected_sport_slug }}&amp;platform={{ selected_platform_slug }}" class="mode-tab {% if view_mode == 'links' %}active{% endif %}">LINKS</a>
+    <a href="?view_mode=results&amp;sport={{ selected_sport_slug }}&amp;platform={{ selected_platform_slug }}" class="mode-tab {% if view_mode == 'results' %}active{% endif %}">RESULTADOS</a>
+  </nav>
+
   <nav class="sport-tabs">
-    <a href="?sport=all&amp;platform={{ selected_platform_slug }}" class="sport-tab {% if selected_sport_slug == 'all' %}active{% endif %}">All</a>
+    <a href="?view_mode={{ view_mode }}&amp;sport=all&amp;platform={{ selected_platform_slug }}" class="sport-tab {% if selected_sport_slug == 'all' %}active{% endif %}">All</a>
     {% for sport in sports %}
-      <a href="?sport={{ sport.slug }}&amp;platform={{ selected_platform_slug }}" class="sport-tab {% if selected_sport_slug == sport.slug %}active{% endif %}">
+      <a href="?view_mode={{ view_mode }}&amp;sport={{ sport.slug }}&amp;platform={{ selected_platform_slug }}" class="sport-tab {% if selected_sport_slug == sport.slug %}active{% endif %}">
         {{ sport.icon }} {{ sport.name }}
       </a>
     {% endfor %}
   </nav>
 
-  {% if platforms %}
+  {% if platforms and view_mode != 'results' %}
   <nav class="platform-tabs">
-    <a href="?sport={{ selected_sport_slug }}&amp;platform=all" class="platform-tab {% if selected_platform_slug == 'all' %}active{% endif %}">All platforms</a>
+    <a href="?view_mode={{ view_mode }}&amp;sport={{ selected_sport_slug }}&amp;platform=all" class="platform-tab {% if selected_platform_slug == 'all' %}active{% endif %}">All platforms</a>
     {% for platform in platforms %}
-      <a href="?sport={{ selected_sport_slug }}&amp;platform={{ platform.slug }}" class="platform-tab {% if selected_platform_slug == platform.slug %}active{% endif %}">
+      <a href="?view_mode={{ view_mode }}&amp;sport={{ selected_sport_slug }}&amp;platform={{ platform.slug }}" class="platform-tab {% if selected_platform_slug == platform.slug %}active{% endif %}">
         <span class="platform-dot" style="background:{{ platform.color }}"></span>
         {{ platform.name }}
       </a>
@@ -32,6 +37,7 @@
   </section>
   {% endif %}
 
+  {% if view_mode == 'links' %}
   <div class="split-app">
 
     <div class="schedule-col">
@@ -94,6 +100,20 @@
     </aside>
 
   </div>
+  {% elif view_mode == 'results' %}
+  <div class="results-app">
+    <div class="section-header">ÚLTIMOS RESULTADOS</div>
+    {% if results_events %}
+      <div class="results-list">
+        {% for event in results_events %}
+          {% include "schedule/_result_row.html" %}
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-note">No hay resultados en los últimos 14 días.</div>
+    {% endif %}
+  </div>
+  {% endif %}
 
 </div>
 {% endblock %}

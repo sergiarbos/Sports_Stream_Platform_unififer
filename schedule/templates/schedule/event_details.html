@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}Detalles - {{ event.title }} | StreamSync{% endblock %}
+
+{% block content %}
+<div class="details-container">
+  <div class="details-header">
+    <a href="javascript:history.back()" class="btn-back">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+      VOLVER
+    </a>
+    <div class="details-comp-badge">
+      {% include "schedule/_competition_badge.html" with competition=event.competition %}
+      <span>{{ event.competition.name }} {% if event.round_name %}· {{ event.round_name }}{% endif %}</span>
+    </div>
+  </div>
+
+  <div class="details-hero">
+    <div class="details-date">{{ event.start_datetime|date:"d M Y · H:i" }}</div>
+    
+    {% if event.competition.sport.category == "football" %}
+      <div class="details-teams-score">
+        <div class="details-team home">
+          <h2>{{ event.participant_home }}</h2>
+        </div>
+        <div class="details-score-box">
+          {% if event.score_home is not None and event.score_away is not None %}
+            <span class="score-number">{{ event.score_home }}</span>
+            <span class="score-divider">-</span>
+            <span class="score-number">{{ event.score_away }}</span>
+          {% else %}
+            <span class="score-pending">VS</span>
+          {% endif %}
+        </div>
+        <div class="details-team away">
+          <h2>{{ event.participant_away }}</h2>
+        </div>
+      </div>
+    {% elif event.competition.sport.category == "motorsport" %}
+      <div class="details-motorsport-title">
+        <h2>{{ event.title }}</h2>
+      </div>
+    {% else %}
+      <div class="details-teams-score">
+        <div class="details-team home">
+          <h2>{{ event.participant_home }}</h2>
+        </div>
+        <div class="details-score-box">
+          <span class="score-pending">VS</span>
+        </div>
+        <div class="details-team away">
+          <h2>{{ event.participant_away }}</h2>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="details-api-content">
+    <h3>Datos de la Competición</h3>
+    
+    {% if not api_data %}
+      <div class="api-no-data">
+        <p>No hay datos detallados disponibles para este evento en este momento.</p>
+        {% if event.result_text %}
+          <div class="basic-result-text">
+            <strong>Resultado:</strong> {{ event.result_text }}
+          </div>
+        {% endif %}
+      </div>
+    {% else %}
+      
+      {% if event.competition.source == "api_football" %}
+        <!-- API Football Data -->
+        <div class="api-football-stats">
+          <div class="stats-grid">
+            <div class="stat-card">
+              <h4>Estado</h4>
+              <p>{{ api_data.fixture.status.long }}</p>
+            </div>
+            <div class="stat-card">
+              <h4>Árbitro</h4>
+              <p>{{ api_data.fixture.referee|default:"No disponible" }}</p>
+            </div>
+            <div class="stat-card">
+              <h4>Estadio</h4>
+              <p>{{ api_data.fixture.venue.name }} ({{ api_data.fixture.venue.city }})</p>
+            </div>
+          </div>
+          
+          {% if api_data.goals %}
+            <div class="api-goals-section">
+              <h4>Goles del Partido</h4>
+              <div class="goals-timeline">
+                <div class="team-goals home-goals">
+                  <h5>{{ api_data.teams.home.name }}</h5>
+                  <span class="goal-count">{{ api_data.goals.home }}</span>
+                </div>
+                <div class="team-goals away-goals">
+                  <h5>{{ api_data.teams.away.name }}</h5>
+                  <span class="goal-count">{{ api_data.goals.away }}</span>
+                </div>
+              </div>
+            </div>
+          {% endif %}
+          
+          <div class="api-raw-data-note">
+            <p>Se han recibido datos de la API correctamente. (Se pueden añadir más estadísticas como alineaciones, tarjetas, etc.)</p>
+          </div>
+        </div>
+        
+      {% elif event.competition.source == "jolpica_f1" %}
+        <!-- Jolpica F1 Data -->
+        <div class="api-f1-stats">
+          <h4>Clasificación Final de la Carrera</h4>
+          <div class="f1-results-table-wrapper">
+            <table class="f1-results-table">
+              <thead>
+                <tr>
+                  <th>Pos</th>
+                  <th>Piloto</th>
+                  <th>Escudería</th>
+                  <th>Tiempo/Estado</th>
+                  <th>Puntos</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for result in api_data.Results %}
+                  <tr>
+                    <td>{{ result.position }}</td>
+                    <td>{{ result.Driver.givenName }} <strong>{{ result.Driver.familyName }}</strong></td>
+                    <td>{{ result.Constructor.name }}</td>
+                    <td>{{ result.Time.time|default:result.status }}</td>
+                    <td>+{{ result.points }}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      {% endif %}
+      
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

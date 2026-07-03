@@ -54,8 +54,25 @@ class JolpicaF1Adapter(BaseSourceAdapter):
         response = requests.get(url, timeout=10)
         response.raise_for_status()
         data = response.json()
-
         races = data.get("MRData", {}).get("RaceTable", {}).get("Races", [])
+
+        # Fetch results
+        results_url = f"{JOLPICA_BASE_URL}/{season}/results/?format=json"
+        try:
+            res_response = requests.get(results_url, timeout=10)
+            res_data = res_response.json()
+            res_races = res_data.get("MRData", {}).get("RaceTable", {}).get("Races", [])
+        except Exception:
+            res_races = []
+
+        results_by_round = {}
+        for r in res_races:
+            round_val = r.get("round")
+            results = r.get("Results", [])
+            if results:
+                top_3 = [f"{res['position']}º {res['Driver']['familyName']}" for res in results[:3]]
+                results_by_round[round_val] = ", ".join(top_3)
+
         events = []
         now = datetime.now(dt_timezone.utc)
 
@@ -87,6 +104,7 @@ class JolpicaF1Adapter(BaseSourceAdapter):
                 "start_datetime": race_dt,
                 "external_id": f"f1-{season_val}-{round_val}-race",
                 "status": _status(race_dt),
+                "result_text": results_by_round.get(round_val, ""),
             })
 
         return events

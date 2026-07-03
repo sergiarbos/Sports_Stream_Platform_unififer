@@ -132,6 +132,11 @@ class Event(models.Model):
     round_name = models.CharField(
         max_length=120, blank=True, help_text="E.g. 'Matchday 12', 'Round of 16', 'Qualifying'."
     )
+    score_home = models.PositiveSmallIntegerField(blank=True, null=True)
+    score_away = models.PositiveSmallIntegerField(blank=True, null=True)
+    result_text = models.CharField(
+        max_length=200, blank=True, help_text="E.g. '1º Verstappen, 2º Norris' for F1."
+    )
 
     class Meta:
         ordering = ["start_datetime"]

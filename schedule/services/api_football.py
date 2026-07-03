@@ -64,6 +64,7 @@ class ApiFootballAdapter(BaseSourceAdapter):
             fixture = item["fixture"]
             teams = item["teams"]
             start = datetime.fromtimestamp(fixture["timestamp"], tz=dt_timezone.utc)
+            goals = item.get("goals", {})
             events.append(
                 {
                     "title": f"{teams['home']['name']} vs {teams['away']['name']}",
@@ -72,6 +73,8 @@ class ApiFootballAdapter(BaseSourceAdapter):
                     "start_datetime": start,
                     "external_id": str(fixture["id"]),
                     "status": "scheduled" if fixture["status"]["short"] in ("NS", "TBD") else "finished",
+                    "score_home": goals.get("home"),
+                    "score_away": goals.get("away"),
                 }
             )
         return events
