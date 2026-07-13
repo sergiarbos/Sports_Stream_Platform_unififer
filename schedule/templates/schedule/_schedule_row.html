@@ -25,8 +25,27 @@ un pelín de JS marca esta fila como seleccionada mientras esté activa.
     <div class="schedule-row-title">{{ event.title }}</div>
   </div>
 
-  <a href="#event-{{ event.id }}" class="get-links-btn">
-    Get links
-    {% include "schedule/_external_icon.html" %}
-  </a>
+  <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+    <a href="#event-{{ event.id }}" class="get-links-btn">
+      Get links
+      {% include "schedule/_external_icon.html" %}
+    </a>
+    {% if card_type == "upcoming" %}
+    <button
+      type="button"
+      class="reminder-bell-btn"
+      data-event-id="{{ event.id }}"
+      data-title="{{ event.title|escapejs }}"
+      data-comp="{{ event.competition.name|escapejs }}"
+      data-start="{{ event.start_datetime|date:'c' }}"
+      title="Set reminder"
+      aria-label="Set reminder for {{ event.title }}"
+    >
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M12 2a6 6 0 0 0-6 6v3.2c0 .8-.3 1.6-.9 2.2L4 14.7c-.6.7-.1 1.8.8 1.8h14.4c.9 0 1.4-1.1.8-1.8l-1.1-1.3a3 3 0 0 1-.9-2.2V8a6 6 0 0 0-6-6z" stroke="currentColor" stroke-width="1.6"/>
+        <path d="M9.5 19.5a2.5 2.5 0 0 0 5 0" stroke="currentColor" stroke-width="1.6"/>
+      </svg>
+    </button>
+    {% endif %}
+  </div>
 </div>

@@ -143,6 +143,15 @@ button, input { font-family: inherit; }
 
 .search-box input::placeholder { color: #6fa39c; }
 
+/* ── Bell Wrapper ──────────────────────────────────────────────────── */
+
+.bell-wrapper {
+  position: relative;
+  flex-shrink: 0;
+}
+
+/* ── Bell Button ───────────────────────────────────────────────────── */
+
 .live-bell {
   position: relative;
   width: 36px;
@@ -155,15 +164,45 @@ button, input { font-family: inherit; }
   justify-content: center;
   color: var(--text-muted);
   flex-shrink: 0;
-  transition: border-color 0.15s, color 0.15s;
+  cursor: pointer;
+  padding: 0;
+  /* Spring hover: smooth scale via cubic-bezier */
+  transition:
+    border-color 0.2s ease,
+    color        0.2s ease,
+    transform    0.25s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow   0.25s ease;
 }
 
 .live-bell:hover {
   border-color: var(--accent-live);
   color: var(--accent-live);
+  transform: scale(1.15);
+}
+
+.live-bell:active {
+  transform: scale(0.94);
+  transition-duration: 0.1s;
+}
+
+/* Active state: bell is green + glow when there are live events */
+.live-bell--active {
+  color: var(--accent-live);
+  border-color: var(--accent-live);
+  box-shadow: 0 0 0 0 rgba(0, 224, 138, 0.45);
+  /* Ringing animation when live */
+  animation: bell-ring 3.5s ease-in-out infinite, bell-glow 3.5s ease-in-out infinite;
+}
+
+.live-bell--active:hover {
+  animation: none;
+  transform: scale(1.15);
+  box-shadow: 0 0 14px rgba(0, 224, 138, 0.55);
 }
 
 .live-bell svg { width: 18px; height: 18px; }
+
+/* ── Badge ─────────────────────────────────────────────────────────── */
 
 .live-bell-count {
   position: absolute;
@@ -180,7 +219,193 @@ button, input { font-family: inherit; }
   display: flex;
   align-items: center;
   justify-content: center;
+  pointer-events: none;
 }
+
+/* ── Keyframes ─────────────────────────────────────────────────────── */
+
+/* Oscillatory ring: subtle left-right tilt */
+@keyframes bell-ring {
+  0%,  55%, 100% { transform: rotate(0deg);   }
+  5%             { transform: rotate(14deg);  }
+  15%            { transform: rotate(-12deg); }
+  25%            { transform: rotate(10deg);  }
+  35%            { transform: rotate(-8deg);  }
+  45%            { transform: rotate(5deg);   }
+}
+
+/* Radiant glow pulse synced with the ring */
+@keyframes bell-glow {
+  0%,  50%, 100% { box-shadow: 0 0 0   0 rgba(0, 224, 138, 0.4); }
+  25%            { box-shadow: 0 0 10px 5px rgba(0, 224, 138, 0.2); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-bell--active {
+    animation: none;
+    box-shadow: 0 0 8px 2px rgba(0, 224, 138, 0.3);
+  }
+}
+
+/* ── Bell Dropdown ─────────────────────────────────────────────────── */
+
+.bell-dropdown {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: 300px;
+  background: rgba(19, 27, 46, 0.92);
+  border: 1px solid rgba(0, 224, 138, 0.25);
+  border-radius: 14px;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.55), 0 0 0 1px rgba(0,224,138,0.08);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  z-index: 1000;
+  overflow: hidden;
+  /* Entrance animation */
+  animation: dropdown-in 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-origin: top right;
+}
+
+.bell-dropdown[hidden] { display: none; }
+
+@keyframes dropdown-in {
+  from { opacity: 0; transform: scale(0.88) translateY(-8px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0);    }
+}
+
+.bell-dropdown-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid rgba(0, 224, 138, 0.15);
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--accent-live);
+}
+
+.bell-dropdown-title { line-height: 1; }
+
+.bell-dropdown-list {
+  list-style: none;
+  margin: 0;
+  padding: 8px 0;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.bell-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: background 0.15s;
+  text-decoration: none;
+  color: var(--text-primary);
+}
+
+.bell-dropdown-item:hover {
+  background: rgba(0, 224, 138, 0.08);
+}
+
+.bell-dropdown-item-icon {
+  font-size: 1.1rem;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.bell-dropdown-item-body {
+  min-width: 0;
+  flex: 1;
+}
+
+.bell-dropdown-item-comp {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-family: 'Oswald', sans-serif;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bell-dropdown-item-title {
+  font-size: 0.86rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bell-dropdown-item-live {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.62rem;
+  font-family: 'Oswald', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent-live);
+  flex-shrink: 0;
+}
+
+.bell-dropdown-empty {
+  padding: 18px 16px;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.bell-dropdown-cta {
+  display: block;
+  padding: 11px 16px;
+  border-top: 1px solid rgba(0, 224, 138, 0.12);
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--accent-live);
+  text-align: center;
+  transition: background 0.15s;
+}
+
+.bell-dropdown-cta:hover {
+  background: rgba(0, 224, 138, 0.08);
+}
+
+/* ── Reminder bell on upcoming rows ─────────────────────────────────── */
+
+.reminder-bell-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: var(--text-muted);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s, transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  flex-shrink: 0;
+}
+
+.reminder-bell-btn:hover {
+  color: var(--accent-upcoming);
+  transform: scale(1.2);
+}
+
+.reminder-bell-btn.is-set {
+  color: var(--accent-upcoming);
+}
+
+.reminder-bell-btn svg { width: 14px; height: 14px; }
+
 
 .container {
   max-width: 1320px;

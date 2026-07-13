@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404
 from django.utils import timezone
 from django.conf import settings
+from django.http import JsonResponse
 import requests
 
 from .models import Event, Platform, Sport
@@ -50,7 +51,10 @@ def home(request):
             qs = qs.filter(competition__sport__slug=selected_sport_slug)
         
         results_events = qs.order_by("-start_datetime")
-        
+
+        # Compute live_count so the bell badge is populated in results view too
+        live_count = Event.objects.filter(status=Event.STATUS_LIVE).count()
+
         context = {
             "sports": sports,
             "platforms": platforms,
@@ -58,6 +62,7 @@ def home(request):
             "selected_platform_slug": selected_platform_slug,
             "view_mode": view_mode,
             "results_events": results_events,
+            "live_count": live_count,
         }
         return render(request, "schedule/home.html", context)
 
@@ -166,3 +171,29 @@ def event_details(request, event_id):
         "api_data": api_data,
     }
     return render(request, "schedule/event_details.html", context)
+
+
+def live_status_api(request):
+    """
+    Lightweight JSON endpoint used by the front-end bell dropdown.
+    Returns live_count and a list of events currently live so the badge
+    and the popover can be updated via AJAX polling every 60 seconds.
+    """
+    live_events = (
+        Event.objects.select_related("competition", "competition__sport")
+        .filter(status=Event.STATUS_LIVE)
+    )
+    data = {
+        "live_count": live_events.count(),
+        "events": [
+            {
+                "id": e.id,
+                "title": e.title,
+                "competition": e.competition.name,
+                "sport_icon": e.competition.sport.icon,
+                "start_datetime": e.start_datetime.isoformat(),
+            }
+            for e in live_events
+        ],
+    }
+    return JsonResponse(data)
