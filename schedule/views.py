@@ -41,15 +41,19 @@ def home(request):
     if view_mode == "results":
         from django.db.models import Q
 
-        cutoff = timezone.now() - timezone.timedelta(days=14)
+        now_dt = timezone.now()
+        LIVE_WINDOW = timezone.timedelta(hours=2, minutes=30)
+        cutoff = now_dt - timezone.timedelta(days=14)
 
         condition = Q(competition__sport__category=Sport.CATEGORY_MOTORSPORT) | Q(
             competition__sport__category=Sport.CATEGORY_FOOTBALL, start_datetime__gte=cutoff
         )
 
+        # Use start_datetime < now - LIVE_WINDOW to determine finished events
+        # so results are always accurate without relying on the DB status field.
         qs = (
             Event.objects.select_related("competition", "competition__sport")
-            .filter(status=Event.STATUS_FINISHED)
+            .filter(start_datetime__lt=now_dt - LIVE_WINDOW)
             .filter(condition)
             .exclude(competition__slug="mundial-2026")
         )
@@ -90,13 +94,28 @@ def home(request):
             broadcasts__language__startswith="es",
         ).distinct()
 
+    now = timezone.now()
+    LIVE_WINDOW = timezone.timedelta(hours=2, minutes=30)
+
     live, upcoming, past = [], [], []
     for event in events_qs:
+        # Compute effective status dynamically from start_datetime so the
+        # schedule is always accurate even without Huey running in production.
+        if event.start_datetime <= now and event.start_datetime >= now - LIVE_WINDOW:
+            effective_status = Event.STATUS_LIVE
+        elif event.start_datetime < now - LIVE_WINDOW:
+            effective_status = Event.STATUS_FINISHED
+        else:
+            effective_status = Event.STATUS_SCHEDULED
+
+        # Temporarily override the DB value for this request
+        event.status = effective_status
+
         if not event.is_visible:
             continue
-        if event.status == Event.STATUS_LIVE:
+        if effective_status == Event.STATUS_LIVE:
             live.append(event)
-        elif event.status == Event.STATUS_FINISHED:
+        elif effective_status == Event.STATUS_FINISHED:
             past.append(event)
         else:
             upcoming.append(event)
@@ -188,8 +207,11 @@ def live_status_api(request):
     Returns live_count and a list of events currently live so the badge
     and the popover can be updated via AJAX polling every 60 seconds.
     """
+    now = timezone.now()
+    LIVE_WINDOW = timezone.timedelta(hours=2, minutes=30)
     live_events = Event.objects.select_related("competition", "competition__sport").filter(
-        status=Event.STATUS_LIVE
+        start_datetime__lte=now,
+        start_datetime__gte=now - LIVE_WINDOW,
     )
     data = {
         "live_count": live_events.count(),
