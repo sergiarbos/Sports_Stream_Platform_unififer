@@ -1,8 +1,8 @@
-from django.shortcuts import render, get_object_or_404
-from django.utils import timezone
+import requests
 from django.conf import settings
 from django.http import JsonResponse
-import requests
+from django.shortcuts import get_object_or_404, render
+from django.utils import timezone
 
 from .models import Event, Platform, Sport
 
@@ -27,9 +27,9 @@ def home(request):
                         to avoid empty options.
     """
     sports = Sport.objects.all()
-    platforms = Platform.objects.filter(
-        broadcasts__language__startswith="es"
-    ).distinct().order_by("name")
+    platforms = (
+        Platform.objects.filter(broadcasts__language__startswith="es").distinct().order_by("name")
+    )
 
     view_mode = request.GET.get("view_mode", "links")
     if view_mode == "results":
@@ -40,16 +40,22 @@ def home(request):
 
     if view_mode == "results":
         from django.db.models import Q
+
         cutoff = timezone.now() - timezone.timedelta(days=14)
-        
-        condition = Q(competition__sport__category=Sport.CATEGORY_MOTORSPORT) | Q(competition__sport__category=Sport.CATEGORY_FOOTBALL, start_datetime__gte=cutoff)
-        
-        qs = Event.objects.select_related("competition", "competition__sport").filter(
-            status=Event.STATUS_FINISHED
-        ).filter(condition).exclude(competition__slug="mundial-2026")
+
+        condition = Q(competition__sport__category=Sport.CATEGORY_MOTORSPORT) | Q(
+            competition__sport__category=Sport.CATEGORY_FOOTBALL, start_datetime__gte=cutoff
+        )
+
+        qs = (
+            Event.objects.select_related("competition", "competition__sport")
+            .filter(status=Event.STATUS_FINISHED)
+            .filter(condition)
+            .exclude(competition__slug="mundial-2026")
+        )
         if selected_sport_slug != "all":
             qs = qs.filter(competition__sport__slug=selected_sport_slug)
-        
+
         results_events = qs.order_by("-start_datetime")
 
         # Compute live_count so the bell badge is populated in results view too
@@ -130,7 +136,7 @@ def event_details(request, event_id):
     """
     event = get_object_or_404(Event.objects.select_related("competition"), pk=event_id)
     api_data = None
-    
+
     if event.competition.source == "api_football" and event.external_id:
         api_key = settings.API_FOOTBALL_KEY
         if api_key:
@@ -138,7 +144,10 @@ def event_details(request, event_id):
             params = {"id": event.external_id}
             try:
                 response = requests.get(
-                    "https://v3.football.api-sports.io/fixtures", headers=headers, params=params, timeout=10
+                    "https://v3.football.api-sports.io/fixtures",
+                    headers=headers,
+                    params=params,
+                    timeout=10,
                 )
                 if response.status_code == 200:
                     resp_json = response.json()
@@ -179,9 +188,8 @@ def live_status_api(request):
     Returns live_count and a list of events currently live so the badge
     and the popover can be updated via AJAX polling every 60 seconds.
     """
-    live_events = (
-        Event.objects.select_related("competition", "competition__sport")
-        .filter(status=Event.STATUS_LIVE)
+    live_events = Event.objects.select_related("competition", "competition__sport").filter(
+        status=Event.STATUS_LIVE
     )
     data = {
         "live_count": live_events.count(),

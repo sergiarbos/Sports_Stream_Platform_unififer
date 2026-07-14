@@ -1,15 +1,16 @@
 {% extends "base.html" %}
+{% load i18n %}
 
 {% block content %}
 <div class="container">
 
   <nav class="mode-tabs" style="display:flex; gap:10px; margin-bottom: 20px;">
-    <a href="?view_mode=links&amp;sport={{ selected_sport_slug }}&amp;platform={{ selected_platform_slug }}" class="mode-tab {% if view_mode == 'links' %}active{% endif %}">LINKS</a>
-    <a href="?view_mode=results&amp;sport={{ selected_sport_slug }}&amp;platform={{ selected_platform_slug }}" class="mode-tab {% if view_mode == 'results' %}active{% endif %}">RESULTADOS</a>
+    <a href="?view_mode=links&amp;sport={{ selected_sport_slug }}&amp;platform={{ selected_platform_slug }}" class="mode-tab {% if view_mode == 'links' %}active{% endif %}">{% trans "LINKS" %}</a>
+    <a href="?view_mode=results&amp;sport={{ selected_sport_slug }}&amp;platform={{ selected_platform_slug }}" class="mode-tab {% if view_mode == 'results' %}active{% endif %}">{% trans "RESULTS" %}</a>
   </nav>
 
   <nav class="sport-tabs">
-    <a href="?view_mode={{ view_mode }}&amp;sport=all&amp;platform={{ selected_platform_slug }}" class="sport-tab {% if selected_sport_slug == 'all' %}active{% endif %}">All</a>
+    <a href="?view_mode={{ view_mode }}&amp;sport=all&amp;platform={{ selected_platform_slug }}" class="sport-tab {% if selected_sport_slug == 'all' %}active{% endif %}">{% trans "All" %}</a>
     {% for sport in sports %}
       <a href="?view_mode={{ view_mode }}&amp;sport={{ sport.slug }}&amp;platform={{ selected_platform_slug }}" class="sport-tab {% if selected_sport_slug == sport.slug %}active{% endif %}">
         {{ sport.icon }} {{ sport.name }}
@@ -19,7 +20,7 @@
 
   {% if platforms and view_mode != 'results' %}
   <nav class="platform-tabs">
-    <a href="?view_mode={{ view_mode }}&amp;sport={{ selected_sport_slug }}&amp;platform=all" class="platform-tab {% if selected_platform_slug == 'all' %}active{% endif %}">All platforms</a>
+    <a href="?view_mode={{ view_mode }}&amp;sport={{ selected_sport_slug }}&amp;platform=all" class="platform-tab {% if selected_platform_slug == 'all' %}active{% endif %}">{% trans "All platforms" %}</a>
     {% for platform in platforms %}
       <a href="?view_mode={{ view_mode }}&amp;sport={{ selected_sport_slug }}&amp;platform={{ platform.slug }}" class="platform-tab {% if selected_platform_slug == platform.slug %}active{% endif %}">
         <span class="platform-dot" style="background:{{ platform.color }}"></span>
@@ -45,35 +46,35 @@
       <div class="schedule-section" id="live-section">
         {% if live_events %}
           <div class="section-header live-header">
-            <span class="live-dot"></span> Live now
+            <span class="live-dot"></span> {% trans "Live now" %}
           </div>
           {% for event in live_events %}
             {% include "schedule/_schedule_row.html" with card_type="live" %}
           {% endfor %}
         {% else %}
-          <div class="live-empty-strip"><span class="live-dot-static"></span> Nothing live right now — check upcoming events.</div>
+          <div class="live-empty-strip"><span class="live-dot-static"></span> {% trans "Nothing live right now — check upcoming events." %}</div>
         {% endif %}
       </div>
 
       <div class="schedule-section">
-        <div class="section-header">Upcoming · schedule</div>
+        <div class="section-header">{% trans "Upcoming · schedule" %}</div>
         {% if upcoming_events %}
           {% for event in upcoming_events %}
             {% include "schedule/_schedule_row.html" with card_type="upcoming" %}
           {% endfor %}
         {% else %}
-          <div class="empty-note">No upcoming events scheduled for this filter yet.</div>
+          <div class="empty-note">{% trans "No upcoming events scheduled for this filter yet." %}</div>
         {% endif %}
       </div>
 
       <div class="schedule-section">
-        <div class="section-header">On demand · last {{ archive_window_days }} days</div>
+        <div class="section-header">{% trans "On demand · last" %} {{ archive_window_days }} {% trans "days" %}</div>
         {% if past_events %}
           {% for event in past_events %}
             {% include "schedule/_schedule_row.html" with card_type="archive" %}
           {% endfor %}
         {% else %}
-          <div class="empty-note">No events from the last {{ archive_window_days }} days with a replay available in Spanish for this filter.</div>
+          <div class="empty-note">{% trans "No events from the last" %} {{ archive_window_days }} {% trans "days with a replay available in Spanish for this filter." %}</div>
         {% endif %}
       </div>
 
@@ -81,8 +82,8 @@
 
     <aside class="links-col">
       <div class="links-col-head">
-        <span class="links-col-title">Links panel</span>
-        <span class="links-col-sub">Click "Get links" on the schedule or pick a platform directly</span>
+        <span class="links-col-title">{% trans "Links panel" %}</span>
+        <span class="links-col-sub">{% trans "Click \"Get links\" on the schedule or pick a platform directly" %}</span>
       </div>
       <div class="links-col-body">
         {% if link_events %}
@@ -91,10 +92,10 @@
           {% endfor %}
           <div class="links-placeholder">
             <span class="links-placeholder-icon">🔗</span>
-            Choose an event and click <strong>"Get links"</strong> to see its direct links here.
+            {% trans "No links available for this filter yet." %}
           </div>
         {% else %}
-          <div class="empty-note">No links available for this filter yet.</div>
+          <div class="empty-note">{% trans "No links available for this filter yet." %}</div>
         {% endif %}
       </div>
     </aside>
@@ -102,7 +103,7 @@
   </div>
   {% elif view_mode == 'results' %}
   <div class="results-app">
-    <div class="section-header">ÚLTIMOS RESULTADOS</div>
+    <div class="section-header">{% trans "LATEST RESULTS" %}</div>
     {% if results_events %}
       <div class="results-list">
         {% for event in results_events %}
@@ -110,7 +111,7 @@
         {% endfor %}
       </div>
     {% else %}
-      <div class="empty-note">No hay resultados en los últimos 14 días.</div>
+      <div class="empty-note">{% trans "No results in the last 14 days." %}</div>
     {% endif %}
   </div>
   {% endif %}

@@ -4,7 +4,7 @@ This document outlines the testing infrastructure and the specific unit tests im
 
 ## Overview
 
-The test suite ensures the reliability of the core business logic, specifically around event visibility, status categorization, and timezone-aware date filtering. 
+The test suite ensures the reliability of the core business logic, specifically around event visibility, status categorization, and timezone-aware date filtering.
 
 To run the tests locally, use the following command from the root directory:
 ```bash
@@ -37,7 +37,7 @@ Tests the behavior and context of the main dashboard (`schedule:home`).
 This is the most critical suite for handling global users. It tests the helper functions (`categorize_event` and `filter_events` in `utils.py`) that categorize events into `"Live"`, `"Today"`, and `"Tomorrow"`.
 
 #### Key Features Tested:
-* **Timezone Consistency**: Prevents bugs where live events (e.g., late-night Champions League matches) are miscategorized. 
+* **Timezone Consistency**: Prevents bugs where live events (e.g., late-night Champions League matches) are miscategorized.
 * **Timezone Overrides**: Simulates different user locations using `timezone.override`. The tests explicitly check the behavior in:
   * `UTC` (Coordinated Universal Time)
   * `Europe/Madrid` (CET)

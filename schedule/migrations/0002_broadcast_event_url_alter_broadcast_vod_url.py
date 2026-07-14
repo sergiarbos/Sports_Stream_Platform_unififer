@@ -4,20 +4,24 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('schedule', '0001_initial'),
+        ("schedule", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='broadcast',
-            name='event_url',
-            field=models.URLField(blank=True, help_text='Link directo a ESTE evento concreto dentro de la plataforma (no a la home general). Se usa para directo/próximos.'),
+            model_name="broadcast",
+            name="event_url",
+            field=models.URLField(
+                blank=True,
+                help_text="Link directo a ESTE evento concreto dentro de la plataforma (no a la home general). Se usa para directo/próximos.",
+            ),
         ),
         migrations.AlterField(
-            model_name='broadcast',
-            name='vod_url',
-            field=models.URLField(blank=True, help_text='Link directo a la repetición/diferido de ESTE evento.'),
+            model_name="broadcast",
+            name="vod_url",
+            field=models.URLField(
+                blank=True, help_text="Link directo a la repetición/diferido de ESTE evento."
+            ),
         ),
     ]

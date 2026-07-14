@@ -31,8 +31,9 @@ FLAGS = {
     "brazilian": "🇧🇷",
     "las vegas": "🇺🇸",
     "qatar": "🇶🇦",
-    "abu dhabi": "🇦🇪"
+    "abu dhabi": "🇦🇪",
 }
+
 
 @register.filter
 def add_flag(title):
@@ -41,10 +42,10 @@ def add_flag(title):
     """
     if not title:
         return title
-        
+
     lower_title = title.lower()
     for key, flag in FLAGS.items():
         if key in lower_title:
             return f"{flag} {title}"
-            
+
     return title

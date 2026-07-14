@@ -35,43 +35,46 @@ ALLOWED_HOSTS = env.list("DJANGO_ALLOWED_HOSTS", default=["localhost", "127.0.0.
 # Application definition
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    'schedule',
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "django_huey",
+    "schedule",
 ]
 
 MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.locale.LocaleMiddleware",  # i18n: detect language from URL/cookie
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-ROOT_URLCONF = 'streamsync.urls'
+ROOT_URLCONF = "streamsync.urls"
 
 TEMPLATES = [
     {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates'],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [BASE_DIR / "templates"],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.request",
+                "django.template.context_processors.i18n",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
             ],
         },
     },
 ]
 
-WSGI_APPLICATION = 'streamsync.wsgi.application'
+WSGI_APPLICATION = "streamsync.wsgi.application"
 
 
 # Database
@@ -81,12 +84,66 @@ WSGI_APPLICATION = 'streamsync.wsgi.application'
 # uncomment the line below.
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
     }
 }
 # DATABASES['default'] = env.db('DATABASE_URL') if env('DATABASE_URL', default=None) else DATABASES['default']
+
+
+# ---------------------------------------------------------------------------
+# Cache — Django Database Cache (SQLite, zero extra dependencies).
+# In production with Redis uncomment the redis backend below and set
+# CACHE_URL=redis://127.0.0.1:6379/1 in your .env.
+# ---------------------------------------------------------------------------
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+        "LOCATION": "django_cache",
+        "TIMEOUT": 3600,  # 1-hour default TTL
+        "OPTIONS": {
+            "MAX_ENTRIES": 1000,
+        },
+    }
+}
+# Redis alternative (uncomment when available):
+# CACHES = {
+#     'default': {
+#         'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+#         'LOCATION': env('CACHE_URL', default='redis://127.0.0.1:6379/1'),
+#     }
+# }
+
+# TTL for external API responses (seconds). 1 h by default.
+API_CACHE_TTL = env.int("API_CACHE_TTL", default=3600)
+
+
+# ---------------------------------------------------------------------------
+# Huey — Background Task Queue (SQLite backend, no Redis required)
+# ---------------------------------------------------------------------------
+# django-huey wraps multiple Huey instances; 'default' points to the
+# queue name used when no queue= kwarg is specified.
+
+DJANGO_HUEY = {
+    "default": "main",
+    "queues": {
+        "main": {
+            "huey_class": "huey.SqliteHuey",
+            "name": "sportlink",
+            "filename": str(BASE_DIR / "huey.db"),
+            "immediate": False,  # set True in tests to run tasks synchronously
+            "consumer": {
+                "workers": 2,
+                "worker_type": "thread",
+                "scheduler_interval": 60,
+                "verbose": True,
+                "logfile": str(BASE_DIR / "huey.log"),
+            },
+        }
+    },
+}
 
 
 # Password validation
@@ -94,26 +151,37 @@ DATABASES = {
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
     },
     {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
 
 
-# Internationalization
+# ---------------------------------------------------------------------------
+# Internationalization (i18n)
+# ---------------------------------------------------------------------------
 # https://docs.djangoproject.com/en/6.0/topics/i18n/
 
-LANGUAGE_CODE = 'es'
+LANGUAGE_CODE = "es"
 
-TIME_ZONE = 'Europe/Madrid'
+LANGUAGES = [
+    ("es", "Español"),
+    ("en", "English"),
+]
+
+LOCALE_PATHS = [
+    BASE_DIR / "locale",
+]
+
+TIME_ZONE = "Europe/Madrid"
 
 USE_I18N = True
 
@@ -123,10 +191,10 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
-STATIC_URL = 'static/'
-STATICFILES_DIRS = [BASE_DIR / 'static']
+STATIC_URL = "static/"
+STATICFILES_DIRS = [BASE_DIR / "static"]
 
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 
 # ---------------------------------------------------------------------------

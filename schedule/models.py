@@ -135,7 +135,7 @@ class Event(models.Model):
     score_home = models.PositiveSmallIntegerField(blank=True, null=True)
     score_away = models.PositiveSmallIntegerField(blank=True, null=True)
     result_text = models.CharField(
-        max_length=200, blank=True, help_text="E.g. '1º Verstappen, 2º Norris' for F1."
+        max_length=200, blank=True, help_text="E.g. '1st Verstappen, 2nd Norris' for F1."
     )
 
     class Meta:

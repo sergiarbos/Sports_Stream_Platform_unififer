@@ -1,16 +1,17 @@
-{% load static %}
+{% load static i18n %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ LANGUAGE_CODE }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}Where to watch each event{% endblock %}</title>
+  <title>{% block title %}{% trans "Where to watch each event" %}{% endblock %}</title>
+  <meta name="description" content="{% trans "Find where to watch every sports event live or on demand in Spanish." %}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  {% comment %} The "?v=" query string forces the browser to download the new
-  version instead of serving a stale cached copy. Bump the number every time
-  style.css or app.js is edited. {% endcomment %}
-  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=7">
+  {# Fuse.js — fuzzy search library (loaded before app.js) #}
+  <script src="https://cdn.jsdelivr.net/npm/fuse.js@7/dist/fuse.min.js"></script>
+  {# Bump ?v= whenever style.css or app.js changes #}
+  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=8">
 </head>
 <body>
   <header class="topbar">
@@ -19,26 +20,49 @@
       <div class="topbar-tools">
         <label class="search-box" for="event-search">
           <svg class="search-icon" viewBox="0 0 20 20" aria-hidden="true"><circle cx="9" cy="9" r="6.5" stroke="currentColor" stroke-width="1.6" fill="none"/><line x1="14" y1="14" x2="18.5" y2="18.5" stroke="currentColor" stroke-width="1.6"/></svg>
-          <input id="event-search" type="text" placeholder="Search team, driver or competition..." autocomplete="off">
+          <input id="event-search" type="text" placeholder="{% trans 'Search team, driver or competition…' %}" autocomplete="off" aria-label="{% trans 'Search events' %}">
         </label>
 
-        {# ── Bell Dropdown ──────────────────────────────────────────────── #}
-        <div class="bell-wrapper" id="bell-wrapper">
+        {# ── Language selector ─────────────────────────────────────── #}
+        <div class="lang-selector" id="lang-selector">
+          <button type="button" class="lang-btn" id="lang-btn" aria-haspopup="true" aria-expanded="false" title="{% trans 'Change language' %}">
+            {% get_current_language as current_lang %}
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" width="16" height="16">
+              <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/>
+              <path d="M12 3c-2 3-3 5.5-3 9s1 6 3 9m0-18c2 3 3 5.5 3 9s-1 6-3 9M3 12h18" stroke="currentColor" stroke-width="1.6"/>
+            </svg>
+            <span>{{ current_lang|upper }}</span>
+          </button>
+          <div class="lang-dropdown" id="lang-dropdown" hidden>
+            {% get_available_languages as langs %}
+            {% for lang_code, lang_name in langs %}
+              <form action="{% url 'set_language' %}" method="post" class="lang-form">
+                {% csrf_token %}
+                <input type="hidden" name="language" value="{{ lang_code }}">
+                <input type="hidden" name="next" value="{{ request.path }}">
+                <button type="submit" class="lang-option {% if lang_code == current_lang %}is-active{% endif %}">
+                  {{ lang_name }}
+                </button>
+              </form>
+            {% endfor %}
+          </div>
+        </div>
 
+        {# ── Live Bell with Dropdown ─────────────────────────────────── #}
+        <div class="bell-wrapper" id="bell-wrapper">
           <button
             type="button"
             id="live-bell-btn"
             class="live-bell{% if live_count %} live-bell--active{% endif %}"
             aria-haspopup="true"
             aria-expanded="false"
-            aria-label="{% if live_count %}{{ live_count }} event{{ live_count|pluralize }} live now{% else %}No events live right now{% endif %}"
-            title="Events live right now"
+            aria-label="{% if live_count %}{{ live_count }} {% trans 'event(s) live now' %}{% else %}{% trans 'No events live right now' %}{% endif %}"
+            title="{% trans 'Events live right now' %}"
           >
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M12 2a6 6 0 0 0-6 6v3.2c0 .8-.3 1.6-.9 2.2L4 14.7c-.6.7-.1 1.8.8 1.8h14.4c.9 0 1.4-1.1.8-1.8l-1.1-1.3a3 3 0 0 1-.9-2.2V8a6 6 0 0 0-6-6z" fill="currentColor"/>
               <path d="M9.5 19.5a2.5 2.5 0 0 0 5 0" stroke="currentColor" stroke-width="1.6" fill="none"/>
             </svg>
-            {# Always rendered so JS can update the text content #}
             <span
               id="live-bell-count"
               class="live-bell-count"
@@ -47,29 +71,19 @@
             >{{ live_count|default:0 }}</span>
           </button>
 
-          {# Floating dropdown — opened by JS, content injected / refreshed via polling #}
-          <div
-            class="bell-dropdown"
-            id="bell-dropdown"
-            role="dialog"
-            aria-label="Live events"
-            hidden
-          >
+          <div class="bell-dropdown" id="bell-dropdown" role="dialog" aria-label="{% trans 'Live events' %}" hidden>
             <div class="bell-dropdown-header">
               <span class="live-dot"></span>
-              <span class="bell-dropdown-title">Live right now</span>
+              <span class="bell-dropdown-title">{% trans "Live right now" %}</span>
             </div>
             <ul class="bell-dropdown-list" id="bell-dropdown-list" role="list"></ul>
             <p class="bell-dropdown-empty" id="bell-dropdown-empty" hidden>
-              Nothing live right now — check upcoming events.
+              {% trans "Nothing live right now — check upcoming events." %}
             </p>
-            <a
-              href="?view_mode=links#live-section"
-              class="bell-dropdown-cta"
-              id="bell-dropdown-cta"
-            >View all live events →</a>
+            <a href="?view_mode=links#live-section" class="bell-dropdown-cta" id="bell-dropdown-cta">
+              {% trans "View all live events" %} →
+            </a>
           </div>
-
         </div>
         {# ─────────────────────────────────────────────────────────────── #}
 
@@ -79,6 +93,8 @@
 
   {% block content %}{% endblock %}
 
-  <script src="{% static 'js/app.js' %}?v=5"></script>
+  {# SW registration must come before app.js so scheduleReminder() is available #}
+  <script src="{% static 'js/sw-register.js' %}?v=1"></script>
+  <script src="{% static 'js/app.js' %}?v=6"></script>
 </body>
 </html>

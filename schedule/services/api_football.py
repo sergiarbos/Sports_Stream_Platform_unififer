@@ -16,10 +16,11 @@ is complete, but no real request is made until you add your own key
 to .env.
 """
 
-from datetime import datetime, timezone as dt_timezone
+from datetime import UTC, datetime
 
 import requests
 from django.conf import settings
+from django.core.cache import cache
 
 from .adapters import BaseSourceAdapter
 
@@ -51,19 +52,25 @@ class ApiFootballAdapter(BaseSourceAdapter):
             )
 
         league_id = LEAGUE_IDS.get(competition_slug)
-        headers = {"x-apisports-key": api_key}
-        params = {"league": league_id, "season": season}
-        response = requests.get(
-            f"{API_FOOTBALL_BASE_URL}/fixtures", headers=headers, params=params, timeout=10
-        )
-        response.raise_for_status()
-        data = response.json()
+        cache_key = f"apifootball:{league_id}:{season}"
+        ttl = getattr(settings, "API_CACHE_TTL", 3600)
+
+        data = cache.get(cache_key)
+        if data is None:
+            headers = {"x-apisports-key": api_key}
+            params = {"league": league_id, "season": season}
+            response = requests.get(
+                f"{API_FOOTBALL_BASE_URL}/fixtures", headers=headers, params=params, timeout=10
+            )
+            response.raise_for_status()
+            data = response.json()
+            cache.set(cache_key, data, ttl)
 
         events = []
         for item in data.get("response", []):
             fixture = item["fixture"]
             teams = item["teams"]
-            start = datetime.fromtimestamp(fixture["timestamp"], tz=dt_timezone.utc)
+            start = datetime.fromtimestamp(fixture["timestamp"], tz=UTC)
             goals = item.get("goals", {})
             events.append(
                 {
@@ -72,7 +79,9 @@ class ApiFootballAdapter(BaseSourceAdapter):
                     "participant_away": teams["away"]["name"],
                     "start_datetime": start,
                     "external_id": str(fixture["id"]),
-                    "status": "scheduled" if fixture["status"]["short"] in ("NS", "TBD") else "finished",
+                    "status": "scheduled"
+                    if fixture["status"]["short"] in ("NS", "TBD")
+                    else "finished",
                     "score_home": goals.get("home"),
                     "score_away": goals.get("away"),
                 }

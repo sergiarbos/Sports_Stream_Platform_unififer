@@ -25,16 +25,13 @@ Update it if a competition airs on a different platform.
 import time
 
 from django.core.management.base import BaseCommand
-from django.utils import timezone
 
 from schedule.models import Broadcast, Competition, Event, Platform
 from schedule.services.jolpica_f1 import JolpicaF1Adapter
-from schedule.services.thesportsdb import TheSportsDBAdapter
 from schedule.services.static_calendar import StaticCalendarAdapter
+from schedule.services.thesportsdb import TheSportsDBAdapter
 
-# ---------------------------------------------------------------------------
 # Competition slug → [(platform_slug, language, is_live_stream)]
-# ---------------------------------------------------------------------------
 ES = Broadcast.LANGUAGE_ES_ES
 LA = Broadcast.LANGUAGE_ES_LA
 
@@ -46,25 +43,25 @@ BROADCAST_MAP = {
     "europa-league": [
         ("movistar-plus", ES, True),
     ],
-    "la-liga":          [("dazn", ES, True)],
-    "premier-league":   [("dazn", ES, True)],
-    "serie-a":          [("dazn", ES, True)],
-    "bundesliga":       [("dazn", ES, True)],
-    "ligue-1":          [("dazn", ES, True)],
-    "mundial-2026":     [
+    "la-liga": [("dazn", ES, True)],
+    "premier-league": [("dazn", ES, True)],
+    "serie-a": [("dazn", ES, True)],
+    "bundesliga": [("dazn", ES, True)],
+    "ligue-1": [("dazn", ES, True)],
+    "mundial-2026": [
         ("dazn", ES, True),
         ("vix", LA, True),
     ],
     # Basketball
-    "nba":              [
+    "nba": [
         ("vix", LA, True),
         ("espn", ES, True),
     ],
     # Motorsport
-    "f1":               [("dazn", ES, True)],
-    "motogp":           [("dazn", ES, True)],
+    "f1": [("dazn", ES, True)],
+    "motogp": [("dazn", ES, True)],
     # Tennis
-    "wimbledon":        [
+    "wimbledon": [
         ("movistar-plus", ES, True),
         ("eurosport", ES, True),
     ],
@@ -72,24 +69,24 @@ BROADCAST_MAP = {
 
 # Competitions to import: (competition_slug, source, fetch_kwargs)
 IMPORT_PLAN = [
-    # F1 — Jolpica
+    # Formula 1 — Jolpica
     ("f1", "jolpica_f1", {"season": "2026"}),
-    # Motorsport — Static Calendar (to bypass API limits)
+    # Motorsport — Static Calendar (bypasses API rate limits)
     ("motogp", "static_calendar", {"competition_slug": "motogp"}),
     # Football — TheSportsDB
     ("champions-league", "thesportsdb", {"competition_slug": "champions-league"}),
-    ("europa-league",    "thesportsdb", {"competition_slug": "europa-league"}),
-    ("la-liga",          "thesportsdb", {"competition_slug": "la-liga"}),
-    ("premier-league",   "thesportsdb", {"competition_slug": "premier-league"}),
-    ("serie-a",          "thesportsdb", {"competition_slug": "serie-a"}),
-    ("bundesliga",       "thesportsdb", {"competition_slug": "bundesliga"}),
-    ("ligue-1",          "thesportsdb", {"competition_slug": "ligue-1"}),
-    # World Cup — Static Calendar (to bypass API limits)
-    ("mundial-2026",     "static_calendar", {"competition_slug": "mundial-2026"}),
+    ("europa-league", "thesportsdb", {"competition_slug": "europa-league"}),
+    ("la-liga", "thesportsdb", {"competition_slug": "la-liga"}),
+    ("premier-league", "thesportsdb", {"competition_slug": "premier-league"}),
+    ("serie-a", "thesportsdb", {"competition_slug": "serie-a"}),
+    ("bundesliga", "thesportsdb", {"competition_slug": "bundesliga"}),
+    ("ligue-1", "thesportsdb", {"competition_slug": "ligue-1"}),
+    # World Cup — Static Calendar (bypasses API rate limits)
+    ("mundial-2026", "static_calendar", {"competition_slug": "mundial-2026"}),
     # Basketball — TheSportsDB
-    ("nba",              "thesportsdb", {"competition_slug": "nba"}),
+    ("nba", "thesportsdb", {"competition_slug": "nba"}),
     # Tennis — TheSportsDB
-    ("wimbledon",        "thesportsdb", {"competition_slug": "wimbledon"}),
+    ("wimbledon", "thesportsdb", {"competition_slug": "wimbledon"}),
 ]
 
 
@@ -113,8 +110,7 @@ class Command(BaseCommand):
         platforms = {p.slug: p for p in Platform.objects.all()}
         if not platforms:
             self.stderr.write(
-                "No platforms found in the database. "
-                "Run first: python manage.py seed_demo_data"
+                "No platforms found in the database. " "Run first: python manage.py seed_demo_data"
             )
             return
 
@@ -149,7 +145,9 @@ class Command(BaseCommand):
                 continue
 
             if not events_data:
-                self.stdout.write(self.style.WARNING(f"  ⚠ API returned no events for {comp_slug}."))
+                self.stdout.write(
+                    self.style.WARNING(f"  ⚠ API returned no events for {comp_slug}.")
+                )
                 # If the API returns nothing, keep whatever is already in the DB
                 continue
 
@@ -161,10 +159,10 @@ class Command(BaseCommand):
                     competition=competition,
                     external_id=event_data["external_id"],
                     defaults={
-                        "title":          event_data["title"],
-                        "round_name":     event_data.get("round_name", ""),
+                        "title": event_data["title"],
+                        "round_name": event_data.get("round_name", ""),
                         "start_datetime": event_data["start_datetime"],
-                        "status":         event_data["status"],
+                        "status": event_data["status"],
                         "participant_home": event_data.get("participant_home", ""),
                         "participant_away": event_data.get("participant_away", ""),
                     },
@@ -187,9 +185,7 @@ class Command(BaseCommand):
                             defaults={
                                 "is_live_stream": is_live,
                                 "vod_available": vod,
-                                "commentary_region": (
-                                    "Latin America" if language == LA else ""
-                                ),
+                                "commentary_region": ("Latin America" if language == LA else ""),
                             },
                         )
                         comp_broadcasts += 1
@@ -207,7 +203,8 @@ class Command(BaseCommand):
                 time.sleep(2)
 
         self.stdout.write(
-            "\n" + self.style.SUCCESS(
+            "\n"
+            + self.style.SUCCESS(
                 f"✅ Import complete: {total_imported} total events, "
                 f"{total_broadcasts} broadcasts assigned."
             )

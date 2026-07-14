@@ -12,7 +12,7 @@
 
   <div class="result-main">
     <div class="result-comp">{{ event.competition.name }}{% if event.round_name %} · {{ event.round_name }}{% endif %}</div>
-    
+
     <div class="result-matchup">
       {% if event.competition.sport.category == "motorsport" %}
         <div class="result-motorsport">

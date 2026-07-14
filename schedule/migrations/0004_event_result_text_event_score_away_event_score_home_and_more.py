@@ -4,90 +4,139 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('schedule', '0003_competition_short_code'),
+        ("schedule", "0003_competition_short_code"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='event',
-            name='result_text',
-            field=models.CharField(blank=True, help_text="E.g. '1º Verstappen, 2º Norris' for F1.", max_length=200),
+            model_name="event",
+            name="result_text",
+            field=models.CharField(
+                blank=True, help_text="E.g. '1º Verstappen, 2º Norris' for F1.", max_length=200
+            ),
         ),
         migrations.AddField(
-            model_name='event',
-            name='score_away',
+            model_name="event",
+            name="score_away",
             field=models.PositiveSmallIntegerField(blank=True, null=True),
         ),
         migrations.AddField(
-            model_name='event',
-            name='score_home',
+            model_name="event",
+            name="score_home",
             field=models.PositiveSmallIntegerField(blank=True, null=True),
         ),
         migrations.AlterField(
-            model_name='broadcast',
-            name='commentary_region',
-            field=models.CharField(blank=True, help_text="Optional, e.g. 'Mexico', 'Argentina', 'Pan-LATAM'.", max_length=80),
+            model_name="broadcast",
+            name="commentary_region",
+            field=models.CharField(
+                blank=True,
+                help_text="Optional, e.g. 'Mexico', 'Argentina', 'Pan-LATAM'.",
+                max_length=80,
+            ),
         ),
         migrations.AlterField(
-            model_name='broadcast',
-            name='event_url',
-            field=models.URLField(blank=True, help_text='Direct link to THIS specific event on the platform (not to the platform homepage). Used for live/upcoming events.'),
+            model_name="broadcast",
+            name="event_url",
+            field=models.URLField(
+                blank=True,
+                help_text="Direct link to THIS specific event on the platform (not to the platform homepage). Used for live/upcoming events.",
+            ),
         ),
         migrations.AlterField(
-            model_name='broadcast',
-            name='is_live_stream',
-            field=models.BooleanField(default=True, help_text='Does this platform stream it live?'),
+            model_name="broadcast",
+            name="is_live_stream",
+            field=models.BooleanField(default=True, help_text="Does this platform stream it live?"),
         ),
         migrations.AlterField(
-            model_name='broadcast',
-            name='language',
-            field=models.CharField(choices=[('es-ES', 'Spanish (Spain)'), ('es-LA', 'Spanish (Latin America)')], default='es-ES', max_length=10),
+            model_name="broadcast",
+            name="language",
+            field=models.CharField(
+                choices=[("es-ES", "Spanish (Spain)"), ("es-LA", "Spanish (Latin America)")],
+                default="es-ES",
+                max_length=10,
+            ),
         ),
         migrations.AlterField(
-            model_name='broadcast',
-            name='vod_available',
-            field=models.BooleanField(default=False, help_text='Is a replay/on-demand version available after the event finishes?'),
+            model_name="broadcast",
+            name="vod_available",
+            field=models.BooleanField(
+                default=False,
+                help_text="Is a replay/on-demand version available after the event finishes?",
+            ),
         ),
         migrations.AlterField(
-            model_name='broadcast',
-            name='vod_url',
-            field=models.URLField(blank=True, help_text='Direct link to the replay/on-demand version of THIS event.'),
+            model_name="broadcast",
+            name="vod_url",
+            field=models.URLField(
+                blank=True, help_text="Direct link to the replay/on-demand version of THIS event."
+            ),
         ),
         migrations.AlterField(
-            model_name='competition',
-            name='short_code',
-            field=models.CharField(blank=True, help_text="Short initials for the competition badge (e.g. 'CL', 'NBA', 'F1'). Used instead of copyrighted logos.", max_length=6),
+            model_name="competition",
+            name="short_code",
+            field=models.CharField(
+                blank=True,
+                help_text="Short initials for the competition badge (e.g. 'CL', 'NBA', 'F1'). Used instead of copyrighted logos.",
+                max_length=6,
+            ),
         ),
         migrations.AlterField(
-            model_name='competition',
-            name='source',
-            field=models.CharField(blank=True, help_text="Data adapter identifier (e.g. 'api_football', 'jolpica_f1', 'manual').", max_length=50),
+            model_name="competition",
+            name="source",
+            field=models.CharField(
+                blank=True,
+                help_text="Data adapter identifier (e.g. 'api_football', 'jolpica_f1', 'manual').",
+                max_length=50,
+            ),
         ),
         migrations.AlterField(
-            model_name='event',
-            name='round_name',
-            field=models.CharField(blank=True, help_text="E.g. 'Matchday 12', 'Round of 16', 'Qualifying'.", max_length=120),
+            model_name="event",
+            name="round_name",
+            field=models.CharField(
+                blank=True,
+                help_text="E.g. 'Matchday 12', 'Round of 16', 'Qualifying'.",
+                max_length=120,
+            ),
         ),
         migrations.AlterField(
-            model_name='event',
-            name='status',
-            field=models.CharField(choices=[('scheduled', 'Scheduled'), ('live', 'Live'), ('finished', 'Finished')], default='scheduled', max_length=20),
+            model_name="event",
+            name="status",
+            field=models.CharField(
+                choices=[("scheduled", "Scheduled"), ("live", "Live"), ("finished", "Finished")],
+                default="scheduled",
+                max_length=20,
+            ),
         ),
         migrations.AlterField(
-            model_name='event',
-            name='title',
-            field=models.CharField(help_text="E.g. 'Real Madrid vs Manchester City' or 'Monaco Grand Prix'.", max_length=200),
+            model_name="event",
+            name="title",
+            field=models.CharField(
+                help_text="E.g. 'Real Madrid vs Manchester City' or 'Monaco Grand Prix'.",
+                max_length=200,
+            ),
         ),
         migrations.AlterField(
-            model_name='sport',
-            name='category',
-            field=models.CharField(choices=[('football', 'Football'), ('basketball', 'Basketball'), ('motorsport', 'Motorsport'), ('tennis', 'Tennis'), ('winter_sports', 'Winter Sports')], max_length=30),
+            model_name="sport",
+            name="category",
+            field=models.CharField(
+                choices=[
+                    ("football", "Football"),
+                    ("basketball", "Basketball"),
+                    ("motorsport", "Motorsport"),
+                    ("tennis", "Tennis"),
+                    ("winter_sports", "Winter Sports"),
+                ],
+                max_length=30,
+            ),
         ),
         migrations.AlterField(
-            model_name='sport',
-            name='icon',
-            field=models.CharField(blank=True, help_text='Emoji used as a quick icon in the UI (e.g. ⚽).', max_length=10),
+            model_name="sport",
+            name="icon",
+            field=models.CharField(
+                blank=True,
+                help_text="Emoji used as a quick icon in the UI (e.g. ⚽).",
+                max_length=10,
+            ),
         ),
     ]

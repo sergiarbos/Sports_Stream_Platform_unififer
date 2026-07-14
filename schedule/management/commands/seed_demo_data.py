@@ -1,11 +1,10 @@
 """
-Comando de demostración: crea deportes, competiciones, plataformas y
-eventos de ejemplo para que el proyecto funcione en local sin necesidad
-de configurar ninguna API real todavía.
+Demo seeder: creates sports, competitions, platforms, and sample events
+so the project works locally without needing to configure any real API.
 
-Uso:
+Usage:
     python manage.py seed_demo_data
-    python manage.py seed_demo_data --flush   (borra y vuelve a crear todo)
+    python manage.py seed_demo_data --flush   (wipes and recreates everything)
 """
 
 from datetime import timedelta
@@ -18,18 +17,18 @@ from schedule.models import Broadcast, Competition, Event, Platform, Sport
 
 
 class Command(BaseCommand):
-    help = "Crea datos de ejemplo (deportes, competiciones, plataformas y eventos) para desarrollo local."
+    help = "Creates sample data (sports, competitions, platforms and events) for local development."
 
     def add_arguments(self, parser):
         parser.add_argument(
             "--flush",
             action="store_true",
-            help="Elimina todos los datos de la app antes de volver a crearlos.",
+            help="Deletes all app data before recreating it.",
         )
 
     def handle(self, *args, **options):
         if options["flush"]:
-            self.stdout.write("Borrando datos existentes de schedule...")
+            self.stdout.write("Deleting existing schedule data...")
             Broadcast.objects.all().delete()
             Event.objects.all().delete()
             Competition.objects.all().delete()
@@ -39,7 +38,7 @@ class Command(BaseCommand):
         now = timezone.now()
 
         # ------------------------------------------------------------------
-        # 1. Deportes
+        # 1. Sports
         # ------------------------------------------------------------------
         sports = {}
         for slug, name, category, icon, order in [
@@ -50,12 +49,13 @@ class Command(BaseCommand):
             ("invierno", "Deportes de invierno", Sport.CATEGORY_WINTER, "❄️", 5),
         ]:
             sport, _ = Sport.objects.update_or_create(
-                slug=slug, defaults={"name": name, "category": category, "icon": icon, "order": order}
+                slug=slug,
+                defaults={"name": name, "category": category, "icon": icon, "order": order},
             )
             sports[slug] = sport
 
         # ------------------------------------------------------------------
-        # 2. Competiciones
+        # 2. Competitions
         # ------------------------------------------------------------------
         competitions = {}
         comp_data = [
@@ -88,7 +88,7 @@ class Command(BaseCommand):
             competitions[slug] = comp
 
         # ------------------------------------------------------------------
-        # 3. Plataformas
+        # 3. Platforms
         # ------------------------------------------------------------------
         platforms = {}
         plat_data = [
@@ -103,94 +103,171 @@ class Command(BaseCommand):
         for slug, name, color, sub, website in plat_data:
             plat, _ = Platform.objects.update_or_create(
                 slug=slug,
-                defaults={"name": name, "color": color, "requires_subscription": sub, "website_url": website},
+                defaults={
+                    "name": name,
+                    "color": color,
+                    "requires_subscription": sub,
+                    "website_url": website,
+                },
             )
             platforms[slug] = plat
 
         # ------------------------------------------------------------------
-        # 4. Eventos + retransmisiones
+        # 4. Events + broadcasts
         # ------------------------------------------------------------------
-        # Cada tupla: (competición, título, ronda, delta_horas_desde_ahora, estado, [retransmisiones])
-        # retransmisión = (plataforma, idioma, es_directo, hay_diferido)
+        # Each tuple: (competition, title, round, hours_delta_from_now, status, [broadcasts])
+        # broadcast = (platform, language, is_live_stream, vod_available)
         ES, LA = Broadcast.LANGUAGE_ES_ES, Broadcast.LANGUAGE_ES_LA
 
         events_data = [
-            # --- EN DIRECTO ---
+            # --- LIVE ---
             (
-                "mundial-2026", "Argentina vs Francia", "Octavos de final", -0.5, Event.STATUS_LIVE,
+                "mundial-2026",
+                "Argentina vs Francia",
+                "Round of 16",
+                -0.5,
+                Event.STATUS_LIVE,
                 [("dazn", ES, True, False), ("vix", LA, True, False)],
             ),
             (
-                "wimbledon", "Carlos Alcaraz vs Novak Djokovic", "Cuartos de final", -0.3, Event.STATUS_LIVE,
+                "wimbledon",
+                "Carlos Alcaraz vs Novak Djokovic",
+                "Quarter-finals",
+                -0.3,
+                Event.STATUS_LIVE,
                 [("movistar-plus", ES, True, False)],
             ),
             (
-                "motogp", "Clasificación GP de los Países Bajos", "Q2", -0.2, Event.STATUS_LIVE,
+                "motogp",
+                "Dutch GP Qualifying",
+                "Q2",
+                -0.2,
+                Event.STATUS_LIVE,
                 [("dazn", ES, True, False)],
             ),
-            # --- PRÓXIMOS ---
+            # --- UPCOMING ---
             (
-                "la-liga", "FC Barcelona vs Atlético de Madrid", "Jornada 1", 96, Event.STATUS_SCHEDULED,
+                "la-liga",
+                "FC Barcelona vs Atlético de Madrid",
+                "Matchday 1",
+                96,
+                Event.STATUS_SCHEDULED,
                 [("dazn", ES, True, False)],
             ),
             (
-                "premier-league", "Liverpool vs Arsenal", "Jornada 1", 120, Event.STATUS_SCHEDULED,
+                "premier-league",
+                "Liverpool vs Arsenal",
+                "Matchday 1",
+                120,
+                Event.STATUS_SCHEDULED,
                 [("dazn", ES, True, False)],
             ),
             (
-                "nba", "Boston Celtics vs Denver Nuggets", "Pretemporada", 72, Event.STATUS_SCHEDULED,
+                "nba",
+                "Boston Celtics vs Denver Nuggets",
+                "Preseason",
+                72,
+                Event.STATUS_SCHEDULED,
                 [("vix", LA, True, False), ("espn", ES, True, False)],
             ),
             (
-                "f1", "Gran Premio de Gran Bretaña", "Carrera", 30, Event.STATUS_SCHEDULED,
+                "f1",
+                "British Grand Prix",
+                "Race",
+                30,
+                Event.STATUS_SCHEDULED,
                 [("dazn", ES, True, False)],
             ),
             (
-                "motogp", "Carrera GP de los Países Bajos", "Carrera", 6, Event.STATUS_SCHEDULED,
+                "motogp",
+                "Dutch GP Race",
+                "Race",
+                6,
+                Event.STATUS_SCHEDULED,
                 [("dazn", ES, True, False)],
             ),
             (
-                "wimbledon", "Final femenina", "Final", 168, Event.STATUS_SCHEDULED,
+                "wimbledon",
+                "Women's Final",
+                "Final",
+                168,
+                Event.STATUS_SCHEDULED,
                 [("movistar-plus", ES, True, False), ("eurosport", ES, True, False)],
             ),
             (
-                "esqui-alpino", "Slalom gigante de Sölden (preseason)", "Manga única", 240, Event.STATUS_SCHEDULED,
+                "esqui-alpino",
+                "Sölden Giant Slalom (preseason)",
+                "Single run",
+                240,
+                Event.STATUS_SCHEDULED,
                 [("eurosport", ES, True, False)],
             ),
             (
-                "salto-esqui", "Gran Premio de Verano - Salto", "Individual", 200, Event.STATUS_SCHEDULED,
+                "salto-esqui",
+                "Summer Grand Prix - Ski Jump",
+                "Individual",
+                200,
+                Event.STATUS_SCHEDULED,
                 [("rtve-play", ES, True, False)],
             ),
             (
-                "europa-league", "Real Sociedad vs AS Roma", "Fase de liga", 144, Event.STATUS_SCHEDULED,
+                "europa-league",
+                "Real Sociedad vs AS Roma",
+                "League stage",
+                144,
+                Event.STATUS_SCHEDULED,
                 [("movistar-plus", ES, True, False)],
             ),
-            # --- PASADOS CON DIFERIDO, DENTRO DE LOS ÚLTIMOS 7 DÍAS (deben verse) ---
+            # --- PAST WITH REPLAY, WITHIN THE LAST 7 DAYS (should be visible) ---
             (
-                "mundial-2026", "España vs Brasil", "Fase de grupos", -72, Event.STATUS_FINISHED,
+                "mundial-2026",
+                "España vs Brasil",
+                "Group stage",
+                -72,
+                Event.STATUS_FINISHED,
                 [("dazn", ES, False, True), ("vix", LA, False, True)],
             ),
             (
-                "serie-a", "Juventus vs Inter de Milán", "Jornada 30", -120, Event.STATUS_FINISHED,
+                "serie-a",
+                "Juventus vs Inter de Milán",
+                "Matchday 30",
+                -120,
+                Event.STATUS_FINISHED,
                 [("bein-sports", ES, False, True)],
             ),
-            # --- PASADOS CON DIFERIDO PERO YA CADUCADO (> 7 días, NO deben verse) ---
+            # --- PAST WITH REPLAY BUT EXPIRED (>7 days, should NOT be visible) ---
             (
-                "f1", "Gran Premio de Mónaco", "Carrera", -240, Event.STATUS_FINISHED,
+                "f1",
+                "Monaco Grand Prix",
+                "Race",
+                -240,
+                Event.STATUS_FINISHED,
                 [("dazn", ES, False, True)],
             ),
             (
-                "esqui-fondo", "50km de Holmenkollen", "Distancia", -480, Event.STATUS_FINISHED,
+                "esqui-fondo",
+                "Holmenkollen 50km",
+                "Distance",
+                -480,
+                Event.STATUS_FINISHED,
                 [("rtve-play", ES, False, True), ("eurosport", ES, False, True)],
             ),
-            # --- PASADOS SIN DIFERIDO (NO deben verse, da igual la fecha) ---
+            # --- PAST WITHOUT REPLAY (should NOT be visible regardless of date) ---
             (
-                "bundesliga", "Bayern Múnich vs Borussia Dortmund", "Jornada 28", -96, Event.STATUS_FINISHED,
+                "bundesliga",
+                "Bayern Múnich vs Borussia Dortmund",
+                "Matchday 28",
+                -96,
+                Event.STATUS_FINISHED,
                 [("dazn", ES, False, False)],
             ),
             (
-                "ligue-1", "PSG vs Olympique de Marsella", "Jornada 29", -100, Event.STATUS_FINISHED,
-                [],  # sin ninguna retransmisión en español -> oculto
+                "ligue-1",
+                "PSG vs Olympique de Marsella",
+                "Matchday 29",
+                -100,
+                Event.STATUS_FINISHED,
+                [],  # no Spanish broadcast -> hidden
             ),
         ]
 
@@ -207,9 +284,8 @@ class Command(BaseCommand):
             event_slug = slugify(title)[:60]
             for plat_slug, language, is_live, vod in broadcasts:
                 platform = platforms[plat_slug]
-                # Link "profundo" de ejemplo, directo a ESTE evento en ESTA
-                # plataforma (no a su home). En producción vendrá de la API
-                # de cada fuente (api_football, jolpica_f1...).
+                # Deep link example pointing directly to THIS event on THIS platform.
+                # In production this will come from each source API (api_football, jolpica_f1...).
                 direct_link = f"{platform.website_url}/es/evento/{event.pk or 'x'}-{event_slug}"
                 Broadcast.objects.create(
                     event=event,
@@ -219,8 +295,10 @@ class Command(BaseCommand):
                     event_url=direct_link if is_live else "",
                     vod_available=vod,
                     vod_url=direct_link if vod else "",
-                    commentary_region="Latinoamérica" if language == LA else "",
+                    commentary_region="Latin America" if language == LA else "",
                 )
             created += 1
 
-        self.stdout.write(self.style.SUCCESS(f"Datos de ejemplo listos: {created} eventos creados/actualizados."))
+        self.stdout.write(
+            self.style.SUCCESS(f"Sample data ready: {created} events created/updated.")
+        )

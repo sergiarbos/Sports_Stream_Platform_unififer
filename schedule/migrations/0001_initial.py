@@ -5,93 +5,219 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Competition',
+            name="Competition",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=150)),
-                ('slug', models.SlugField(unique=True)),
-                ('source', models.CharField(blank=True, help_text="Identificador del adaptador de datos (ej: 'api_football', 'jolpica_f1', 'manual').", max_length=50)),
-                ('external_id', models.CharField(blank=True, max_length=100)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("name", models.CharField(max_length=150)),
+                ("slug", models.SlugField(unique=True)),
+                (
+                    "source",
+                    models.CharField(
+                        blank=True,
+                        help_text="Identificador del adaptador de datos (ej: 'api_football', 'jolpica_f1', 'manual').",
+                        max_length=50,
+                    ),
+                ),
+                ("external_id", models.CharField(blank=True, max_length=100)),
             ],
             options={
-                'verbose_name_plural': 'competitions',
-                'ordering': ['sport__order', 'name'],
+                "verbose_name_plural": "competitions",
+                "ordering": ["sport__order", "name"],
             },
         ),
         migrations.CreateModel(
-            name='Platform',
+            name="Platform",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=100)),
-                ('slug', models.SlugField(unique=True)),
-                ('website_url', models.URLField(blank=True)),
-                ('color', models.CharField(default='#2563eb', max_length=7)),
-                ('requires_subscription', models.BooleanField(default=True)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("name", models.CharField(max_length=100)),
+                ("slug", models.SlugField(unique=True)),
+                ("website_url", models.URLField(blank=True)),
+                ("color", models.CharField(default="#2563eb", max_length=7)),
+                ("requires_subscription", models.BooleanField(default=True)),
             ],
             options={
-                'ordering': ['name'],
+                "ordering": ["name"],
             },
         ),
         migrations.CreateModel(
-            name='Sport',
+            name="Sport",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=100)),
-                ('slug', models.SlugField(unique=True)),
-                ('category', models.CharField(choices=[('football', 'Fútbol'), ('basketball', 'Baloncesto'), ('motorsport', 'Motor'), ('tennis', 'Tenis'), ('winter_sports', 'Deportes de invierno')], max_length=30)),
-                ('icon', models.CharField(blank=True, help_text='Emoji usado como icono rápido en la interfaz (ej: ⚽).', max_length=10)),
-                ('order', models.PositiveSmallIntegerField(default=0)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                ("name", models.CharField(max_length=100)),
+                ("slug", models.SlugField(unique=True)),
+                (
+                    "category",
+                    models.CharField(
+                        choices=[
+                            ("football", "Fútbol"),
+                            ("basketball", "Baloncesto"),
+                            ("motorsport", "Motor"),
+                            ("tennis", "Tenis"),
+                            ("winter_sports", "Deportes de invierno"),
+                        ],
+                        max_length=30,
+                    ),
+                ),
+                (
+                    "icon",
+                    models.CharField(
+                        blank=True,
+                        help_text="Emoji usado como icono rápido en la interfaz (ej: ⚽).",
+                        max_length=10,
+                    ),
+                ),
+                ("order", models.PositiveSmallIntegerField(default=0)),
             ],
             options={
-                'ordering': ['order', 'name'],
+                "ordering": ["order", "name"],
             },
         ),
         migrations.CreateModel(
-            name='Event',
+            name="Event",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('title', models.CharField(help_text="Ej: 'Real Madrid vs Manchester City' o 'Gran Premio de Mónaco'.", max_length=200)),
-                ('participant_home', models.CharField(blank=True, max_length=120)),
-                ('participant_away', models.CharField(blank=True, max_length=120)),
-                ('start_datetime', models.DateTimeField()),
-                ('status', models.CharField(choices=[('scheduled', 'Programado'), ('live', 'En directo'), ('finished', 'Finalizado')], default='scheduled', max_length=20)),
-                ('external_id', models.CharField(blank=True, max_length=100)),
-                ('round_name', models.CharField(blank=True, help_text="Ej: 'Jornada 12', 'Octavos de final', 'Clasificación'.", max_length=120)),
-                ('competition', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='events', to='schedule.competition')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                (
+                    "title",
+                    models.CharField(
+                        help_text="Ej: 'Real Madrid vs Manchester City' o 'Gran Premio de Mónaco'.",
+                        max_length=200,
+                    ),
+                ),
+                ("participant_home", models.CharField(blank=True, max_length=120)),
+                ("participant_away", models.CharField(blank=True, max_length=120)),
+                ("start_datetime", models.DateTimeField()),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[
+                            ("scheduled", "Programado"),
+                            ("live", "En directo"),
+                            ("finished", "Finalizado"),
+                        ],
+                        default="scheduled",
+                        max_length=20,
+                    ),
+                ),
+                ("external_id", models.CharField(blank=True, max_length=100)),
+                (
+                    "round_name",
+                    models.CharField(
+                        blank=True,
+                        help_text="Ej: 'Jornada 12', 'Octavos de final', 'Clasificación'.",
+                        max_length=120,
+                    ),
+                ),
+                (
+                    "competition",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="events",
+                        to="schedule.competition",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['start_datetime'],
+                "ordering": ["start_datetime"],
             },
         ),
         migrations.AddField(
-            model_name='competition',
-            name='sport',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='competitions', to='schedule.sport'),
+            model_name="competition",
+            name="sport",
+            field=models.ForeignKey(
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="competitions",
+                to="schedule.sport",
+            ),
         ),
         migrations.CreateModel(
-            name='Broadcast',
+            name="Broadcast",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('language', models.CharField(choices=[('es-ES', 'Español (España)'), ('es-LA', 'Español (Latinoamérica)')], default='es-ES', max_length=10)),
-                ('commentary_region', models.CharField(blank=True, help_text="Opcional, ej: 'México', 'Argentina', 'Conjunta Latam'.", max_length=80)),
-                ('is_live_stream', models.BooleanField(default=True, help_text='¿Esta plataforma lo retransmite en directo?')),
-                ('vod_available', models.BooleanField(default=False, help_text='¿Hay repetición/diferido disponible una vez finalizado el evento?')),
-                ('vod_url', models.URLField(blank=True)),
-                ('notes', models.CharField(blank=True, max_length=200)),
-                ('event', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='broadcasts', to='schedule.event')),
-                ('platform', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='broadcasts', to='schedule.platform')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True, primary_key=True, serialize=False, verbose_name="ID"
+                    ),
+                ),
+                (
+                    "language",
+                    models.CharField(
+                        choices=[
+                            ("es-ES", "Español (España)"),
+                            ("es-LA", "Español (Latinoamérica)"),
+                        ],
+                        default="es-ES",
+                        max_length=10,
+                    ),
+                ),
+                (
+                    "commentary_region",
+                    models.CharField(
+                        blank=True,
+                        help_text="Opcional, ej: 'México', 'Argentina', 'Conjunta Latam'.",
+                        max_length=80,
+                    ),
+                ),
+                (
+                    "is_live_stream",
+                    models.BooleanField(
+                        default=True, help_text="¿Esta plataforma lo retransmite en directo?"
+                    ),
+                ),
+                (
+                    "vod_available",
+                    models.BooleanField(
+                        default=False,
+                        help_text="¿Hay repetición/diferido disponible una vez finalizado el evento?",
+                    ),
+                ),
+                ("vod_url", models.URLField(blank=True)),
+                ("notes", models.CharField(blank=True, max_length=200)),
+                (
+                    "event",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="broadcasts",
+                        to="schedule.event",
+                    ),
+                ),
+                (
+                    "platform",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="broadcasts",
+                        to="schedule.platform",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['platform__name'],
-                'unique_together': {('event', 'platform', 'language')},
+                "ordering": ["platform__name"],
+                "unique_together": {("event", "platform", "language")},
             },
         ),
     ]

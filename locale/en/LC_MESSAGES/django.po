@@ -1,0 +1,97 @@
+# English translations for Sports Stream Platform
+# Generated manually — run `compilemessages` after editing.
+msgid ""
+msgstr ""
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: en\n"
+
+msgid "Where to watch each event"
+msgstr "Where to watch each event"
+
+msgid "Find where to watch every sports event live or on demand in Spanish."
+msgstr "Find where to watch every sports event live or on demand in Spanish."
+
+msgid "Search team, driver or competition…"
+msgstr "Search team, driver or competition…"
+
+msgid "Search events"
+msgstr "Search events"
+
+msgid "Change language"
+msgstr "Change language"
+
+msgid "event(s) live now"
+msgstr "event(s) live now"
+
+msgid "No events live right now"
+msgstr "No events live right now"
+
+msgid "Events live right now"
+msgstr "Events live right now"
+
+msgid "Live events"
+msgstr "Live events"
+
+msgid "Live right now"
+msgstr "Live right now"
+
+msgid "Nothing live right now — check upcoming events."
+msgstr "Nothing live right now — check upcoming events."
+
+msgid "View all live events"
+msgstr "View all live events"
+
+msgid "LINKS"
+msgstr "LINKS"
+
+msgid "RESULTS"
+msgstr "RESULTS"
+
+msgid "All"
+msgstr "All"
+
+msgid "All platforms"
+msgstr "All platforms"
+
+msgid "Live now"
+msgstr "Live now"
+
+msgid "Upcoming · schedule"
+msgstr "Upcoming · schedule"
+
+msgid "On demand · last"
+msgstr "On demand · last"
+
+msgid "days"
+msgstr "days"
+
+msgid "No upcoming events scheduled for this filter yet."
+msgstr "No upcoming events scheduled for this filter yet."
+
+msgid "No events from the last"
+msgstr "No events from the last"
+
+msgid "with a replay available in Spanish for this filter."
+msgstr "with a replay available in Spanish for this filter."
+
+msgid "Links panel"
+msgstr "Links panel"
+
+msgid "Click \"Get links\" on the schedule or pick a platform directly"
+msgstr "Click \"Get links\" on the schedule or pick a platform directly"
+
+msgid "No links available for this filter yet."
+msgstr "No links available for this filter yet."
+
+msgid "LATEST RESULTS"
+msgstr "LATEST RESULTS"
+
+msgid "No results in the last 14 days."
+msgstr "No results in the last 14 days."
+
+msgid "Get links"
+msgstr "Get links"
+
+msgid "Set reminder"
+msgstr "Set reminder"

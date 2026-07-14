@@ -4,7 +4,7 @@ This document explains the architecture and functionality of the newly added **R
 
 ## Overview
 
-The Results section allows users to view the final outcomes of past sporting events, specifically focusing on **Football** and **Motorsport (Formula 1)**. 
+The Results section allows users to view the final outcomes of past sporting events, specifically focusing on **Football** and **Motorsport (Formula 1)**.
 
 Users can toggle between the standard "LINKS" mode (which shows upcoming/live streams) and the "RESULTADOS" mode using the top navigation tabs. When the Results mode is active, platform filters are hidden, as the focus shifts to post-match data rather than where to watch it.
 
@@ -40,7 +40,7 @@ When the user switches to `?view_mode=results`, the following rules apply:
 
 The results list is designed with a premium, frosted glass aesthetic:
 - **No Scores on the Main View for F1:** To keep the interface clean, F1 events only show the Grand Prix name (with a dynamically generated country flag) and the session.
-- **Football Scores:** Football matches display the actual score (`X - Y`) enclosed in a subtle translucent box. 
+- **Football Scores:** Football matches display the actual score (`X - Y`) enclosed in a subtle translucent box.
 - **Dynamic Flags:** A custom Django template filter (`f1_flags.py`) automatically parses the name of the F1 Grand Prix and prepends the corresponding country's emoji flag to the title.
 
 ## 4. The Live Details Page (`/results/<id>/`)

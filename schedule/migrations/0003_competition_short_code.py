@@ -4,15 +4,18 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('schedule', '0002_broadcast_event_url_alter_broadcast_vod_url'),
+        ("schedule", "0002_broadcast_event_url_alter_broadcast_vod_url"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='competition',
-            name='short_code',
-            field=models.CharField(blank=True, help_text="Siglas cortas para la insignia visual de la competición (ej: 'CL', 'NBA', 'F1'). Se usan en vez de logotipos con copyright.", max_length=6),
+            model_name="competition",
+            name="short_code",
+            field=models.CharField(
+                blank=True,
+                help_text="Siglas cortas para la insignia visual de la competición (ej: 'CL', 'NBA', 'F1'). Se usan en vez de logotipos con copyright.",
+                max_length=6,
+            ),
         ),
     ]

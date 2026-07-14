@@ -1,6 +1,9 @@
-from django.utils import timezone
 from datetime import timedelta
+
+from django.utils import timezone
+
 from .models import Event
+
 
 def categorize_event(event):
     """
@@ -9,16 +12,17 @@ def categorize_event(event):
     """
     if event.status == Event.STATUS_LIVE:
         return "Live"
-        
+
     now = timezone.localtime(timezone.now())
     event_local = timezone.localtime(event.start_datetime)
-    
+
     if event_local.date() == now.date():
         return "Today"
     elif event_local.date() == (now + timedelta(days=1)).date():
         return "Tomorrow"
-        
+
     return None
+
 
 def filter_events(events, category):
     """

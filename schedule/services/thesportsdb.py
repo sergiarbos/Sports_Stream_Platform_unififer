@@ -23,10 +23,11 @@ Validated league IDs:
 """
 
 import time
-from datetime import datetime, timezone as dt_timezone
+from datetime import UTC, datetime
 
 import requests
 from django.conf import settings
+from django.core.cache import cache
 
 from .adapters import BaseSourceAdapter
 
@@ -37,19 +38,19 @@ TSDB_BASE = "https://www.thesportsdb.com/api/v1/json"
 LEAGUE_CONFIG = {
     # --- Football ---
     "champions-league": (4418, "2025-2026"),
-    "europa-league":    (4480, "2025-2026"),
-    "la-liga":          (4335, "2025-2026"),
-    "premier-league":   (4328, "2025-2026"),
-    "serie-a":          (4332, "2025-2026"),
-    "bundesliga":       (4331, "2025-2026"),
-    "ligue-1":          (4334, "2025-2026"),
-    "mundial-2026":     (4429, "2026"),  # FIFA World Cup (national teams)
+    "europa-league": (4480, "2025-2026"),
+    "la-liga": (4335, "2025-2026"),
+    "premier-league": (4328, "2025-2026"),
+    "serie-a": (4332, "2025-2026"),
+    "bundesliga": (4331, "2025-2026"),
+    "ligue-1": (4334, "2025-2026"),
+    "mundial-2026": (4429, "2026"),  # FIFA World Cup (national teams)
     # --- Basketball ---
-    "nba":              (4387, "2025-2026"),
+    "nba": (4387, "2025-2026"),
     # --- Motorsport ---
-    "motogp":           (4407, "2026"),
+    "motogp": (4407, "2026"),
     # --- Tennis ---
-    "wimbledon":        (4451, "2026"),
+    "wimbledon": (4451, "2026"),
 }
 
 
@@ -61,7 +62,7 @@ def _parse_event(item):
         start = datetime.strptime(f"{date_str}T{time_str}", "%Y-%m-%dT%H:%M:%S")
     except ValueError:
         return None
-    start = start.replace(tzinfo=dt_timezone.utc)
+    start = start.replace(tzinfo=UTC)
 
     raw_status = item.get("strStatus") or ""
     # TheSportsDB uses: "NS" (not started), "FT" (full time), "HT" (half time)…
@@ -88,7 +89,15 @@ def _parse_event(item):
 
 
 def _get(api_key, endpoint, params, retries=3):
-    """HTTP GET with retries that respects the rate limit."""
+    """HTTP GET with cache + retries that respects the rate limit."""
+    # Build a stable cache key from endpoint + sorted params
+    league_id = params.get("id", "")
+    cache_key = f"tsdb:{endpoint}:{league_id}"
+    ttl = getattr(settings, "API_CACHE_TTL", 3600)
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
+
     url = f"{TSDB_BASE}/{api_key}/{endpoint}.php"
     for attempt in range(retries):
         try:
@@ -99,7 +108,9 @@ def _get(api_key, endpoint, params, retries=3):
                 continue
             if r.status_code != 200:
                 return []
-            return r.json().get("events") or []
+            result = r.json().get("events") or []
+            cache.set(cache_key, result, ttl)
+            return result
         except Exception:
             time.sleep(5)
     return []

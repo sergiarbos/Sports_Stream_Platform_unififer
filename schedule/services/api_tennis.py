@@ -13,7 +13,6 @@ whichever tennis provider you choose, as they vary quite a lot between
 providers (unlike football, there is no widely adopted standard).
 """
 
-import requests
 from django.conf import settings
 
 from .adapters import BaseSourceAdapter
