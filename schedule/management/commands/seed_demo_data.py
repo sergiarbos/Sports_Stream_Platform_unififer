@@ -25,6 +25,11 @@ class Command(BaseCommand):
             action="store_true",
             help="Deletes all app data before recreating it.",
         )
+        parser.add_argument(
+            "--no-events",
+            action="store_true",
+            help="Only creates Sports, Competitions and Platforms — skips demo events. Use this in production.",
+        )
 
     def handle(self, *args, **options):
         if options["flush"]:
@@ -270,6 +275,15 @@ class Command(BaseCommand):
                 [],  # no Spanish broadcast -> hidden
             ),
         ]
+
+        if options["no_events"]:
+            self.stdout.write(
+                self.style.SUCCESS(
+                    "Base data ready: sports, competitions and platforms created. "
+                    "Skipping demo events (--no-events)."
+                )
+            )
+            return
 
         created = 0
         for comp_slug, title, round_name, hours_delta, status, broadcasts in events_data:
