@@ -1,5 +1,7 @@
 # Sports Broadcast Aggregator
 
+**Live Demo**: [sports-stream-platform-unififer.onrender.com](https://sports-stream-platform-unififer.onrender.com)
+
 Tells you on which platform you can watch a sporting event (with
 Spanish-language commentary), whether it is live right now, when it starts if
 it hasn't begun yet, or whether you can watch a replay if it has already
@@ -14,10 +16,11 @@ wrapped in an Android Studio app that consumes the same data.
 1. [Project rules](#project-rules)
 2. [Architecture](#architecture)
 3. [Local installation and setup](#local-installation-and-setup)
-4. [APIs used: which ones you can publish and which ones you cannot](#apis-used-which-ones-you-can-publish-and-which-ones-you-cannot)
-5. [Legal notice regarding DAZN / Movistar Plus+](#legal-notice-regarding-dazn--movistar-plus)
-6. [Pushing the project to GitHub](#pushing-the-project-to-github)
-7. [Phase 2: Android app](#phase-2-android-app)
+4. [Deployment on Render](#deployment-on-render)
+5. [APIs used: which ones you can publish and which ones you cannot](#apis-used-which-ones-you-can-publish-and-which-ones-you-cannot)
+6. [Legal notice regarding DAZN / Movistar Plus+](#legal-notice-regarding-dazn--movistar-plus)
+7. [Pushing the project to GitHub](#pushing-the-project-to-github)
+8. [Phase 2: Android app](#phase-2-android-app)
 
 ## Project rules
 
@@ -109,6 +112,40 @@ To verify the system also works with a real API (no key required):
 ```bash
 python manage.py import_f1_calendar
 ```
+
+## Deployment on Render
+
+This project is configured to run on Render.
+
+- **Live URL**: `https://sports-stream-platform-unififer.onrender.com`
+- **WSGI Server**: Uses `gunicorn` to serve the application in production.
+- **Static Files**: Serves compressed static assets via `whitenoise`.
+- **Dynamic Statuses**: The application dynamically computes event statuses based on the current wall-clock time relative to `start_datetime`, removing the need for a background task worker (like Huey) in serverless or free environments.
+
+### Render Configuration
+
+To deploy this project to Render as a Web Service:
+
+1. **Build Command**:
+   ```bash
+   pip install -r requirements.txt && python manage.py migrate && python manage.py createcachetable && python manage.py collectstatic --noinput && python manage.py seed_demo_data --no-events && python manage.py import_all_sports
+   ```
+   *(This ensures that all DB tables, cache tables, and static files are ready, structural/seeding metadata is loaded without demo events, and the actual live data gets populated on every deployment).*
+
+2. **Start Command**:
+   ```bash
+   gunicorn streamsync.wsgi:application
+   ```
+
+3. **Environment Variables**:
+   In the Render dashboard, go to the environment settings and add the following keys:
+
+   | Name | Value / Description |
+   |---|---|
+   | `DJANGO_SECRET_KEY` | Generate a secure key, e.g. with `python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"` |
+   | `DJANGO_DEBUG` | `False` |
+   | `DJANGO_ALLOWED_HOSTS` | `sports-stream-platform-unififer.onrender.com` |
+   | `THESPORTSDB_KEY` | `3` (Free public API key for sports data) |
 
 ## APIs used: which ones you can publish and which ones you cannot
 
