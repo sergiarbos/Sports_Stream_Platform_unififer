@@ -91,6 +91,7 @@ pip install -r requirements.txt
 cp .env.example .env            # then fill in the keys you want to use (optional at first)
 
 python manage.py migrate
+python manage.py createcachetable
 python manage.py seed_demo_data # creates sports, platforms and ~19 demo events
 
 python manage.py runserver
@@ -145,6 +146,7 @@ To deploy this project to Render as a Web Service:
    | `DJANGO_SECRET_KEY` | Generate a secure key, e.g. with `python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"` |
    | `DJANGO_DEBUG` | `False` |
    | `DJANGO_ALLOWED_HOSTS` | `sports-stream-platform-unififer.onrender.com` |
+   | `FOOTBALL_DATA_TOKEN` | Free personal token from `football-data.org` |
    | `THESPORTSDB_KEY` | `3` (Free public API key for sports data) |
 
 ## APIs used: which ones you can publish and which ones you cannot
@@ -173,8 +175,8 @@ DAZN/Movistar+ scraper. Instead:
 | Source | Covers | Key required? | Safe to publish on GitHub? |
 |---|---|---|---|
 | **Jolpica F1** (successor to Ergast) | F1 calendar | No | ✅ Yes — no key at all, 100% open |
-| **TheSportsDB** | NBA | Public test key: `3` | ✅ Yes, that test key is officially public and shared. If you later upgrade to a paid Patreon key (more requests, live data), that one **must not** be published |
-| **API-Football** | Champions, Europa League, LaLiga, Premier, Serie A, Bundesliga, Ligue 1 | Personal key (free tier: 100 requests/day) | ❌ No — it identifies your account and quota. Keep it in `.env` only |
+| **football-data.org** | Champions, Premier, LaLiga, Bundesliga, Serie A, Ligue 1 and World Cup | Free personal token | ❌ No — keep `FOOTBALL_DATA_TOKEN` in `.env` only |
+| **TheSportsDB** | Europa League, NBA, MotoGP and Wimbledon | Public test key: `3` | ✅ Yes, that test key is officially public and shared. If you later upgrade to a paid Patreon key (more requests, live data), that one **must not** be published |
 | **Static Calendar** | MotoGP, 2026 World Cup | No | ✅ Yes — local Python dictionary to bypass TheSportsDB free tier limitations |
 | **Tennis provider** (your choice, e.g. api-tennis.com) | Wimbledon, ATP, WTA | Personal key | ❌ No — `.env` only |
 | Winter sports (alpine skiing, ski jumping, cross-country) | — | — | No decent free API exists; events are added manually via `/admin/` (`ManualSourceAdapter`) |

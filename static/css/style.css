@@ -391,6 +391,33 @@ input {
   }
 }
 
+@media (max-width: 768px) {
+  .topbar-inner {
+    grid-template-columns: 1fr;
+    padding: 12px 14px;
+  }
+
+  .topbar-tools {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .search-box {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .lang-btn,
+  .live-bell {
+    min-width: 36px;
+  }
+
+  .bell-dropdown {
+    width: min(92vw, 320px);
+    right: -10px;
+  }
+}
+
 .bell-dropdown {
   position: absolute;
   top: calc(100% + 10px);

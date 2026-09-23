@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+
+DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$DIR"
+if [ -x "$DIR/gradlew" ]; then
+  exec "$DIR/gradlew" "$@"
+fi
+
+if [ ! -x "$DIR/gradlew" ]; then
+  echo "Gradle wrapper not found. Please open this project in Android Studio and let it generate it."
+  exit 1
+fi

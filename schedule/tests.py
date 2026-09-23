@@ -101,6 +101,23 @@ class HomeViewTest(TestCase):
         self.assertNotIn(far_event, response.context["upcoming_events"])
 
 
+class MobileApiTest(TestCase):
+    def setUp(self):
+        sport = make_sport()
+        comp = make_competition(sport)
+        platform = make_platform()
+        self.event = make_event(comp, hours_delta=+3)
+        make_broadcast(self.event, platform)
+
+    def test_mobile_events_api_returns_visible_events_json(self):
+        response = self.client.get(reverse("schedule:events_api"))
+
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertIn("events", payload)
+        self.assertTrue(any(event["id"] == self.event.id for event in payload["events"]))
+
+
 class DateTimeFilterTest(TestCase):
     def setUp(self):
         self.sport = make_sport()

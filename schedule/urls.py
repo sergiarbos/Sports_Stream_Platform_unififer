@@ -6,6 +6,7 @@ app_name = "schedule"
 
 urlpatterns = [
     path("", views.home, name="home"),
+    path("api/events/", views.events_api, name="events_api"),
     path("results/<int:event_id>/", views.event_details, name="event_details"),
     path("api/live-status/", views.live_status_api, name="live_status_api"),
 ]

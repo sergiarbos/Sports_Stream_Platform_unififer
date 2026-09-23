@@ -64,14 +64,14 @@ class Command(BaseCommand):
         # ------------------------------------------------------------------
         competitions = {}
         comp_data = [
-            ("champions-league", "UEFA Champions League", "CL", "futbol", "api_football"),
-            ("europa-league", "UEFA Europa League", "EL", "futbol", "api_football"),
-            ("mundial-2026", "Copa Mundial 2026", "WC", "futbol", "api_football"),
-            ("la-liga", "LaLiga", "LL", "futbol", "api_football"),
-            ("premier-league", "Premier League", "PL", "futbol", "api_football"),
-            ("serie-a", "Serie A", "SA", "futbol", "api_football"),
-            ("bundesliga", "Bundesliga", "BL", "futbol", "api_football"),
-            ("ligue-1", "Ligue 1", "L1", "futbol", "api_football"),
+            ("champions-league", "UEFA Champions League", "CL", "futbol", "football_data"),
+            ("europa-league", "UEFA Europa League", "EL", "futbol", "thesportsdb"),
+            ("mundial-2026", "Copa Mundial 2026", "WC", "futbol", "football_data"),
+            ("la-liga", "LaLiga", "LL", "futbol", "football_data"),
+            ("premier-league", "Premier League", "PL", "futbol", "football_data"),
+            ("serie-a", "Serie A", "SA", "futbol", "football_data"),
+            ("bundesliga", "Bundesliga", "BL", "futbol", "football_data"),
+            ("ligue-1", "Ligue 1", "L1", "futbol", "football_data"),
             ("nba", "NBA", "NBA", "baloncesto", "thesportsdb"),
             ("f1", "Fórmula 1", "F1", "motor", "jolpica_f1"),
             ("motogp", "MotoGP", "MGP", "motor", "thesportsdb"),

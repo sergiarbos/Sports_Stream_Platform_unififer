@@ -10,7 +10,7 @@ Usage:
 Sources:
   - Formula 1         → Jolpica (free, no key required)
   - MotoGP            → TheSportsDB (public key "3")
-  - Football (7 leagues) → TheSportsDB (public key "3")
+    - Football (7 leagues) → football-data.org (personal free token)
   - NBA               → TheSportsDB (public key "3")
   - Wimbledon         → TheSportsDB (public key "3")
   - Winter sports     → Manual (no reliable free API available)
@@ -27,6 +27,7 @@ import time
 from django.core.management.base import BaseCommand
 
 from schedule.models import Broadcast, Competition, Event, Platform
+from schedule.services.football_data import FootballDataAdapter
 from schedule.services.jolpica_f1 import JolpicaF1Adapter
 from schedule.services.static_calendar import StaticCalendarAdapter
 from schedule.services.thesportsdb import TheSportsDBAdapter
@@ -73,14 +74,15 @@ IMPORT_PLAN = [
     ("f1", "jolpica_f1", {"season": "2026"}),
     # Motorsport — Static Calendar (bypasses API rate limits)
     ("motogp", "static_calendar", {"competition_slug": "motogp"}),
-    # Football — TheSportsDB
-    ("champions-league", "thesportsdb", {"competition_slug": "champions-league"}),
+    # Football — football-data.org
+    ("champions-league", "football_data", {"competition_slug": "champions-league"}),
+    # Europa League is not included in football-data.org's free competition set.
     ("europa-league", "thesportsdb", {"competition_slug": "europa-league"}),
-    ("la-liga", "thesportsdb", {"competition_slug": "la-liga"}),
-    ("premier-league", "thesportsdb", {"competition_slug": "premier-league"}),
-    ("serie-a", "thesportsdb", {"competition_slug": "serie-a"}),
-    ("bundesliga", "thesportsdb", {"competition_slug": "bundesliga"}),
-    ("ligue-1", "thesportsdb", {"competition_slug": "ligue-1"}),
+    ("la-liga", "football_data", {"competition_slug": "la-liga"}),
+    ("premier-league", "football_data", {"competition_slug": "premier-league"}),
+    ("serie-a", "football_data", {"competition_slug": "serie-a"}),
+    ("bundesliga", "football_data", {"competition_slug": "bundesliga"}),
+    ("ligue-1", "football_data", {"competition_slug": "ligue-1"}),
     # World Cup — Static Calendar (bypasses API rate limits)
     ("mundial-2026", "static_calendar", {"competition_slug": "mundial-2026"}),
     # Basketball — TheSportsDB
@@ -91,7 +93,7 @@ IMPORT_PLAN = [
 
 
 class Command(BaseCommand):
-    help = "Imports real events from all APIs (Jolpica F1 + TheSportsDB) for every sport."
+    help = "Imports real events from football-data.org, Jolpica F1 and TheSportsDB."
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -115,6 +117,7 @@ class Command(BaseCommand):
             return
 
         adapters = {
+            "football_data": FootballDataAdapter(),
             "jolpica_f1": JolpicaF1Adapter(),
             "thesportsdb": TheSportsDBAdapter(),
             "static_calendar": StaticCalendarAdapter(),
@@ -155,17 +158,22 @@ class Command(BaseCommand):
             comp_broadcasts = 0
 
             for event_data in events_data:
+                defaults = {
+                    "title": event_data["title"],
+                    "round_name": event_data.get("round_name", ""),
+                    "start_datetime": event_data["start_datetime"],
+                    "status": event_data["status"],
+                    "participant_home": event_data.get("participant_home", ""),
+                    "participant_away": event_data.get("participant_away", ""),
+                }
+                for field in ("score_home", "score_away", "result_text"):
+                    if field in event_data:
+                        defaults[field] = event_data[field]
+
                 event, _ = Event.objects.update_or_create(
                     competition=competition,
                     external_id=event_data["external_id"],
-                    defaults={
-                        "title": event_data["title"],
-                        "round_name": event_data.get("round_name", ""),
-                        "start_datetime": event_data["start_datetime"],
-                        "status": event_data["status"],
-                        "participant_home": event_data.get("participant_home", ""),
-                        "participant_away": event_data.get("participant_away", ""),
-                    },
+                    defaults=defaults,
                 )
                 comp_imported += 1
 
@@ -201,6 +209,8 @@ class Command(BaseCommand):
             # Pause between TheSportsDB calls to respect the rate limit
             if source == "thesportsdb":
                 time.sleep(2)
+            elif source == "football_data":
+                time.sleep(6)
 
         self.stdout.write(
             "\n"

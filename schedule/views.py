@@ -3,6 +3,7 @@ from django.conf import settings
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.utils import timezone
+from django.views.decorators.http import require_GET
 
 from .models import Event, Platform, Sport
 
@@ -199,6 +200,68 @@ def event_details(request, event_id):
         "api_data": api_data,
     }
     return render(request, "schedule/event_details.html", context)
+
+
+@require_GET
+def events_api(request):
+    """
+    JSON endpoint for the Android WebView/mobile wrapper.
+    Returns the same visible events the web UI exposes, but in an app-friendly
+    structure so a native client can consume them without parsing HTML.
+    """
+    now = timezone.now()
+    LIVE_WINDOW = timezone.timedelta(hours=2, minutes=30)
+
+    event_list = []
+    for event in (
+        Event.objects.select_related("competition", "competition__sport")
+        .prefetch_related("broadcasts__platform")
+        .order_by("start_datetime")
+    ):
+        if event.start_datetime <= now and event.start_datetime >= now - LIVE_WINDOW:
+            effective_status = Event.STATUS_LIVE
+        elif event.start_datetime < now - LIVE_WINDOW:
+            effective_status = Event.STATUS_FINISHED
+        else:
+            effective_status = Event.STATUS_SCHEDULED
+
+        event.status = effective_status
+        if not event.is_visible:
+            continue
+
+        broadcasts = [
+            {
+                "id": broadcast.id,
+                "platform": broadcast.platform.name,
+                "language": broadcast.language,
+                "event_url": broadcast.event_url,
+                "vod_url": broadcast.vod_url,
+                "is_latam": broadcast.is_latam,
+            }
+            for broadcast in event.broadcasts.all()
+            if broadcast.language.startswith("es")
+        ]
+        if not broadcasts:
+            continue
+
+        event_list.append(
+            {
+                "id": event.id,
+                "title": event.title,
+                "competition": event.competition.name,
+                "sport": event.competition.sport.name,
+                "sport_icon": event.competition.sport.icon,
+                "start_datetime": event.start_datetime.isoformat(),
+                "status": effective_status,
+                "broadcasts": broadcasts,
+                "participant_home": event.participant_home,
+                "participant_away": event.participant_away,
+                "score_home": event.score_home,
+                "score_away": event.score_away,
+            }
+        )
+
+    return JsonResponse({"count": len(event_list), "events": event_list})
 
 
 def live_status_api(request):

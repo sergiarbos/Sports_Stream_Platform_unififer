@@ -117,7 +117,9 @@ class Event(models.Model):
 
     # Maximum forward horizon: scheduled events further away than this
     # number of days are hidden from the schedule (prevents infinite lists).
-    UPCOMING_WINDOW_DAYS = 365
+    # This matches the project’s validation rule: scheduled events beyond
+    # 30 days are excluded from the main dashboard.
+    UPCOMING_WINDOW_DAYS = 30
 
     competition = models.ForeignKey(Competition, on_delete=models.CASCADE, related_name="events")
     title = models.CharField(

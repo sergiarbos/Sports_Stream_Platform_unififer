@@ -208,5 +208,6 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # (not secret, e.g. public demo/free-tier keys) and which must always
 # remain private.
 API_FOOTBALL_KEY = env("API_FOOTBALL_KEY", default="")
+FOOTBALL_DATA_TOKEN = env("FOOTBALL_DATA_TOKEN", default="")
 THESPORTSDB_KEY = env("THESPORTSDB_KEY", default="3")  # "3" = public test key
 API_TENNIS_KEY = env("API_TENNIS_KEY", default="")
