@@ -42,12 +42,15 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "django_huey",
+    "rest_framework",
+    "corsheaders",
     "schedule",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.locale.LocaleMiddleware",  # i18n: detect language from URL/cookie
     "django.middleware.common.CommonMiddleware",
@@ -211,3 +214,25 @@ API_FOOTBALL_KEY = env("API_FOOTBALL_KEY", default="")
 FOOTBALL_DATA_TOKEN = env("FOOTBALL_DATA_TOKEN", default="")
 THESPORTSDB_KEY = env("THESPORTSDB_KEY", default="3")  # "3" = public test key
 API_TENNIS_KEY = env("API_TENNIS_KEY", default="")
+
+
+# ---------------------------------------------------------------------------
+# Django REST Framework
+# ---------------------------------------------------------------------------
+REST_FRAMEWORK = {
+    "DEFAULT_RENDERER_CLASSES": [
+        "rest_framework.renderers.JSONRenderer",
+    ],
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 50,
+}
+
+
+# ---------------------------------------------------------------------------
+# CORS — allow Flutter app (and browser devtools) to call /api/v1/
+# ---------------------------------------------------------------------------
+# The sports API is read-only, so opening CORS to all origins is safe.
+# Tighten this in production if needed by replacing CORS_ALLOW_ALL_ORIGINS
+# with CORS_ALLOWED_ORIGINS = ["https://your-app-domain.com"].
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_URLS_REGEX = r"^/api/.*$"  # Only affects /api/* routes

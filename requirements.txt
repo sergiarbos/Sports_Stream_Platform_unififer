@@ -6,3 +6,5 @@ django-huey==1.2.1
 responses==0.25.3
 gunicorn==23.0.0
 whitenoise==6.9.0
+djangorestframework==3.16.0
+django-cors-headers==4.7.0

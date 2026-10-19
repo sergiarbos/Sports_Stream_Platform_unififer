@@ -289,3 +289,142 @@ def live_status_api(request):
         ],
     }
     return JsonResponse(data)
+
+
+# ===========================================================================
+# REST API — consumed by the Flutter mobile app
+# ===========================================================================
+# All endpoints are read-only and require no authentication.
+# Business rules (is_visible, dynamic status, 14-day archive window) are
+# applied here exactly as they are in the home() web view.
+# ===========================================================================
+
+from rest_framework.response import Response  # noqa: E402
+from rest_framework.views import APIView  # noqa: E402
+
+from .serializers import EventSerializer, SportSerializer  # noqa: E402
+
+
+class SportListAPIView(APIView):
+    """
+    GET /api/v1/sports/
+
+    Returns all sports with their emoji icon and slug.
+    Used to populate the sport-filter picker in the mobile app.
+    """
+
+    def get(self, request):
+        from .models import Sport
+
+        sports = Sport.objects.all()
+        serializer = SportSerializer(sports, many=True)
+        return Response(serializer.data)
+
+
+class EventListAPIView(APIView):
+    """
+    GET /api/v1/events/
+
+    Returns events grouped into three sections:
+      - live      → events happening right now
+      - upcoming  → scheduled events (up to UPCOMING_WINDOW_DAYS ahead)
+      - on_demand → finished events within the ARCHIVE_WINDOW_DAYS window
+
+    Optional query params:
+      ?sport=<slug>     filter by sport slug (or omit / "all" for all sports)
+      ?platform=<slug>  filter to events broadcast on that platform in Spanish
+    """
+
+    def get(self, request):
+        selected_sport_slug = request.GET.get("sport", "all")
+        selected_platform_slug = request.GET.get("platform", "all")
+
+        events_qs = (
+            Event.objects.select_related("competition", "competition__sport")
+            .prefetch_related("broadcasts__platform")
+            .exclude(
+                status=Event.STATUS_SCHEDULED,
+                start_datetime__gt=(
+                    timezone.now() + timezone.timedelta(days=Event.UPCOMING_WINDOW_DAYS)
+                ),
+            )
+        )
+
+        if selected_sport_slug not in ("all", ""):
+            events_qs = events_qs.filter(competition__sport__slug=selected_sport_slug)
+        if selected_platform_slug not in ("all", ""):
+            events_qs = events_qs.filter(
+                broadcasts__platform__slug=selected_platform_slug,
+                broadcasts__language__startswith="es",
+            ).distinct()
+
+        now = timezone.now()
+        LIVE_WINDOW = timezone.timedelta(hours=2, minutes=30)
+
+        live, upcoming, past = [], [], []
+        for event in events_qs:
+            # Dynamic status computation — identical to home() web view.
+            if event.start_datetime <= now and event.start_datetime >= now - LIVE_WINDOW:
+                effective_status = Event.STATUS_LIVE
+            elif event.start_datetime < now - LIVE_WINDOW:
+                effective_status = Event.STATUS_FINISHED
+            else:
+                effective_status = Event.STATUS_SCHEDULED
+
+            event.status = effective_status
+            # Attach as a regular attribute so EventSerializer can read it.
+            event.effective_status = effective_status
+
+            if not event.is_visible:
+                continue
+
+            if effective_status == Event.STATUS_LIVE:
+                live.append(event)
+            elif effective_status == Event.STATUS_FINISHED:
+                past.append(event)
+            else:
+                upcoming.append(event)
+
+        upcoming.sort(key=lambda e: e.start_datetime)
+        past.sort(key=lambda e: e.start_datetime, reverse=True)
+
+        data = {
+            "live": EventSerializer(live, many=True).data,
+            "upcoming": EventSerializer(upcoming, many=True).data,
+            "on_demand": EventSerializer(past, many=True).data,
+            "live_count": len(live),
+            "generated_at": now,
+        }
+        return Response(data)
+
+
+class EventDetailAPIView(APIView):
+    """
+    GET /api/v1/events/<id>/
+
+    Returns full detail for a single event including all broadcasts.
+    Used by the EventDetailScreen in Flutter.
+    """
+
+    def get(self, request, event_id):
+        from django.shortcuts import get_object_or_404
+
+        event = get_object_or_404(
+            Event.objects.select_related("competition", "competition__sport").prefetch_related(
+                "broadcasts__platform"
+            ),
+            pk=event_id,
+        )
+        now = timezone.now()
+        LIVE_WINDOW = timezone.timedelta(hours=2, minutes=30)
+
+        if event.start_datetime <= now and event.start_datetime >= now - LIVE_WINDOW:
+            event.effective_status = Event.STATUS_LIVE
+        elif event.start_datetime < now - LIVE_WINDOW:
+            event.effective_status = Event.STATUS_FINISHED
+        else:
+            event.effective_status = Event.STATUS_SCHEDULED
+        event.status = event.effective_status
+
+        serializer = EventSerializer(event)
+        return Response(serializer.data)
