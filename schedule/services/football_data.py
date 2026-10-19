@@ -17,7 +17,6 @@ COMPETITION_CODES = {
     "serie-a": "SA",
     "bundesliga": "BL1",
     "ligue-1": "FL1",
-    "mundial-2026": "WC",
 }
 
 

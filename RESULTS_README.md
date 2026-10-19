@@ -34,7 +34,6 @@ When the user switches to `?view_mode=results`, the following rules apply:
 - **Time Limits (The 14-Day Rule):**
   - **Football:** The queryset is strictly filtered to only show matches that have concluded within the **last 14 days**.
   - **Motorsport (F1):** The 14-day limit is bypassed. The system will load all finished races from the current season.
-- **Exclusions:** The World Cup (`mundial-2026`) is explicitly excluded from the results view, as there is no direct, free API available to reliably fetch its historical results in this implementation.
 
 ## 3. UI/UX Design (The Glassmorphism Row)
 

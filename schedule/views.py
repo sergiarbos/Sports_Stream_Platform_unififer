@@ -56,7 +56,6 @@ def home(request):
             Event.objects.select_related("competition", "competition__sport")
             .filter(start_datetime__lt=now_dt - LIVE_WINDOW)
             .filter(condition)
-            .exclude(competition__slug="mundial-2026")
         )
         if selected_sport_slug != "all":
             qs = qs.filter(competition__sport__slug=selected_sport_slug)

@@ -66,7 +66,6 @@ class Command(BaseCommand):
         comp_data = [
             ("champions-league", "UEFA Champions League", "CL", "futbol", "football_data"),
             ("europa-league", "UEFA Europa League", "EL", "futbol", "thesportsdb"),
-            ("mundial-2026", "Copa Mundial 2026", "WC", "futbol", "football_data"),
             ("la-liga", "LaLiga", "LL", "futbol", "football_data"),
             ("premier-league", "Premier League", "PL", "futbol", "football_data"),
             ("serie-a", "Serie A", "SA", "futbol", "football_data"),
@@ -126,14 +125,6 @@ class Command(BaseCommand):
 
         events_data = [
             # --- LIVE ---
-            (
-                "mundial-2026",
-                "Argentina vs Francia",
-                "Round of 16",
-                -0.5,
-                Event.STATUS_LIVE,
-                [("dazn", ES, True, False), ("vix", LA, True, False)],
-            ),
             (
                 "wimbledon",
                 "Carlos Alcaraz vs Novak Djokovic",
@@ -224,14 +215,6 @@ class Command(BaseCommand):
                 [("movistar-plus", ES, True, False)],
             ),
             # --- PAST WITH REPLAY, WITHIN THE LAST 7 DAYS (should be visible) ---
-            (
-                "mundial-2026",
-                "España vs Brasil",
-                "Group stage",
-                -72,
-                Event.STATUS_FINISHED,
-                [("dazn", ES, False, True), ("vix", LA, False, True)],
-            ),
             (
                 "serie-a",
                 "Juventus vs Inter de Milán",

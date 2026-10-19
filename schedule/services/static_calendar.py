@@ -1,6 +1,6 @@
 """
 Static calendar adapter for competitions that the free TheSportsDB API
-fails to fetch accurately (like MotoGP and the World Cup).
+fails to fetch accurately (like MotoGP).
 """
 
 import json

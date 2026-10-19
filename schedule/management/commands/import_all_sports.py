@@ -49,10 +49,6 @@ BROADCAST_MAP = {
     "serie-a": [("dazn", ES, True)],
     "bundesliga": [("dazn", ES, True)],
     "ligue-1": [("dazn", ES, True)],
-    "mundial-2026": [
-        ("dazn", ES, True),
-        ("vix", LA, True),
-    ],
     # Basketball
     "nba": [
         ("vix", LA, True),
@@ -83,8 +79,6 @@ IMPORT_PLAN = [
     ("serie-a", "football_data", {"competition_slug": "serie-a"}),
     ("bundesliga", "football_data", {"competition_slug": "bundesliga"}),
     ("ligue-1", "football_data", {"competition_slug": "ligue-1"}),
-    # World Cup — Static Calendar (bypasses API rate limits)
-    ("mundial-2026", "static_calendar", {"competition_slug": "mundial-2026"}),
     # Basketball — TheSportsDB
     ("nba", "thesportsdb", {"competition_slug": "nba"}),
     # Tennis — TheSportsDB

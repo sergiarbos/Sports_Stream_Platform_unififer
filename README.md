@@ -36,7 +36,7 @@ Implemented in `schedule/models.py` (properties `Event.is_visible` and
 4. **Past** events → visible by default for **14 days** (in the "On Demand" section). After 14 days, they disappear automatically without exception.
 
 Sports and competitions included as examples: Football (Champions League,
-Europa League, 2026 World Cup, LaLiga, Premier League, Serie A, Bundesliga,
+Europa League, LaLiga, Premier League, Serie A, Bundesliga,
 Ligue 1), Basketball (NBA), Motorsport (F1, MotoGP), Tennis (Wimbledon) and
 Winter Sports (alpine/slalom skiing, ski jumping, cross-country skiing).
 
@@ -61,7 +61,7 @@ streamsync_repo/
     │   ├── jolpica_f1.py    <- REAL and functional, F1, no key required
     │   ├── api_football.py  <- skeleton, football, requires a private key
     │   ├── thesportsdb.py   <- skeleton, NBA, public test key
-    │   ├── static_calendar.py <- static local calendar for MotoGP and World Cup to bypass API limits
+   │   ├── static_calendar.py <- static local calendar for MotoGP to bypass API limits
     │   └── api_tennis.py    <- skeleton, tennis, requires a private key
     └── management/commands/
         ├── seed_demo_data.py     <- demo data (no API required)
@@ -175,9 +175,9 @@ DAZN/Movistar+ scraper. Instead:
 | Source | Covers | Key required? | Safe to publish on GitHub? |
 |---|---|---|---|
 | **Jolpica F1** (successor to Ergast) | F1 calendar | No | ✅ Yes — no key at all, 100% open |
-| **football-data.org** | Champions, Premier, LaLiga, Bundesliga, Serie A, Ligue 1 and World Cup | Free personal token | ❌ No — keep `FOOTBALL_DATA_TOKEN` in `.env` only |
+| **football-data.org** | Champions, Premier, LaLiga, Bundesliga, Serie A and Ligue 1 | Free personal token | ❌ No — keep `FOOTBALL_DATA_TOKEN` in `.env` only |
 | **TheSportsDB** | Europa League, NBA, MotoGP and Wimbledon | Public test key: `3` | ✅ Yes, that test key is officially public and shared. If you later upgrade to a paid Patreon key (more requests, live data), that one **must not** be published |
-| **Static Calendar** | MotoGP, 2026 World Cup | No | ✅ Yes — local Python dictionary to bypass TheSportsDB free tier limitations |
+| **Static Calendar** | MotoGP | No | ✅ Yes — local Python dictionary to bypass TheSportsDB free tier limitations |
 | **Tennis provider** (your choice, e.g. api-tennis.com) | Wimbledon, ATP, WTA | Personal key | ❌ No — `.env` only |
 | Winter sports (alpine skiing, ski jumping, cross-country) | — | — | No decent free API exists; events are added manually via `/admin/` (`ManualSourceAdapter`) |
 

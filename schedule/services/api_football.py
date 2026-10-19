@@ -1,6 +1,6 @@
 """
 Adapter for API-Football (https://www.api-football.com/), via RapidAPI
-or directly. Covers Champions League, Europa League, World Cup, LaLiga,
+or directly. Covers Champions League, Europa League, LaLiga,
 Premier League, Serie A, Bundesliga, Ligue 1 and many more.
 
 ⚠️ PRIVATE KEY — DO NOT PUBLISH
@@ -35,7 +35,6 @@ LEAGUE_IDS = {
     "serie-a": 135,
     "bundesliga": 78,
     "ligue-1": 61,
-    "mundial-2026": 1,
 }
 
 
