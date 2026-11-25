@@ -1,23 +1,23 @@
+{% load team_badges %}
 {% comment %}
-Tarjeta destacada: bloque tipográfico con los equipos en dos líneas,
-avatares circulares minimalistas y flecha lateral como único enlace hacia
-el panel de emisiones.
+Tarjeta destacada: los equipos se identifican por iniciales tipográficas
+sobre un escudo con los colores del club (sin logotipos con derechos).
 {% endcomment %}
 <a href="#event-{{ event.id }}" class="featured-card {{ event.competition.sport.accent_class }}">
   <div class="featured-body">
     <div class="featured-topline">
       {% include "schedule/_status_pill.html" with event=event compact=True %}
-      <span class="featured-comp">{{ event.competition.name }}{% if event.round_name %} · {{ event.round_name }}{% endif %}</span>
+      <span class="featured-comp"><span class="comp-flag">{{ event.competition|comp_flag }}</span> {{ event.competition.name }}{% if event.round_name %} · {{ event.round_name }}{% endif %}</span>
     </div>
     <div class="featured-matchup">
       <div class="featured-team-line">
-        <span class="team-avatar team-avatar--home" aria-hidden="true"></span>
-        <span class="featured-team-name">{{ event.participant_home|default:event.title }}</span>
+        <span class="team-avatar team-avatar--home" style="{{ event.participant_home|default:event.title|team_gradient }}" aria-hidden="true">{{ event.participant_home|default:event.title|team_code }}</span>
+        <span class="featured-team-name" title="{{ event.participant_home|default:event.title }}">{{ event.participant_home|default:event.title|team_short }}</span>
       </div>
       {% if event.participant_away %}
       <div class="featured-team-line">
-        <span class="team-avatar team-avatar--away" aria-hidden="true"></span>
-        <span class="featured-team-name">{{ event.participant_away }}</span>
+        <span class="team-avatar team-avatar--away" style="{{ event.participant_away|team_gradient }}" aria-hidden="true">{{ event.participant_away|team_code }}</span>
+        <span class="featured-team-name" title="{{ event.participant_away }}">{{ event.participant_away|team_short }}</span>
       </div>
       {% endif %}
     </div>

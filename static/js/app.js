@@ -6,6 +6,33 @@
     document.querySelectorAll(".schedule-row[data-search]"),
   );
   const featured = document.querySelectorAll(".featured-card");
+  const competitionHeaders = Array.from(
+    document.querySelectorAll(".competition-subheader"),
+  );
+
+  function syncCompetitionHeaders() {
+    competitionHeaders.forEach((header) => {
+      let node = header.nextElementSibling;
+      let hasVisibleRow = false;
+      while (
+        node &&
+        !node.classList.contains("competition-subheader") &&
+        !node.classList.contains("section-header") &&
+        !node.classList.contains("dgrouphead")
+      ) {
+        if (
+          (node.classList.contains("schedule-row") ||
+            node.classList.contains("result-row")) &&
+          node.style.display !== "none"
+        ) {
+          hasVisibleRow = true;
+          break;
+        }
+        node = node.nextElementSibling;
+      }
+      header.style.display = hasVisibleRow ? "" : "none";
+    });
+  }
 
   let fuse = null;
   if (typeof Fuse !== "undefined" && rowEls.length) {
@@ -34,6 +61,7 @@
       if (!query) {
         rowEls.forEach((row) => (row.style.display = ""));
         featured.forEach((card) => (card.style.display = ""));
+        syncCompetitionHeaders();
         return;
       }
 
@@ -59,6 +87,7 @@
       rowEls.forEach((row, i) => {
         row.style.display = matchSet.has(i) ? "" : "none";
       });
+      syncCompetitionHeaders();
     });
   }
 
@@ -116,6 +145,62 @@
       const id = this.getAttribute("href").slice(1);
       history.pushState(null, "", "#" + id);
       selectEvent(id, true);
+    });
+  });
+
+  document.querySelectorAll(".schedule-row[data-event-id]").forEach((row) => {
+    row.addEventListener("click", (e) => {
+      if (e.target.closest("button, a")) return;
+      const link = row.querySelector('a[href^="#event-"]');
+      if (link) link.click();
+    });
+  });
+
+  document.querySelectorAll(".result-row").forEach((row) => {
+    row.addEventListener("click", (e) => {
+      if (e.target.closest("a")) return;
+      const link = row.querySelector("a.result-open");
+      if (link) link.click();
+    });
+  });
+
+  document.querySelectorAll("[data-event-target]").forEach((button) => {
+    button.addEventListener("click", () => {
+      const id = button.dataset.eventTarget;
+      history.pushState(null, "", "#" + id);
+      selectEvent(id, true);
+    });
+  });
+
+  const datePills = Array.from(document.querySelectorAll(".date-pill"));
+
+  datePills.forEach((pill) => {
+    pill.addEventListener("click", () => {
+      const target = document.getElementById(pill.dataset.dateTarget);
+      if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
+
+  document.querySelectorAll(".date-nav-arrow").forEach((arrow) => {
+    arrow.addEventListener("click", () => {
+      if (!datePills.length) return;
+      const step = Number(arrow.dataset.dateStep || 0);
+      const currentIndex = datePills.findIndex((pill) => {
+        const target = document.getElementById(pill.dataset.dateTarget);
+        if (!target) return false;
+        const top = target.getBoundingClientRect().top;
+        return top >= -8 && top <= 120;
+      });
+      const base =
+        currentIndex < 0 ? (step > 0 ? 0 : datePills.length - 1) : currentIndex;
+      const nextIndex = Math.min(
+        datePills.length - 1,
+        Math.max(0, base + step),
+      );
+      const target = document.getElementById(
+        datePills[nextIndex].dataset.dateTarget,
+      );
+      if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   });
 
@@ -308,6 +393,16 @@
   document.addEventListener("keydown", function (e) {
     const tag = (document.activeElement || {}).tagName || "";
     const inInput = tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
+
+    // Ctrl/Cmd + K → focus search
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+      e.preventDefault();
+      if (input) {
+        input.focus();
+        input.select();
+      }
+      return;
+    }
 
     // "/" → focus search (only when not already typing)
     if (e.key === "/" && !inInput) {

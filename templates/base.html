@@ -11,7 +11,7 @@
   {# Fuse.js — fuzzy search library (loaded before app.js) #}
   <script src="https://cdn.jsdelivr.net/npm/fuse.js@7/dist/fuse.min.js"></script>
   {# Bump ?v= whenever style.css or app.js changes #}
-  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=11">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=13">
 </head>
 <body>
   <header class="topbar">
@@ -20,7 +20,8 @@
       <div class="topbar-tools">
         <label class="search-box" for="event-search">
           <svg class="search-icon" viewBox="0 0 20 20" aria-hidden="true"><circle cx="9" cy="9" r="6.5" stroke="currentColor" stroke-width="1.6" fill="none"/><line x1="14" y1="14" x2="18.5" y2="18.5" stroke="currentColor" stroke-width="1.6"/></svg>
-          <input id="event-search" type="text" placeholder="Busca equipo, piloto o competición…" autocomplete="off" aria-label="Buscar eventos">
+          <input id="event-search" type="text" placeholder="Busca equipo, piloto o competición…" autocomplete="off" aria-label="Buscar eventos" aria-keyshortcuts="/ Control+K Meta+K">
+          <kbd class="search-shortcut" aria-hidden="true">/</kbd>
         </label>
 
         {# ── Language selector ─────────────────────────────────────── #}
@@ -95,6 +96,6 @@
 
   {# SW registration must come before app.js so scheduleReminder() is available #}
   <script src="{% static 'js/sw-register.js' %}?v=1"></script>
-  <script src="{% static 'js/app.js' %}?v=7"></script>
+  <script src="{% static 'js/app.js' %}?v=9"></script>
 </body>
 </html>

@@ -1,0 +1,11 @@
+{% if date_links|length > 1 %}
+<nav class="date-nav" aria-label="Navegar por fechas">
+  <button type="button" class="date-nav-arrow" data-date-step="-1" aria-label="Día anterior">‹</button>
+  <span class="date-nav-pills">
+    {% for link in date_links %}
+    <button type="button" class="date-pill" data-date-target="date-{{ link.iso }}">{{ link.label }}</button>
+    {% endfor %}
+  </span>
+  <button type="button" class="date-nav-arrow" data-date-step="1" aria-label="Día siguiente">›</button>
+</nav>
+{% endif %}

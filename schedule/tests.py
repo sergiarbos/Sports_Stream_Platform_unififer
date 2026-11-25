@@ -12,7 +12,20 @@ from django.urls import reverse
 from django.utils import timezone
 
 from .models import Broadcast, Competition, Event, Platform, Sport
-from .utils import categorize_event, filter_events
+from .utils import (
+    broadcast_meta,
+    categorize_event,
+    competition_flag,
+    filter_events,
+    live_minute,
+    mark_competition_sections,
+    platform_code,
+    result_detail,
+    short_team_name,
+    team_colors,
+    team_initials,
+    team_text_style,
+)
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -157,6 +170,216 @@ class CompetitionFilterTest(TestCase):
         )
         self.assertIn(finished, response.context["results_events"])
         self.assertNotContains(response, "Test Match")
+
+
+class TeamPresentationTest(TestCase):
+    def test_short_names_initials_and_colors(self):
+        cases = (
+            ("FC Barcelona", "Barcelona", "FCB"),
+            ("Real Madrid", "Real Madrid", "RM"),
+            ("Inter de Milán", "Inter", "INT"),
+            ("PSG", "PSG", "PSG"),
+            ("Club Atlético de Madrid", "Atlético", "ATM"),
+            ("Sabah FK", "Sabah FK", "SF"),
+            ("VfB Stuttgart", "VfB Stuttgart", "VFB"),
+            ("Viking FK", "Viking FK", "VF"),
+            ("PSV", "PSV", "PSV"),
+            ("SSC Napoli", "SSC Napoli", "SSC"),
+            ("SK Slovan Bratislava", "SK Slovan", "SKS"),
+            ("SK Slavia Praha", "SK Slavia Praha", "SLA"),
+            ("Villarreal", "Villarreal", "VIL"),
+        )
+        for full, short, code in cases:
+            self.assertEqual(short_team_name(full), short)
+            self.assertEqual(team_initials(full), code)
+            self.assertLessEqual(len(code), 3)
+
+        self.assertIn("#a50044", team_colors("FC Barcelona"))
+        self.assertIn("#d4af37", team_colors("Real Madrid"))
+        self.assertIn("--team-text: #0a0a0a", team_colors("Villarreal"))
+        self.assertIn("--team-text: #ffffff", team_colors("FC Barcelona"))
+        self.assertEqual(team_text_style("Villarreal")[0], "#0a0a0a")
+
+    def test_competition_flags(self):
+        self.assertEqual(competition_flag("champions-league"), "🇪🇺")
+        self.assertEqual(competition_flag("la-liga"), "🇪🇸")
+        self.assertEqual(competition_flag("unknown-league"), "")
+
+    def test_platform_codes_and_broadcast_metadata(self):
+        sport = make_sport()
+        comp = make_competition(sport)
+        event = make_event(comp, hours_delta=1)
+
+        dazn = make_platform()
+        self.assertEqual(platform_code(dazn), "DAZN")
+        self.assertIn("SUSCRIPCIÓN", broadcast_meta(make_broadcast(event, dazn)))
+
+        rtve = Platform.objects.create(
+            name="RTVE Play",
+            slug="rtve-play",
+            color="#e30613",
+            website_url="https://www.rtve.es/play",
+            requires_subscription=False,
+        )
+        self.assertIn("EN ABIERTO", broadcast_meta(make_broadcast(event, rtve)))
+
+        movistar = Platform.objects.create(
+            name="Movistar Plus+",
+            slug="movistar-plus",
+            color="#0033a0",
+            website_url="https://www.movistarplus.es",
+            requires_subscription=True,
+        )
+        self.assertIn("M+ CL", broadcast_meta(make_broadcast(event, movistar)))
+
+    def test_live_minute_and_result_detail(self):
+        sport = make_sport()
+        comp = make_competition(sport)
+
+        live = make_event(comp, status=Event.STATUS_LIVE)
+        live.start_datetime = timezone.now() - timedelta(minutes=64)
+        live.save()
+        minute = int(live_minute(live).rstrip("'"))
+        self.assertIn(minute, (63, 64, 65))
+        self.assertEqual(live_minute(make_event(comp)), "")
+
+        finished = make_event(comp, status=Event.STATUS_FINISHED)
+        finished.result_text = "Pen. 4-3"
+        finished.save()
+        self.assertIn("PEN.", result_detail(finished))
+
+    def test_competition_section_grouping(self):
+        sport = make_sport()
+        comp = make_competition(sport)
+        first = make_event(comp, hours_delta=+3)
+        first.round_name = "Jornada 5"
+        second = make_event(comp, hours_delta=+4)
+        second.round_name = "Jornada 5"
+        other = Competition.objects.create(sport=sport, name="LaLiga", slug="la-liga")
+        third = make_event(other, hours_delta=+5)
+
+        mark_competition_sections([first, second, third])
+
+        self.assertTrue(first.is_competition_start)
+        self.assertFalse(second.is_competition_start)
+        self.assertTrue(third.is_competition_start)
+        self.assertIn("🇪🇺", first.competition_section_label)
+        self.assertIn("JORNADA 5", first.competition_section_label)
+
+
+class ListPresentationTest(TestCase):
+    def setUp(self):
+        sport = make_sport()
+        comp = make_competition(sport)
+        platform = make_platform()
+        pairs = (
+            ("FC Internazionale Milano", "Slavia Praga"),
+            ("FC Barcelona", "PSG"),
+        )
+        for index, (home, away) in enumerate(pairs):
+            event = make_event(comp, hours_delta=+26 + index)
+            event.title = f"{home} vs {away}"
+            event.participant_home = home
+            event.participant_away = away
+            event.round_name = "Jornada 5"
+            event.save()
+            make_broadcast(event, platform)
+
+    def test_schedule_rows_use_short_names_tooltips_and_competition_header(self):
+        response = self.client.get(reverse("schedule:home"), {"sport": "football"})
+        html = response.content.decode()
+
+        self.assertEqual(html.count('class="competition-subheader"'), 1)
+        self.assertContains(response, 'Inter <span class="vs-sep">vs</span> SK Slavia Praha')
+        self.assertContains(response, 'title="FC Internazionale Milano vs Slavia Praga"')
+        self.assertContains(response, "FCB")
+        self.assertContains(response, "platform-hint")
+        self.assertContains(response, 'class="search-shortcut"')
+        self.assertNotContains(response, "VER EMISIONES")
+
+    def test_results_use_minimal_detail_icon(self):
+        finished = Event.objects.create(
+            competition=Competition.objects.get(slug="champions"),
+            title="FC Barcelona vs PSG",
+            participant_home="FC Barcelona",
+            participant_away="PSG",
+            start_datetime=timezone.now() - timedelta(hours=5),
+            status=Event.STATUS_FINISHED,
+            score_home=2,
+            score_away=1,
+        )
+        make_broadcast(finished, Platform.objects.get(slug="dazn"))
+
+        response = self.client.get(
+            reverse("schedule:home"), {"view_mode": "results", "sport": "football"}
+        )
+        self.assertContains(response, 'class="result-open"')
+        self.assertNotContains(response, "DETALLES")
+
+    def test_rows_do_not_repeat_competition_subtitle(self):
+        response = self.client.get(reverse("schedule:home"), {"sport": "football"})
+        html = response.content.decode()
+        self.assertNotIn("schedule-row-comp", html)
+        self.assertNotIn("result-comp", html)
+
+    def test_live_row_shows_minute_score_and_platform_codes(self):
+        comp = Competition.objects.get(slug="champions")
+        live = make_event(comp, hours_delta=-1, status=Event.STATUS_LIVE)
+        live.title = "Live Match"
+        live.score_home = 1
+        live.score_away = 0
+        live.save()
+        make_broadcast(live, Platform.objects.get(slug="dazn"))
+
+        response = self.client.get(reverse("schedule:home"), {"sport": "football"})
+        html = response.content.decode()
+        self.assertIn("live-time", html)
+        self.assertIn("live-score", html)
+        self.assertIn("platform-hint-code", html)
+        upcoming_row = html[
+            html.index('data-event-id="event-1"') : html.index('data-event-id="event-2"')
+        ]
+        self.assertLess(upcoming_row.index("reminder-bell-btn"), upcoming_row.index("row-open"))
+
+    def test_date_navigation_and_panel_placeholder_summary(self):
+        comp = Competition.objects.get(slug="champions")
+        platform = Platform.objects.get(slug="dazn")
+        extra = make_event(comp, hours_delta=+50)
+        extra.title = "Extra Match"
+        extra.participant_home = "PSG"
+        extra.participant_away = "Villarreal"
+        extra.save()
+        make_broadcast(extra, platform)
+
+        response = self.client.get(reverse("schedule:home"), {"sport": "football"})
+        html = response.content.decode()
+        self.assertIn("date-nav", html)
+        self.assertIn("date-pill", html)
+        self.assertIn('id="date-', html)
+        self.assertIn("placeholder-open", html)
+
+    def test_motorsport_results_use_single_event_layout(self):
+        sport = Sport.objects.create(
+            name="Motor",
+            slug="motor",
+            category=Sport.CATEGORY_MOTORSPORT,
+            icon="🏁",
+            order=1,
+        )
+        comp = Competition.objects.create(sport=sport, name="Fórmula 1", slug="f1", short_code="F1")
+        event = make_event(comp, hours_delta=-5, status=Event.STATUS_FINISHED)
+        event.title = "GP de Abu Dabi · Carrera"
+        event.result_text = "1º Verstappen, 2º Norris, 3º Leclerc"
+        event.save()
+
+        response = self.client.get(
+            reverse("schedule:home"), {"view_mode": "results", "sport": "motor"}
+        )
+        html = response.content.decode()
+        self.assertIn("result-single", html)
+        self.assertIn("result-top3", html)
+        self.assertIn("result-when", html)
+        self.assertNotIn("result-score", html)
 
 
 class MobileApiTest(TestCase):

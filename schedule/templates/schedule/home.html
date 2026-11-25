@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% load i18n %}
+{% load i18n team_badges %}
 
 {% block content %}
 <div class="container">
@@ -40,7 +40,7 @@
     {% for competition in competitions %}
       <a href="?view_mode={{ view_mode }}&amp;sport={{ selected_sport_slug }}&amp;platform={{ selected_platform_slug }}&amp;competition={{ competition.slug }}" class="competition-tab {% if selected_competition_slug == competition.slug %}active{% endif %}">
         <span class="competition-badge" style="--comp-color:{{ competition.accent_color }}">{{ competition.badge_initials }}</span>
-        {{ competition.name }}
+        <span class="comp-flag">{{ competition|comp_flag }}</span> {{ competition.name }}
       </a>
     {% endfor %}
   </nav>
@@ -59,6 +59,8 @@
 
     <div class="schedule-col">
 
+      {% include "schedule/_date_nav.html" %}
+
       <div class="schedule-section" id="live-section">
         {% if live_events %}
           <div class="section-header live-header">
@@ -72,7 +74,7 @@
 
       <div class="schedule-section">
         {% for group in upcoming_groups %}
-          <div class="section-header date-header">{{ group.label }}</div>
+          <div class="section-header date-header" id="date-{{ group.date|date:'Y-m-d' }}">{{ group.label }}</div>
           {% for event in group.events %}
             {% include "schedule/_schedule_row.html" with card_type="upcoming" %}
           {% endfor %}
@@ -84,7 +86,7 @@
 
       <div class="schedule-section">
         {% for group in past_groups %}
-          <div class="section-header date-header">{{ group.label }}</div>
+          <div class="section-header date-header" id="date-{{ group.date|date:'Y-m-d' }}">{{ group.label }}</div>
           {% for event in group.events %}
             {% include "schedule/_schedule_row.html" with card_type="archive" %}
           {% endfor %}
@@ -108,7 +110,14 @@
           {% endfor %}
           <div class="links-placeholder">
             <span class="links-placeholder-icon">🔗</span>
-            No hay enlaces disponibles para este filtro.
+            {% if panel_hint %}
+            <button type="button" class="placeholder-open" data-event-target="event-{{ panel_hint.id }}">
+              <strong>{{ panel_hint.title }}</strong>
+              <span>{{ panel_hint.meta }}</span>
+            </button>
+            {% else %}
+            <span class="placeholder-empty">No hay enlaces disponibles para este filtro.</span>
+            {% endif %}
           </div>
         {% else %}
           <div class="empty-note">No hay enlaces disponibles para este filtro.</div>
@@ -120,6 +129,7 @@
   {% elif view_mode == 'results' %}
   <div class="results-app">
     <div class="section-header">ÚLTIMOS RESULTADOS</div>
+    {% include "schedule/_date_nav.html" %}
     {% if results_events %}
       {% for group in results_groups %}
         <div class="section-header date-header">{{ group.label }}</div>

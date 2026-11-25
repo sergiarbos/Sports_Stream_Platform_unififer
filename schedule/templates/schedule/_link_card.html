@@ -1,3 +1,4 @@
+{% load team_badges %}
 {% comment %}
 Tarjeta del panel de enlaces: se muestra cuando coincide con el ancla
 activa (#event-N) o cuando es la primera fila seleccionada por defecto.
@@ -16,8 +17,14 @@ Cada emisión se abre con una acción propia: IR AL CANAL.
     <div class="link-card-info">
       {% include "schedule/_status_pill.html" with event=event %}
       <span class="link-card-when">{{ event.start_datetime|date:"d F, H:i" }}</span>
-      <div class="link-card-comp">{{ event.competition.name }}{% if event.round_name %} · {{ event.round_name }}{% endif %}</div>
-      <div class="link-card-title">{{ event.title }}</div>
+      <div class="link-card-comp"><span class="comp-flag">{{ event.competition|comp_flag }}</span> {{ event.competition.name }}{% if event.round_name %} · {{ event.round_name }}{% endif %}</div>
+      <div class="link-card-title" title="{{ event.title }}">
+        {% if event.participant_home and event.participant_away %}
+          {{ event.participant_home|team_short }} <span class="vs-sep">vs</span> {{ event.participant_away|team_short }}
+        {% else %}
+          {{ event.title }}
+        {% endif %}
+      </div>
     </div>
   </div>
 
@@ -31,7 +38,7 @@ Cada emisión se abre con una acción propia: IR AL CANAL.
             <span class="redirect-btn-name">
               <span class="platform-dot" style="background:{{ broadcast.platform.color }}"></span>
               <span class="redirect-btn-platform">{{ broadcast.platform.name }}{% if broadcast.is_latam %} · LATAM{% endif %}</span>
-              <span class="redirect-btn-meta">HD · {{ broadcast.language|slice:":2"|upper }}</span>
+              <span class="redirect-btn-meta">{{ broadcast|broadcast_meta }}</span>
             </span>
             {% if url %}
               <span class="redirect-btn-arrow">IR AL CANAL ↗</span>

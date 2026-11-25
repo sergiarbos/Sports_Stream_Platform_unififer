@@ -8,6 +8,7 @@ from django.utils import timezone
 from django.views.decorators.http import require_GET
 
 from .models import Competition, Event, Platform, Sport
+from .utils import mark_competition_sections
 
 SPANISH_MONTHS = {
     1: "enero",
@@ -61,6 +62,48 @@ def group_events_by_date(events, today, prefix=None):
             )
         groups[-1]["events"].append(event)
     return groups
+
+
+def build_date_links(groups, today):
+    links = []
+    for group in sorted(groups, key=lambda item: item["date"]):
+        group_date = group["date"]
+        if group_date == today:
+            label = "Hoy"
+        elif group_date == today + timedelta(days=1):
+            label = "Mañana"
+        elif group_date == today - timedelta(days=1):
+            label = "Ayer"
+        else:
+            label = f"{SPANISH_WEEKDAYS[group_date.weekday()][:3].capitalize()} {group_date.day}"
+        links.append({"iso": group_date.isoformat(), "label": label})
+    return links
+
+
+def build_panel_hint(link_events, now):
+    if not link_events:
+        return None
+    event = next((item for item in link_events if item.status == Event.STATUS_LIVE), None)
+    if event is None:
+        event = next(
+            (
+                item
+                for item in link_events
+                if item.status == Event.STATUS_SCHEDULED and item.start_datetime > now
+            ),
+            None,
+        )
+    if event is None:
+        event = link_events[0]
+
+    if event.status == Event.STATUS_LIVE:
+        meta = "EN DIRECTO · pulsa para ver las emisiones"
+    elif event.status == Event.STATUS_FINISHED:
+        meta = "Último evento · pulsa para ver la repetición"
+    else:
+        minutes = max(0, int((event.start_datetime - now).total_seconds() // 60))
+        meta = f"En {minutes} min" if minutes < 60 else f"En {minutes // 60} h {minutes % 60} min"
+    return {"id": event.id, "title": event.title, "meta": meta}
 
 
 def home(request):
@@ -136,7 +179,9 @@ def home(request):
             qs = qs.filter(competition__slug=selected_competition_slug)
 
         results_events = qs.order_by("-start_datetime")
-        results_groups = group_events_by_date(results_events, timezone.localtime(now_dt).date())
+        mark_competition_sections(results_events)
+        today = timezone.localtime(now_dt).date()
+        results_groups = group_events_by_date(results_events, today)
 
         # Compute live_count so the bell badge is populated in results view too
         live_count = Event.objects.filter(status=Event.STATUS_LIVE).count()
@@ -151,6 +196,7 @@ def home(request):
             "view_mode": view_mode,
             "results_events": results_events,
             "results_groups": results_groups,
+            "date_links": build_date_links(results_groups, today),
             "live_count": live_count,
         }
         return render(request, "schedule/home.html", context)
@@ -203,6 +249,8 @@ def home(request):
 
     upcoming.sort(key=lambda e: e.start_datetime)
     past.sort(key=lambda e: e.start_datetime, reverse=True)
+    for events in (live, upcoming, past):
+        mark_competition_sections(events)
 
     today = timezone.localtime(now).date()
     upcoming_groups = group_events_by_date(upcoming, today)
@@ -217,6 +265,8 @@ def home(request):
     link_events = live + upcoming + past
 
     context = {
+        "date_links": build_date_links(upcoming_groups + past_groups, today),
+        "panel_hint": build_panel_hint(link_events, now),
         "sports": sports,
         "platforms": platforms,
         "selected_sport_slug": selected_sport_slug,

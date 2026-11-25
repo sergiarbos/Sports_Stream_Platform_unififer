@@ -1,72 +1,88 @@
-{% load f1_flags %}
-<div class="result-row" style="--comp-color: {{ event.competition.accent_color }}">
+{% load f1_flags team_badges %}
+{% if event.is_competition_start %}
+<div class="competition-subheader">
+  <span class="comp-flag">{{ event.competition|comp_flag }}</span>
+  <span>{{ event.competition.name|upper }}</span>
+  {% if event.round_name %}<span class="comp-round">· {{ event.round_name|upper }}</span>{% endif %}
+</div>
+{% endif %}
+<div class="result-row is-finished">
   <div class="result-left">
     <span class="result-final">FINAL</span>
+    <span class="result-when">{{ event|result_detail }}</span>
   </div>
 
   <div class="result-main">
-    <div class="result-comp"><span class="result-comp-code">{{ event.competition.badge_initials }}</span> {{ event.competition.name }}{% if event.round_name %} · {{ event.round_name }}{% endif %}</div>
-
     <div class="result-matchup">
-      {% if event.competition.sport.category == "motorsport" %}
-        <div class="result-motorsport">
+      {% if event.competition.sport.category == "motorsport" or not event.participant_home or not event.participant_away %}
+        <div class="result-single">
           <span class="result-title">{{ event.title|add_flag }}</span>
+          {% if event.result_text %}
+          <span class="result-top3">{{ event.result_text }}</span>
+          {% elif event.round_name %}
+          <span class="result-top3">{{ event.round_name }}</span>
+          {% endif %}
         </div>
       {% elif event.score_home is not None and event.score_away is not None and event.score_home > event.score_away %}
         {% with home_state="is-winner" away_state="is-loser" %}
-        <div class="result-team home {{ home_state }}">
-          <span class="team-name {{ home_state }}">{{ event.participant_home }}</span>
+        <div class="result-team home {{ home_state }}" title="{{ event.participant_home }}">
+          <span class="team-name {{ home_state }}">{{ event.participant_home|team_short }}</span>
         </div>
         <div class="result-score">
           <span class="score-number {{ home_state }}">{{ event.score_home }}</span>
           <span class="score-dash">-</span>
           <span class="score-number {{ away_state }}">{{ event.score_away }}</span>
         </div>
-        <div class="result-team away {{ away_state }}">
-          <span class="team-name {{ away_state }}">{{ event.participant_away }}</span>
+        <div class="result-team away {{ away_state }}" title="{{ event.participant_away }}">
+          <span class="team-name {{ away_state }}">{{ event.participant_away|team_short }}</span>
         </div>
         {% endwith %}
       {% elif event.score_home is not None and event.score_away is not None and event.score_away > event.score_home %}
         {% with home_state="is-loser" away_state="is-winner" %}
-        <div class="result-team home {{ home_state }}">
-          <span class="team-name {{ home_state }}">{{ event.participant_home }}</span>
+        <div class="result-team home {{ home_state }}" title="{{ event.participant_home }}">
+          <span class="team-name {{ home_state }}">{{ event.participant_home|team_short }}</span>
         </div>
         <div class="result-score">
           <span class="score-number {{ home_state }}">{{ event.score_home }}</span>
           <span class="score-dash">-</span>
           <span class="score-number {{ away_state }}">{{ event.score_away }}</span>
         </div>
-        <div class="result-team away {{ away_state }}">
-          <span class="team-name {{ away_state }}">{{ event.participant_away }}</span>
+        <div class="result-team away {{ away_state }}" title="{{ event.participant_away }}">
+          <span class="team-name {{ away_state }}">{{ event.participant_away|team_short }}</span>
         </div>
         {% endwith %}
       {% elif event.score_home is not None and event.score_away is not None %}
         {% with team_state="is-draw" %}
-        <div class="result-team home {{ team_state }}">
-          <span class="team-name {{ team_state }}">{{ event.participant_home }}</span>
+        <div class="result-team home {{ team_state }}" title="{{ event.participant_home }}">
+          <span class="team-name {{ team_state }}">{{ event.participant_home|team_short }}</span>
         </div>
         <div class="result-score">
           <span class="score-number {{ team_state }}">{{ event.score_home }}</span>
           <span class="score-dash">-</span>
           <span class="score-number {{ team_state }}">{{ event.score_away }}</span>
         </div>
-        <div class="result-team away {{ team_state }}">
-          <span class="team-name {{ team_state }}">{{ event.participant_away }}</span>
+        <div class="result-team away {{ team_state }}" title="{{ event.participant_away }}">
+          <span class="team-name {{ team_state }}">{{ event.participant_away|team_short }}</span>
         </div>
         {% endwith %}
       {% else %}
-        <div class="result-team home">
-          <span class="team-name">{{ event.participant_home }}</span>
+        <div class="result-team home" title="{{ event.participant_home }}">
+          <span class="team-name">{{ event.participant_home|team_short }}</span>
         </div>
         <div class="result-score">
           <span class="result-vs">—</span>
         </div>
-        <div class="result-team away">
-          <span class="team-name">{{ event.participant_away }}</span>
+        <div class="result-team away" title="{{ event.participant_away }}">
+          <span class="team-name">{{ event.participant_away|team_short }}</span>
         </div>
       {% endif %}
     </div>
+    {% if event.result_text and event.competition.sport.category != "motorsport" %}
+    <span class="result-note">{{ event.result_text }}</span>
+    {% elif event.round_name %}
+    <span class="result-note">{{ event.round_name }}</span>
+    {% endif %}
   </div>
 
-  <a href="{% url 'schedule:event_details' event.id %}" class="btn-detalles">DETALLES →</a>
+  <a href="{% url 'schedule:event_details' event.id %}" class="result-open" aria-label="Ver detalle de {{ event.title }}">↗</a>
 </div>

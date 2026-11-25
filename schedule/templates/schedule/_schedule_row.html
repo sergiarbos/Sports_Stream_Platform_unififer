@@ -1,27 +1,51 @@
+{% load team_badges %}
 {% comment %}
-Fila compacta de la agenda. El día se muestra una sola vez en el
-encabezado del grupo; aquí solo aparece la hora. El botón "VER EMISIONES"
-abre el panel lateral de ese evento.
+Fila compacta de la agenda. El día y la competición/jornada se muestran una
+sola vez en sus cabeceras; aquí solo aparecen hora, equipo y las plataformas
+que emiten el evento. Toda la fila abre el panel lateral.
 {% endcomment %}
+{% if event.is_competition_start %}
+<div class="competition-subheader">
+  <span class="comp-flag">{{ event.competition|comp_flag }}</span>
+  <span>{{ event.competition.name|upper }}</span>
+  {% if event.round_name %}<span class="comp-round">· {{ event.round_name|upper }}</span>{% endif %}
+</div>
+{% endif %}
 <div
   class="schedule-row is-{{ card_type }}"
-  style="--comp-color: {{ event.competition.accent_color }}"
   data-search="{{ event.title|lower }} {{ event.competition.name|lower }}"
   data-event-id="event-{{ event.id }}"
 >
   <div class="schedule-row-when">
+    {% if card_type == "live" %}
+    <span class="time live-time"><span class="live-dot"></span> {{ event|live_minute }}</span>
+    {% else %}
     <span class="time">{{ event.start_datetime|date:"H:i" }}</span>
+    {% endif %}
   </div>
 
   <div class="schedule-row-main">
-    <div class="schedule-row-comp">{{ event.competition.badge_initials }} · {{ event.competition.name }}{% if event.round_name %} · {{ event.round_name }}{% endif %}</div>
-    <div class="schedule-row-title">{{ event.title }}</div>
+    <div class="schedule-row-title" title="{{ event.title }}">
+      {% if event.participant_home and event.participant_away %}
+        {{ event.participant_home|team_short }} <span class="vs-sep">vs</span> {{ event.participant_away|team_short }}
+      {% else %}
+        {{ event.title }}
+      {% endif %}
+      {% if card_type == "live" and event.score_home is not None and event.score_away is not None %}
+      <span class="live-score">{{ event.score_home }} - {{ event.score_away }}</span>
+      {% endif %}
+    </div>
   </div>
 
-  <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-    <a href="#event-{{ event.id }}" class="get-links-btn">
-      VER EMISIONES →
-    </a>
+  <div class="schedule-row-actions">
+    <span class="platform-hints" aria-label="Emisiones en español">
+      {% for broadcast in event|es_broadcasts %}
+        <span class="platform-hint" style="--hint-color: {{ broadcast.platform.color }}" title="{{ broadcast.platform.name }}">
+          <span class="platform-hint-dot"></span>
+          <span class="platform-hint-code">{{ broadcast.platform|platform_code }}</span>
+        </span>
+      {% endfor %}
+    </span>
     {% if card_type == "upcoming" %}
     <button
       type="button"
@@ -34,10 +58,11 @@ abre el panel lateral de ese evento.
       aria-label="Añadir recordatorio para {{ event.title }}"
     >
       <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-        <path d="M12 2a6 6 0 0 0-6 6v3.2c0 .8-.3 1.6-.9 2.2L4 14.7c-.6.7-.1 1.8.8 1.8h14.4c.9 0 1.4-1.1.8-1.8l-1.1-1.3a3 3 0 0 1-.9-2.2V8a6 6 0 0 0-6-6z" stroke="currentColor" stroke-width="1.6"/>
-        <path d="M9.5 19.5a2.5 2.5 0 0 0 5 0" stroke="currentColor" stroke-width="1.6"/>
+        <path d="M12 2a6 6 0 0 0-6 6v3.2c0 .8-.3 1.6-.9 2.2L4 14.7c-.6.7-.1 1.8.8 1.8h14.4c.9 0 1.4-1.1.8-1.8l-1.1-1.3a3 3 0 0 0-.9-2.2V8a6 6 0 0 0-6-6z" stroke="currentColor" stroke-width="1.6"/>
+        <path d="M9.5 19.5a2.5 2.5 0 0 0 5 0" stroke="currentColor" stroke-width="1.6" fill="none"/>
       </svg>
     </button>
     {% endif %}
+    <a href="#event-{{ event.id }}" class="row-open" aria-label="Ver emisiones de {{ event.title }}">↗</a>
   </div>
 </div>
