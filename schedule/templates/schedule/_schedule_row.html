@@ -1,34 +1,26 @@
 {% comment %}
-Fila compacta de la agenda (columna izquierda). El botón "Ver enlaces"
-activa el ancla #event-{{ event.id }}: el panel de enlaces (columna
-derecha) muta para mostrar SOLO ese evento (ver :target en el CSS), y
-un pelín de JS marca esta fila como seleccionada mientras esté activa.
+Fila compacta de la agenda. El día se muestra una sola vez en el
+encabezado del grupo; aquí solo aparece la hora. El botón "VER EMISIONES"
+abre el panel lateral de ese evento.
 {% endcomment %}
-<div class="schedule-row is-{{ card_type }}" data-search="{{ event.title|lower }} {{ event.competition.name|lower }}" data-event-id="event-{{ event.id }}">
+<div
+  class="schedule-row is-{{ card_type }}"
+  style="--comp-color: {{ event.competition.accent_color }}"
+  data-search="{{ event.title|lower }} {{ event.competition.name|lower }}"
+  data-event-id="event-{{ event.id }}"
+>
   <div class="schedule-row-when">
-    {% if card_type == "live" %}
-      <span class="live-tag">● LIVE</span>
-    {% elif card_type == "archive" %}
-      <span class="archive-tag">{{ event.start_datetime|date:"d M"|upper }}</span>
-    {% else %}
-      <span class="day">{{ event.start_datetime|date:"d" }}</span><span class="month">{{ event.start_datetime|date:"M"|upper }}</span>
-    {% endif %}
     <span class="time">{{ event.start_datetime|date:"H:i" }}</span>
   </div>
 
-  <div class="schedule-row-sport" title="{{ event.competition.name }}">
-    {% include "schedule/_competition_badge.html" with competition=event.competition %}
-  </div>
-
   <div class="schedule-row-main">
-    <div class="schedule-row-comp">{{ event.competition.name }}{% if event.round_name %} · {{ event.round_name }}{% endif %}</div>
+    <div class="schedule-row-comp">{{ event.competition.badge_initials }} · {{ event.competition.name }}{% if event.round_name %} · {{ event.round_name }}{% endif %}</div>
     <div class="schedule-row-title">{{ event.title }}</div>
   </div>
 
   <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
     <a href="#event-{{ event.id }}" class="get-links-btn">
-      Get links
-      {% include "schedule/_external_icon.html" %}
+      VER EMISIONES →
     </a>
     {% if card_type == "upcoming" %}
     <button
@@ -38,8 +30,8 @@ un pelín de JS marca esta fila como seleccionada mientras esté activa.
       data-title="{{ event.title|escapejs }}"
       data-comp="{{ event.competition.name|escapejs }}"
       data-start="{{ event.start_datetime|date:'c' }}"
-      title="Set reminder"
-      aria-label="Set reminder for {{ event.title }}"
+      title="Añadir recordatorio"
+      aria-label="Añadir recordatorio para {{ event.title }}"
     >
       <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <path d="M12 2a6 6 0 0 0-6 6v3.2c0 .8-.3 1.6-.9 2.2L4 14.7c-.6.7-.1 1.8.8 1.8h14.4c.9 0 1.4-1.1.8-1.8l-1.1-1.3a3 3 0 0 1-.9-2.2V8a6 6 0 0 0-6-6z" stroke="currentColor" stroke-width="1.6"/>

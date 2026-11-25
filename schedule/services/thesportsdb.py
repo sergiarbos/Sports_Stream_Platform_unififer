@@ -1,16 +1,18 @@
 """
 TheSportsDB adapter (https://www.thesportsdb.com/api.php).
 Covers football (LaLiga, PL, UCL, UEL, Bundesliga, Serie A, Ligue 1),
-basketball (NBA) and motorsport (MotoGP).
+basketball (NBA), motorsport (MotoGP), tennis (Wimbledon) and
+winter sports (FIS Alpine Ski, Biathlon, Ski Jumping, Cross-Country...).
 
 ✅ PUBLIC KEY — safe to publish
 --------------------------------
-The key "3" is TheSportsDB's official public test key.
-It does not identify your account. Stored in .env with default value "3".
+The key "123" is TheSportsDB's official public test key
+(the old key "3" was permanently disabled).
+Stored in .env with default value "123".
 
 ⚠️  RATE LIMIT
 --------------
-With key=3 the limit is ~20 requests/minute per IP (Cloudflare).
+With key=123 the limit is ~30 requests/minute per IP (Cloudflare).
 The adapter therefore combines two endpoints (next + past) and adds
 a sleep between calls to stay within the limit.
 
@@ -20,6 +22,9 @@ Validated league IDs:
   Motorsport: MotoGP=4407
   Basketball: NBA=4387
   Tennis    : Wimbledon=4451
+  Winter    : Alpine Ski WC=5625, Biathlon WC=5342, Ski Jumping WC=5724,
+              Cross-Country WC=5722, Freestyle WC=5723, Nordic Combined WC=5725,
+              Ski Cross WC=5726, Snowboard Alpine WC=5730
 """
 
 import time
@@ -50,6 +55,15 @@ LEAGUE_CONFIG = {
     "motogp": (4407, "2026"),
     # --- Tennis ---
     "wimbledon": (4451, "2026"),
+    # --- Winter sports (FIS World Cups) ---
+    "esqui-alpino": (5625, "2026"),  # FIS Alpine Ski World Cup
+    "biathlon": (5342, "2026-2027"),  # Biathlon World Cup
+    "salto-esqui": (5724, "2026"),  # FIS Ski Jumping World Cup
+    "esqui-fondo": (5722, "2026"),  # FIS Cross-Country Ski World Cup
+    "esqui-freestyle": (5723, "2026"),  # FIS Freestyle World Cup
+    "nordic-combined": (5725, "2026"),  # FIS Nordic Combined World Cup
+    "ski-cross": (5726, "2026"),  # FIS Ski Cross World Cup
+    "snowboard-alpino": (5730, "2026"),  # FIS Snowboard Alpine World Cup
 }
 
 
@@ -119,7 +133,7 @@ class TheSportsDBAdapter(BaseSourceAdapter):
     source_id = "thesportsdb"
 
     def fetch_events(self, competition_slug="nba", **kwargs):
-        api_key = settings.THESPORTSDB_KEY or "3"
+        api_key = settings.THESPORTSDB_KEY or "123"
         config = LEAGUE_CONFIG.get(competition_slug)
         if not config:
             return []

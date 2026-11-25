@@ -6,14 +6,15 @@ Usage:
     python manage.py import_all_sports --sport motogp
     python manage.py import_all_sports --sport f1
     python manage.py import_all_sports --sport la-liga
+    python manage.py import_all_sports --sport esqui-alpino
 
 Sources:
   - Formula 1         → Jolpica (free, no key required)
-  - MotoGP            → TheSportsDB (public key "3")
-    - Football (7 leagues) → football-data.org (personal free token)
-  - NBA               → TheSportsDB (public key "3")
-  - Wimbledon         → TheSportsDB (public key "3")
-  - Winter sports     → Manual (no reliable free API available)
+  - MotoGP            → TheSportsDB (public key "123")
+  - Football (7 leagues) → football-data.org (personal free token)
+  - NBA               → TheSportsDB (public key "123")
+  - Wimbledon         → TheSportsDB (public key "123")
+  - Winter sports     → TheSportsDB (public key "123", FIS World Cups)
 
 Broadcast assignment
 ---------------------
@@ -62,6 +63,28 @@ BROADCAST_MAP = {
         ("movistar-plus", ES, True),
         ("eurosport", ES, True),
     ],
+    # Winter sports — Eurosport is the main rights holder in Spain;
+    # RTVE Play broadcasts selected FIS World Cup races for free.
+    "esqui-alpino": [
+        ("eurosport", ES, True),
+        ("rtve-play", ES, True),
+    ],
+    "biathlon": [
+        ("eurosport", ES, True),
+        ("rtve-play", ES, True),
+    ],
+    "salto-esqui": [
+        ("eurosport", ES, True),
+        ("rtve-play", ES, True),
+    ],
+    "esqui-fondo": [
+        ("eurosport", ES, True),
+        ("rtve-play", ES, True),
+    ],
+    "esqui-freestyle": [("eurosport", ES, True)],
+    "nordic-combined": [("eurosport", ES, True)],
+    "ski-cross": [("eurosport", ES, True)],
+    "snowboard-alpino": [("eurosport", ES, True)],
 }
 
 # Competitions to import: (competition_slug, source, fetch_kwargs)
@@ -83,6 +106,15 @@ IMPORT_PLAN = [
     ("nba", "thesportsdb", {"competition_slug": "nba"}),
     # Tennis — TheSportsDB
     ("wimbledon", "thesportsdb", {"competition_slug": "wimbledon"}),
+    # Winter sports — TheSportsDB (FIS World Cups)
+    ("esqui-alpino", "thesportsdb", {"competition_slug": "esqui-alpino"}),
+    ("biathlon", "thesportsdb", {"competition_slug": "biathlon"}),
+    ("salto-esqui", "thesportsdb", {"competition_slug": "salto-esqui"}),
+    ("esqui-fondo", "thesportsdb", {"competition_slug": "esqui-fondo"}),
+    ("esqui-freestyle", "thesportsdb", {"competition_slug": "esqui-freestyle"}),
+    ("nordic-combined", "thesportsdb", {"competition_slug": "nordic-combined"}),
+    ("ski-cross", "thesportsdb", {"competition_slug": "ski-cross"}),
+    ("snowboard-alpino", "thesportsdb", {"competition_slug": "snowboard-alpino"}),
 ]
 
 

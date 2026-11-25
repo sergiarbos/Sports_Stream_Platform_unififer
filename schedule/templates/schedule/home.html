@@ -5,12 +5,15 @@
 <div class="container">
 
   <nav class="mode-tabs" style="display:flex; gap:10px; margin-bottom: 20px;">
-    <a href="?view_mode=links&amp;sport={{ selected_sport_slug }}&amp;platform={{ selected_platform_slug }}" class="mode-tab {% if view_mode == 'links' %}active{% endif %}">{% trans "LINKS" %}</a>
-    <a href="?view_mode=results&amp;sport={{ selected_sport_slug }}&amp;platform={{ selected_platform_slug }}" class="mode-tab {% if view_mode == 'results' %}active{% endif %}">{% trans "RESULTS" %}</a>
+    <a href="?view_mode=links&amp;sport={{ selected_sport_slug }}&amp;platform={{ selected_platform_slug }}" class="mode-tab {% if view_mode == 'links' %}active{% endif %}">ENLACES</a>
+    <a href="?view_mode=results&amp;sport={{ selected_sport_slug }}&amp;platform={{ selected_platform_slug }}" class="mode-tab {% if view_mode == 'results' %}active{% endif %}">RESULTADOS</a>
   </nav>
 
   <nav class="sport-tabs">
-    <a href="?view_mode={{ view_mode }}&amp;sport=all&amp;platform={{ selected_platform_slug }}" class="sport-tab {% if selected_sport_slug == 'all' %}active{% endif %}">{% trans "All" %}</a>
+    <a href="?view_mode={{ view_mode }}&amp;sport=all&amp;platform={{ selected_platform_slug }}" class="sport-tab {% if selected_sport_slug == 'all' %}active{% endif %}">Todos</a>
+    {% if view_mode == 'links' %}
+      <a href="#live-section" class="sport-tab live-filter">EN DIRECTO ({{ live_count|default:0 }})</a>
+    {% endif %}
     {% for sport in sports %}
       <a href="?view_mode={{ view_mode }}&amp;sport={{ sport.slug }}&amp;platform={{ selected_platform_slug }}" class="sport-tab {% if selected_sport_slug == sport.slug %}active{% endif %}">
         {{ sport.icon }} {{ sport.name }}
@@ -20,7 +23,7 @@
 
   {% if platforms and view_mode != 'results' %}
   <nav class="platform-tabs">
-    <a href="?view_mode={{ view_mode }}&amp;sport={{ selected_sport_slug }}&amp;platform=all" class="platform-tab {% if selected_platform_slug == 'all' %}active{% endif %}">{% trans "All platforms" %}</a>
+    <a href="?view_mode={{ view_mode }}&amp;sport={{ selected_sport_slug }}&amp;platform=all" class="platform-tab {% if selected_platform_slug == 'all' %}active{% endif %}">Todas las plataformas</a>
     {% for platform in platforms %}
       <a href="?view_mode={{ view_mode }}&amp;sport={{ selected_sport_slug }}&amp;platform={{ platform.slug }}" class="platform-tab {% if selected_platform_slug == platform.slug %}active{% endif %}">
         <span class="platform-dot" style="background:{{ platform.color }}"></span>
@@ -46,56 +49,56 @@
       <div class="schedule-section" id="live-section">
         {% if live_events %}
           <div class="section-header live-header">
-            <span class="live-dot"></span> {% trans "Live now" %}
+            <span class="live-dot"></span> EN DIRECTO
           </div>
           {% for event in live_events %}
             {% include "schedule/_schedule_row.html" with card_type="live" %}
           {% endfor %}
-        {% else %}
-          <div class="live-empty-strip"><span class="live-dot-static"></span> {% trans "Nothing live right now — check upcoming events." %}</div>
         {% endif %}
       </div>
 
       <div class="schedule-section">
-        <div class="section-header">{% trans "Upcoming · schedule" %}</div>
-        {% if upcoming_events %}
-          {% for event in upcoming_events %}
+        {% for group in upcoming_groups %}
+          <div class="section-header date-header">{{ group.label }}</div>
+          {% for event in group.events %}
             {% include "schedule/_schedule_row.html" with card_type="upcoming" %}
           {% endfor %}
-        {% else %}
-          <div class="empty-note">{% trans "No upcoming events scheduled for this filter yet." %}</div>
-        {% endif %}
+        {% empty %}
+          <div class="section-header date-header">PRÓXIMAMENTE</div>
+          <div class="empty-note">No hay eventos próximos para este filtro.</div>
+        {% endfor %}
       </div>
 
       <div class="schedule-section">
-        <div class="section-header">{% trans "On demand · last" %} {{ archive_window_days }} {% trans "days" %}</div>
-        {% if past_events %}
-          {% for event in past_events %}
+        {% for group in past_groups %}
+          <div class="section-header date-header">{{ group.label }}</div>
+          {% for event in group.events %}
             {% include "schedule/_schedule_row.html" with card_type="archive" %}
           {% endfor %}
-        {% else %}
-          <div class="empty-note">{% trans "No events from the last" %} {{ archive_window_days }} {% trans "days with a replay available in Spanish for this filter." %}</div>
-        {% endif %}
+        {% empty %}
+          <div class="section-header date-header">A LA CARTA</div>
+          <div class="empty-note">No hay eventos de los últimos {{ archive_window_days }} días con repetición disponible en español para este filtro.</div>
+        {% endfor %}
       </div>
 
     </div>
 
     <aside class="links-col">
       <div class="links-col-head">
-        <span class="links-col-title">{% trans "Links panel" %}</span>
-        <span class="links-col-sub">{% trans "Click \"Get links\" on the schedule or pick a platform directly" %}</span>
+        <span class="links-col-title">PANEL DE ENLACES</span>
+        <span class="links-col-sub">Selecciona un evento para ver sus emisiones</span>
       </div>
       <div class="links-col-body">
         {% if link_events %}
           {% for event in link_events %}
-            {% include "schedule/_link_card.html" %}
+            {% include "schedule/_link_card.html" with active=forloop.first %}
           {% endfor %}
           <div class="links-placeholder">
             <span class="links-placeholder-icon">🔗</span>
-            {% trans "No links available for this filter yet." %}
+            No hay enlaces disponibles para este filtro.
           </div>
         {% else %}
-          <div class="empty-note">{% trans "No links available for this filter yet." %}</div>
+          <div class="empty-note">No hay enlaces disponibles para este filtro.</div>
         {% endif %}
       </div>
     </aside>
@@ -103,15 +106,18 @@
   </div>
   {% elif view_mode == 'results' %}
   <div class="results-app">
-    <div class="section-header">{% trans "LATEST RESULTS" %}</div>
+    <div class="section-header">ÚLTIMOS RESULTADOS</div>
     {% if results_events %}
-      <div class="results-list">
-        {% for event in results_events %}
-          {% include "schedule/_result_row.html" %}
-        {% endfor %}
-      </div>
+      {% for group in results_groups %}
+        <div class="section-header date-header">{{ group.label }}</div>
+        <div class="results-list">
+          {% for event in group.events %}
+            {% include "schedule/_result_row.html" %}
+          {% endfor %}
+        </div>
+      {% endfor %}
     {% else %}
-      <div class="empty-note">{% trans "No results in the last 14 days." %}</div>
+      <div class="empty-note">No hay resultados en los últimos 14 días.</div>
     {% endif %}
   </div>
   {% endif %}

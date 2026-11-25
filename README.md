@@ -147,7 +147,7 @@ To deploy this project to Render as a Web Service:
    | `DJANGO_DEBUG` | `False` |
    | `DJANGO_ALLOWED_HOSTS` | `sports-stream-platform-unififer.onrender.com` |
    | `FOOTBALL_DATA_TOKEN` | Free personal token from `football-data.org` |
-   | `THESPORTSDB_KEY` | `3` (Free public API key for sports data) |
+   | `THESPORTSDB_KEY` | `123` (Free public API key for sports data) |
 
 ## APIs used: which ones you can publish and which ones you cannot
 
@@ -176,15 +176,14 @@ DAZN/Movistar+ scraper. Instead:
 |---|---|---|---|
 | **Jolpica F1** (successor to Ergast) | F1 calendar | No | ✅ Yes — no key at all, 100% open |
 | **football-data.org** | Champions, Premier, LaLiga, Bundesliga, Serie A and Ligue 1 | Free personal token | ❌ No — keep `FOOTBALL_DATA_TOKEN` in `.env` only |
-| **TheSportsDB** | Europa League, NBA, MotoGP and Wimbledon | Public test key: `3` | ✅ Yes, that test key is officially public and shared. If you later upgrade to a paid Patreon key (more requests, live data), that one **must not** be published |
+| **TheSportsDB** | Europa League, NBA, MotoGP, Wimbledon and winter sports (FIS Alpine Ski / Biathlon / Ski Jumping / Cross-Country World Cups...) | Public test key: `123` | ✅ Yes, that test key is officially public and shared. If you later upgrade to a paid key ($9/mo, more requests + live data), that one **must not** be published |
 | **Static Calendar** | MotoGP | No | ✅ Yes — local Python dictionary to bypass TheSportsDB free tier limitations |
 | **Tennis provider** (your choice, e.g. api-tennis.com) | Wimbledon, ATP, WTA | Personal key | ❌ No — `.env` only |
-| Winter sports (alpine skiing, ski jumping, cross-country) | — | — | No decent free API exists; events are added manually via `/admin/` (`ManualSourceAdapter`) |
 
 General rule: **any key that identifies your personal account or your request
 quota is private** and must go only in your real `.env` file (which is in
 `.gitignore` and is never committed). Test keys that the provider itself
-publishes as shared (like TheSportsDB's `3`) are safe to keep in the
+publishes as shared (like TheSportsDB's `123`) are safe to keep in the
 repository, though we still put them in `.env` for cleanliness and easy
 rotation.
 

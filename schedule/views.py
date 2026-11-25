@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 import requests
 from django.conf import settings
 from django.http import JsonResponse
@@ -6,6 +8,59 @@ from django.utils import timezone
 from django.views.decorators.http import require_GET
 
 from .models import Event, Platform, Sport
+
+SPANISH_MONTHS = {
+    1: "enero",
+    2: "febrero",
+    3: "marzo",
+    4: "abril",
+    5: "mayo",
+    6: "junio",
+    7: "julio",
+    8: "agosto",
+    9: "septiembre",
+    10: "octubre",
+    11: "noviembre",
+    12: "diciembre",
+}
+SPANISH_WEEKDAYS = (
+    "lunes",
+    "martes",
+    "miércoles",
+    "jueves",
+    "viernes",
+    "sábado",
+    "domingo",
+)
+
+
+def date_group_label(group_date, today, prefix=None):
+    if group_date == today:
+        day_label = "HOY"
+    elif group_date == today + timedelta(days=1):
+        day_label = "MAÑANA"
+    elif group_date == today - timedelta(days=1):
+        day_label = "AYER"
+    else:
+        day_label = SPANISH_WEEKDAYS[group_date.weekday()].upper()
+    label = f"{day_label} · {group_date.day} {SPANISH_MONTHS[group_date.month].upper()}"
+    return f"{prefix} · {label}" if prefix else label
+
+
+def group_events_by_date(events, today, prefix=None):
+    groups = []
+    for event in events:
+        event_date = timezone.localtime(event.start_datetime).date()
+        if not groups or groups[-1]["date"] != event_date:
+            groups.append(
+                {
+                    "date": event_date,
+                    "label": date_group_label(event_date, today, prefix),
+                    "events": [],
+                }
+            )
+        groups[-1]["events"].append(event)
+    return groups
 
 
 def home(request):
@@ -61,6 +116,7 @@ def home(request):
             qs = qs.filter(competition__sport__slug=selected_sport_slug)
 
         results_events = qs.order_by("-start_datetime")
+        results_groups = group_events_by_date(results_events, timezone.localtime(now_dt).date())
 
         # Compute live_count so the bell badge is populated in results view too
         live_count = Event.objects.filter(status=Event.STATUS_LIVE).count()
@@ -72,6 +128,7 @@ def home(request):
             "selected_platform_slug": selected_platform_slug,
             "view_mode": view_mode,
             "results_events": results_events,
+            "results_groups": results_groups,
             "live_count": live_count,
         }
         return render(request, "schedule/home.html", context)
@@ -123,6 +180,10 @@ def home(request):
     upcoming.sort(key=lambda e: e.start_datetime)
     past.sort(key=lambda e: e.start_datetime, reverse=True)
 
+    today = timezone.localtime(now).date()
+    upcoming_groups = group_events_by_date(upcoming, today)
+    past_groups = group_events_by_date(past, today, "A LA CARTA")
+
     # Featured strip (top banner): prioritises currently live events;
     # fills up with the nearest upcoming ones if there aren't enough.
     featured = (live + upcoming)[:2]
@@ -139,7 +200,9 @@ def home(request):
         "view_mode": view_mode,
         "live_events": live,
         "upcoming_events": upcoming,
+        "upcoming_groups": upcoming_groups,
         "past_events": past,
+        "past_groups": past_groups,
         "live_count": len(live),
         "featured_events": featured,
         "link_events": link_events,

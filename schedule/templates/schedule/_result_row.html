@@ -1,35 +1,65 @@
 {% load f1_flags %}
-<div class="result-row">
+<div class="result-row" style="--comp-color: {{ event.competition.accent_color }}">
   <div class="result-left">
-    <div class="result-when">
-      <span class="day">{{ event.start_datetime|date:"d" }}</span>
-      <span class="month">{{ event.start_datetime|date:"M"|upper }}</span>
-    </div>
-    <div class="result-sport" title="{{ event.competition.name }}">
-      {% include "schedule/_competition_badge.html" with competition=event.competition %}
-    </div>
+    <span class="result-final">FINAL</span>
   </div>
 
   <div class="result-main">
-    <div class="result-comp">{{ event.competition.name }}{% if event.round_name %} · {{ event.round_name }}{% endif %}</div>
+    <div class="result-comp"><span class="result-comp-code">{{ event.competition.badge_initials }}</span> {{ event.competition.name }}{% if event.round_name %} · {{ event.round_name }}{% endif %}</div>
 
     <div class="result-matchup">
       {% if event.competition.sport.category == "motorsport" %}
         <div class="result-motorsport">
           <span class="result-title">{{ event.title|add_flag }}</span>
         </div>
+      {% elif event.score_home is not None and event.score_away is not None and event.score_home > event.score_away %}
+        {% with home_state="is-winner" away_state="is-loser" %}
+        <div class="result-team home {{ home_state }}">
+          <span class="team-name {{ home_state }}">{{ event.participant_home }}</span>
+        </div>
+        <div class="result-score">
+          <span class="score-number {{ home_state }}">{{ event.score_home }}</span>
+          <span class="score-dash">-</span>
+          <span class="score-number {{ away_state }}">{{ event.score_away }}</span>
+        </div>
+        <div class="result-team away {{ away_state }}">
+          <span class="team-name {{ away_state }}">{{ event.participant_away }}</span>
+        </div>
+        {% endwith %}
+      {% elif event.score_home is not None and event.score_away is not None and event.score_away > event.score_home %}
+        {% with home_state="is-loser" away_state="is-winner" %}
+        <div class="result-team home {{ home_state }}">
+          <span class="team-name {{ home_state }}">{{ event.participant_home }}</span>
+        </div>
+        <div class="result-score">
+          <span class="score-number {{ home_state }}">{{ event.score_home }}</span>
+          <span class="score-dash">-</span>
+          <span class="score-number {{ away_state }}">{{ event.score_away }}</span>
+        </div>
+        <div class="result-team away {{ away_state }}">
+          <span class="team-name {{ away_state }}">{{ event.participant_away }}</span>
+        </div>
+        {% endwith %}
+      {% elif event.score_home is not None and event.score_away is not None %}
+        {% with team_state="is-draw" %}
+        <div class="result-team home {{ team_state }}">
+          <span class="team-name {{ team_state }}">{{ event.participant_home }}</span>
+        </div>
+        <div class="result-score">
+          <span class="score-number {{ team_state }}">{{ event.score_home }}</span>
+          <span class="score-dash">-</span>
+          <span class="score-number {{ team_state }}">{{ event.score_away }}</span>
+        </div>
+        <div class="result-team away {{ team_state }}">
+          <span class="team-name {{ team_state }}">{{ event.participant_away }}</span>
+        </div>
+        {% endwith %}
       {% else %}
         <div class="result-team home">
           <span class="team-name">{{ event.participant_home }}</span>
         </div>
         <div class="result-score">
-          {% if event.score_home is not None and event.score_away is not None %}
-            <span class="score-number">{{ event.score_home }}</span>
-            <span class="score-dash">-</span>
-            <span class="score-number">{{ event.score_away }}</span>
-          {% else %}
-            <span class="result-vs">VS</span>
-          {% endif %}
+          <span class="result-vs">—</span>
         </div>
         <div class="result-team away">
           <span class="team-name">{{ event.participant_away }}</span>
@@ -38,7 +68,5 @@
     </div>
   </div>
 
-  <a href="{% url 'schedule:event_details' event.id %}" class="btn-detalles">
-    VER DETALLES COMPLETOS <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-left:6px;"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg>
-  </a>
+  <a href="{% url 'schedule:event_details' event.id %}" class="btn-detalles">DETALLES →</a>
 </div>

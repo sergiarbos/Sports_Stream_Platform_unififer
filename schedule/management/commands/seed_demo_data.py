@@ -75,9 +75,33 @@ class Command(BaseCommand):
             ("f1", "Fórmula 1", "F1", "motor", "jolpica_f1"),
             ("motogp", "MotoGP", "MGP", "motor", "thesportsdb"),
             ("wimbledon", "Wimbledon", "WIM", "tenis", "api_tennis"),
-            ("esqui-alpino", "Copa del Mundo de Esquí Alpino", "ALP", "invierno", "manual"),
-            ("salto-esqui", "Copa del Mundo de Salto de Esquí", "SAL", "invierno", "manual"),
-            ("esqui-fondo", "Copa del Mundo de Esquí de Fondo", "FON", "invierno", "manual"),
+            # Winter sports — TheSportsDB (FIS World Cups)
+            ("esqui-alpino", "Copa del Mundo de Esquí Alpino", "ALP", "invierno", "thesportsdb"),
+            ("biathlon", "Copa del Mundo de Biatlón", "BIA", "invierno", "thesportsdb"),
+            ("salto-esqui", "Copa del Mundo de Salto de Esquí", "SAL", "invierno", "thesportsdb"),
+            ("esqui-fondo", "Copa del Mundo de Esquí de Fondo", "FON", "invierno", "thesportsdb"),
+            (
+                "esqui-freestyle",
+                "Copa del Mundo de Esquí Freestyle",
+                "FRS",
+                "invierno",
+                "thesportsdb",
+            ),
+            (
+                "nordic-combined",
+                "Copa del Mundo de Nórdico Combinado",
+                "NCB",
+                "invierno",
+                "thesportsdb",
+            ),
+            ("ski-cross", "Copa del Mundo de Ski Cross", "SCX", "invierno", "thesportsdb"),
+            (
+                "snowboard-alpino",
+                "Copa del Mundo de Snowboard Alpino",
+                "SBA",
+                "invierno",
+                "thesportsdb",
+            ),
         ]
         for slug, name, short_code, sport_slug, source in comp_data:
             comp, _ = Competition.objects.update_or_create(

@@ -1,15 +1,13 @@
 {% comment %}
-Tarjeta del panel de enlaces (columna derecha). AHORA es una vista de
-detalle: por defecto está oculta (display:none) y solo se muestra
-cuando coincide con el ancla activa en la URL (#event-N), gracias a
-:target en el CSS. Así, al pulsar "Ver enlaces" en la agenda, el panel
-muta para mostrar SOLO ese evento, en grande — sin duplicar listas.
+Tarjeta del panel de enlaces: se muestra cuando coincide con el ancla
+activa (#event-N) o cuando es la primera fila seleccionada por defecto.
+Cada emisión se abre con una acción propia: IR AL CANAL.
 {% endcomment %}
 <div
   id="event-{{ event.id }}"
-  class="link-card is-{% if event.status == 'live' %}live{% elif event.status == 'finished' %}archive{% else %}upcoming{% endif %}"
+  class="link-card is-{% if event.status == 'live' %}live{% elif event.status == 'finished' %}archive{% else %}upcoming{% endif %}{% if active %} is-active{% endif %}"
 >
-  <a href="#" class="link-card-close" aria-label="Close and return to the links panel" title="Close">✕</a>
+  <a href="#" class="link-card-close" aria-label="Cerrar y volver al panel de enlaces" title="Cerrar">✕</a>
 
   <div class="link-card-head">
     <div class="link-card-sport">
@@ -29,15 +27,16 @@ muta para mostrar SOLO ese evento, en grande — sin duplicar listas.
         {% if event.status == "finished" and not broadcast.vod_available %}
         {% else %}
           {% with url=broadcast.direct_url %}
-          <{% if url %}a href="{{ url }}" target="_blank" rel="noopener noreferrer"{% else %}span{% endif %} class="redirect-btn {% if not url %}is-disabled{% endif %}">
+          <{% if url %}a href="{{ url }}" target="_blank" rel="noopener noreferrer"{% else %}span{% endif %} class="redirect-btn {% if not url %}is-disabled{% endif %}" style="border-left-color: {{ broadcast.platform.color }}">
             <span class="redirect-btn-name">
               <span class="platform-dot" style="background:{{ broadcast.platform.color }}"></span>
-              {{ broadcast.platform.name }}{% if broadcast.is_latam %} · LATAM{% endif %}
+              <span class="redirect-btn-platform">{{ broadcast.platform.name }}{% if broadcast.is_latam %} · LATAM{% endif %}</span>
+              <span class="redirect-btn-meta">HD · {{ broadcast.language|slice:":2"|upper }}</span>
             </span>
             {% if url %}
-              <span class="redirect-btn-arrow">Open {% include "schedule/_external_icon.html" %}</span>
+              <span class="redirect-btn-arrow">IR AL CANAL ↗</span>
             {% else %}
-              <span class="redirect-btn-arrow">Link not available</span>
+              <span class="redirect-btn-arrow">SIN ENLACE</span>
             {% endif %}
           </{% if url %}a{% else %}span{% endif %}>
           {% endwith %}

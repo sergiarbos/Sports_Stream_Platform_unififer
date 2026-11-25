@@ -1,17 +1,26 @@
 {% comment %}
-Tarjeta "destacado": sustituye los recuadros de imagen del wireframe
-original por un fondo degradado generado por categoría deportiva + el
-escudo de la competición, evitando usar fotografías o logotipos
-oficiales con derechos de autor.
+Tarjeta destacada: bloque tipográfico con los equipos en dos líneas,
+avatares circulares minimalistas y flecha lateral como único enlace hacia
+el panel de emisiones.
 {% endcomment %}
 <a href="#event-{{ event.id }}" class="featured-card {{ event.competition.sport.accent_class }}">
-  <div class="featured-art">
-    {% include "schedule/_competition_badge.html" with competition=event.competition large=True %}
-  </div>
   <div class="featured-body">
-    {% include "schedule/_status_pill.html" with event=event %}
-    <div class="featured-comp">{{ event.competition.name }}{% if event.round_name %} · {{ event.round_name }}{% endif %}</div>
-    <div class="featured-title">{{ event.title }}</div>
-    <div class="featured-cta">Ver enlaces ↓</div>
+    <div class="featured-topline">
+      {% include "schedule/_status_pill.html" with event=event compact=True %}
+      <span class="featured-comp">{{ event.competition.name }}{% if event.round_name %} · {{ event.round_name }}{% endif %}</span>
+    </div>
+    <div class="featured-matchup">
+      <div class="featured-team-line">
+        <span class="team-avatar team-avatar--home" aria-hidden="true"></span>
+        <span class="featured-team-name">{{ event.participant_home|default:event.title }}</span>
+      </div>
+      {% if event.participant_away %}
+      <div class="featured-team-line">
+        <span class="team-avatar team-avatar--away" aria-hidden="true"></span>
+        <span class="featured-team-name">{{ event.participant_away }}</span>
+      </div>
+      {% endif %}
+    </div>
   </div>
+  <span class="featured-arrow" aria-hidden="true">→</span>
 </a>

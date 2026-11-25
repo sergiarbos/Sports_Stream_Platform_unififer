@@ -4,14 +4,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}{% trans "Where to watch each event" %}{% endblock %}</title>
-  <meta name="description" content="{% trans "Find where to watch every sports event live or on demand in Spanish." %}">
+  <title>{% block title %}Dónde ver cada evento{% endblock %}</title>
+  <meta name="description" content="Encuentra dónde ver cada evento deportivo en directo o a la carta en español.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   {# Fuse.js — fuzzy search library (loaded before app.js) #}
   <script src="https://cdn.jsdelivr.net/npm/fuse.js@7/dist/fuse.min.js"></script>
   {# Bump ?v= whenever style.css or app.js changes #}
-  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=8">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=10">
 </head>
 <body>
   <header class="topbar">
@@ -20,12 +20,12 @@
       <div class="topbar-tools">
         <label class="search-box" for="event-search">
           <svg class="search-icon" viewBox="0 0 20 20" aria-hidden="true"><circle cx="9" cy="9" r="6.5" stroke="currentColor" stroke-width="1.6" fill="none"/><line x1="14" y1="14" x2="18.5" y2="18.5" stroke="currentColor" stroke-width="1.6"/></svg>
-          <input id="event-search" type="text" placeholder="{% trans 'Search team, driver or competition…' %}" autocomplete="off" aria-label="{% trans 'Search events' %}">
+          <input id="event-search" type="text" placeholder="Busca equipo, piloto o competición…" autocomplete="off" aria-label="Buscar eventos">
         </label>
 
         {# ── Language selector ─────────────────────────────────────── #}
         <div class="lang-selector" id="lang-selector">
-          <button type="button" class="lang-btn" id="lang-btn" aria-haspopup="true" aria-expanded="false" title="{% trans 'Change language' %}">
+          <button type="button" class="lang-btn" id="lang-btn" aria-haspopup="true" aria-expanded="false" title="Cambiar idioma">
             {% get_current_language as current_lang %}
             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" width="16" height="16">
               <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/>
@@ -56,8 +56,8 @@
             class="live-bell{% if live_count %} live-bell--active{% endif %}"
             aria-haspopup="true"
             aria-expanded="false"
-            aria-label="{% if live_count %}{{ live_count }} {% trans 'event(s) live now' %}{% else %}{% trans 'No events live right now' %}{% endif %}"
-            title="{% trans 'Events live right now' %}"
+            aria-label="{% if live_count %}{{ live_count }} evento(s) en directo ahora{% else %}No hay eventos en directo ahora{% endif %}"
+            title="Eventos en directo ahora"
           >
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M12 2a6 6 0 0 0-6 6v3.2c0 .8-.3 1.6-.9 2.2L4 14.7c-.6.7-.1 1.8.8 1.8h14.4c.9 0 1.4-1.1.8-1.8l-1.1-1.3a3 3 0 0 1-.9-2.2V8a6 6 0 0 0-6-6z" fill="currentColor"/>
@@ -71,17 +71,17 @@
             >{{ live_count|default:0 }}</span>
           </button>
 
-          <div class="bell-dropdown" id="bell-dropdown" role="dialog" aria-label="{% trans 'Live events' %}" hidden>
+          <div class="bell-dropdown" id="bell-dropdown" role="dialog" aria-label="Eventos en directo" hidden>
             <div class="bell-dropdown-header">
               <span class="live-dot"></span>
-              <span class="bell-dropdown-title">{% trans "Live right now" %}</span>
+              <span class="bell-dropdown-title">EN DIRECTO AHORA</span>
             </div>
             <ul class="bell-dropdown-list" id="bell-dropdown-list" role="list"></ul>
             <p class="bell-dropdown-empty" id="bell-dropdown-empty" hidden>
-              {% trans "Nothing live right now — check upcoming events." %}
+              Nada en directo ahora — revisa los próximos eventos.
             </p>
             <a href="?view_mode=links#live-section" class="bell-dropdown-cta" id="bell-dropdown-cta">
-              {% trans "View all live events" %} →
+              Ver todos los eventos en directo →
             </a>
           </div>
         </div>
@@ -95,6 +95,6 @@
 
   {# SW registration must come before app.js so scheduleReminder() is available #}
   <script src="{% static 'js/sw-register.js' %}?v=1"></script>
-  <script src="{% static 'js/app.js' %}?v=6"></script>
+  <script src="{% static 'js/app.js' %}?v=7"></script>
 </body>
 </html>

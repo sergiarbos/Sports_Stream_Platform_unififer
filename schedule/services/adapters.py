@@ -48,8 +48,10 @@ class BaseSourceAdapter(ABC):
 class ManualSourceAdapter(BaseSourceAdapter):
     """
     Empty adapter for competitions managed manually through the admin
-    panel (/admin/) — for example winter sports, where no decent free
-    API exists.
+    panel (/admin/).
+
+    Winter sports now use TheSportsDB (FIS World Cups), so this adapter
+    is only needed for events with no free API at all.
 
     This is also the recommended place to plug in your own
     DAZN/Movistar+ scraper if you decide to build one (see legal notice

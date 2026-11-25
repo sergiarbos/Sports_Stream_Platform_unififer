@@ -135,8 +135,13 @@
     selectEvent(window.location.hash.slice(1), false),
   );
 
-  // On load: restore from URL hash (shared links)
-  selectEvent(window.location.hash.slice(1), false);
+  // On load: restore the shared link, or select the first row by default
+  let initialId = window.location.hash.slice(1);
+  const hashEl = initialId ? document.getElementById(initialId) : null;
+  if (!hashEl || !hashEl.classList.contains("link-card")) {
+    initialId = allRows.length ? allRows[0].dataset.eventId : null;
+  }
+  selectEvent(initialId, false);
 
   /* ──────────────────────────────────────────────────────────────────────────
    * 3. LIVE BELL DROPDOWN + AJAX POLLING
@@ -156,12 +161,12 @@
         bellBtn.classList.add("live-bell--active");
         bellBtn.setAttribute(
           "aria-label",
-          count + " event" + (count !== 1 ? "s" : "") + " live now",
+          count + " evento(s) en directo ahora",
         );
       } else {
         bellCount.style.display = "none";
         bellBtn.classList.remove("live-bell--active");
-        bellBtn.setAttribute("aria-label", "No events live right now");
+        bellBtn.setAttribute("aria-label", "No hay eventos en directo ahora");
       }
     }
 
@@ -263,22 +268,22 @@
       e.stopPropagation();
 
       const id = btn.dataset.eventId || "";
-      const title = btn.dataset.title || "Sports event";
+      const title = btn.dataset.title || "Evento deportivo";
       const comp = btn.dataset.comp || "";
       const startIso = btn.dataset.start || "";
 
       if (btn.classList.contains("is-set")) {
         // Cancel reminder
         btn.classList.remove("is-set");
-        btn.title = "Set reminder";
-        btn.setAttribute("aria-label", "Set reminder for " + title);
+        btn.title = "Añadir recordatorio";
+        btn.setAttribute("aria-label", "Añadir recordatorio para " + title);
         if (typeof window.cancelReminder === "function")
           window.cancelReminder(id);
       } else {
         // Schedule reminder via Service Worker
         btn.classList.add("is-set");
-        btn.title = "Reminder set — click to cancel";
-        btn.setAttribute("aria-label", "Cancel reminder for " + title);
+        btn.title = "Recordatorio activado — pulsa para cancelar";
+        btn.setAttribute("aria-label", "Cancelar recordatorio para " + title);
 
         if (typeof window.scheduleReminder === "function") {
           window.scheduleReminder({
@@ -298,7 +303,7 @@
    *    /        → focus search input
    *    Escape   → close bell dropdown OR deselect active link card
    *    ↑ / ↓    → navigate between visible schedule rows
-   *    Enter    → activate "Get links" on focused schedule row
+   *    Enter    → activate "VER ENLACES" on focused schedule row
    * ────────────────────────────────────────────────────────────────────────── */
   document.addEventListener("keydown", function (e) {
     const tag = (document.activeElement || {}).tagName || "";
@@ -364,7 +369,7 @@
       }
     }
 
-    // Enter → activate "Get links" on selected row (when not in input)
+    // Enter → activate "VER ENLACES" on selected row (when not in input)
     if (e.key === "Enter" && !inInput) {
       const selected = document.querySelector(".schedule-row.is-selected");
       if (selected) {

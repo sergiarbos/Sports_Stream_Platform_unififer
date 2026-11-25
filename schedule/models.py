@@ -1,6 +1,19 @@
 from django.db import models
 from django.utils import timezone
 
+COMPETITION_COLORS = {
+    "champions-league": "#3b82f6",
+    "europa-league": "#f97316",
+    "la-liga": "#ef4444",
+    "premier-league": "#a855f7",
+    "serie-a": "#14b8a6",
+    "bundesliga": "#eab308",
+    "ligue-1": "#38bdf8",
+    "nba": "#f97316",
+    "f1": "#ef4444",
+    "motogp": "#f97316",
+}
+
 
 class Sport(models.Model):
     """Top-level sport category (Football, Basketball, Motorsport, Tennis, Winter Sports...)."""
@@ -78,6 +91,10 @@ class Competition(models.Model):
             return self.short_code
         words = [w for w in self.name.split() if w.lower() not in ("de", "del", "la", "el")]
         return "".join(w[0] for w in words[:3]).upper()
+
+    @property
+    def accent_color(self):
+        return COMPETITION_COLORS.get(self.slug, "#84cc16")
 
 
 class Platform(models.Model):
