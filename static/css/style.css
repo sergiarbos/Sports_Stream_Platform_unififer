@@ -669,6 +669,75 @@ input {
   flex-shrink: 0;
 }
 
+/* ---------- Competition filter (shown once a sport is selected) ---------- */
+
+.competition-tabs {
+  display: flex;
+  gap: 7px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 22px;
+}
+
+.filter-caption {
+  font-family: "Oswald", sans-serif;
+  font-size: 0.64rem;
+  letter-spacing: 0.14em;
+  color: var(--text-muted);
+  margin-right: 4px;
+}
+
+.competition-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 32px;
+  padding: 0 12px 0 6px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface-sunken);
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  font-family: "Oswald", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  transition:
+    border-color 0.15s,
+    color 0.15s,
+    background 0.15s;
+}
+
+.competition-tab:hover {
+  border-color: var(--accent-upcoming);
+  color: var(--text-primary);
+}
+
+.competition-tab.active {
+  background: var(--text-primary);
+  border-color: var(--text-primary);
+  color: var(--bg-deep);
+  font-weight: 600;
+}
+
+.competition-badge {
+  display: inline-grid;
+  place-items: center;
+  width: 22px;
+  height: 25px;
+  flex-shrink: 0;
+  clip-path: polygon(50% 0, 100% 16%, 92% 68%, 50% 100%, 8% 68%, 0 16%);
+  background: linear-gradient(
+    160deg,
+    color-mix(in srgb, var(--comp-color, var(--accent)) 85%, white 15%),
+    color-mix(in srgb, var(--comp-color, var(--accent)) 60%, var(--bg-deep))
+  );
+  color: var(--bg-deep);
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0;
+}
+
 .featured-strip {
   display: grid;
   grid-template-columns: repeat(2, 1fr);

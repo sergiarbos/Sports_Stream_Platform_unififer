@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Oswald:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#09090b;--surface:#18181b;--raised:#202023;--sunken:#101013;--line:#2a2a2f;
+  --text:#fafafa;--muted:#a1a1aa;--dim:#71717a;--accent:#84cc16;--accent-rgb:132,204,22;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:Inter,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+.canvas{width:1600px;height:1200px;overflow:hidden;position:relative;background:radial-gradient(circle at 80% 5%,rgba(132,204,22,.05),transparent 32%),var(--bg)}
+
+.topbar{height:74px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 32px;background:rgba(13,13,16,.96)}
+.brand{display:flex;align-items:center;gap:13px}
+.brand-mark{width:36px;height:38px;clip-path:polygon(50% 0,100% 15%,92% 68%,50% 100%,8% 68%,0 15%);background:linear-gradient(160deg,#bef264,#4d7c0f);display:grid;place-items:center;color:#09090b;font:700 15px Oswald}
+.brand-name{font:600 22px Oswald;text-transform:uppercase;letter-spacing:.085em;line-height:1}
+.brand-name b{color:var(--accent);font-weight:600}
+.brand-sub{font-size:10px;color:var(--dim);letter-spacing:.16em;text-transform:uppercase;margin-top:5px;font-family:Oswald}
+.tools{display:flex;align-items:center;gap:12px}
+.search{width:352px;height:38px;border-radius:999px;border:1px solid rgba(132,204,22,.34);background:rgba(132,204,22,.07);display:flex;align-items:center;gap:9px;padding:0 15px;color:var(--accent)}
+.search svg{width:15px;height:15px;flex:none}
+.search span{font-size:13px;color:var(--muted)}
+.lang,.bell{height:38px;border:1px solid var(--line);background:var(--surface);border-radius:999px;display:flex;align-items:center;gap:7px;padding:0 13px;color:var(--muted);font:500 12px Oswald;letter-spacing:.06em}
+.bell{width:38px;padding:0;justify-content:center;position:relative}
+.bell svg{width:16px;height:16px}
+.bell i{position:absolute;top:-3px;right:-3px;width:15px;height:15px;border-radius:50%;background:var(--accent);color:#09090b;font:700 9px Inter;display:grid;place-items:center;font-style:normal}
+
+.container{padding:20px 32px 0}
+.mode-tabs{display:flex;gap:26px;border-bottom:1px solid var(--line);height:42px;align-items:stretch}
+.mode-tab{position:relative;display:flex;align-items:center;padding:0 2px;font:600 15px Oswald;text-transform:uppercase;letter-spacing:.1em;color:var(--dim)}
+.mode-tab.active{color:var(--text)}
+.mode-tab.active:after{content:"";position:absolute;left:0;right:0;bottom:-1px;height:2px;background:var(--accent);box-shadow:0 0 12px rgba(132,204,22,.55)}
+.sport-tabs{display:flex;gap:8px;margin-top:16px}
+.sport-tab{height:34px;padding:0 15px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--muted);display:flex;align-items:center;gap:7px;font:500 12px Oswald;text-transform:uppercase;letter-spacing:.04em}
+.sport-tab.active{background:var(--text);border-color:var(--text);color:#09090b;font-weight:700}
+
+/* ---------- results shell ---------- */
+.results-app{margin-top:18px;border:1px solid var(--line);border-radius:14px;background:linear-gradient(180deg,rgba(24,24,27,.96),rgba(15,15,18,.96));padding:18px 24px 18px;box-shadow:0 18px 45px rgba(0,0,0,.3)}
+.app-head{display:flex;align-items:baseline;justify-content:space-between;border-bottom:1px solid var(--line);padding-bottom:11px}
+.app-head h1{font:600 14px Oswald;text-transform:uppercase;letter-spacing:.13em;margin:0;color:var(--text)}
+.app-head .meta{font:500 11px "JetBrains Mono",monospace;color:var(--dim)}
+.app-head .meta b{color:var(--accent);font-weight:600}
+
+/* ---------- date hierarchy ---------- */
+.dgrouphead{display:flex;align-items:center;gap:14px;margin:14px 0 10px}
+.dblock{width:54px;height:54px;flex:none;border-radius:10px;border:1px solid rgba(132,204,22,.26);background:linear-gradient(150deg,rgba(132,204,22,.16),rgba(132,204,22,.03));display:flex;flex-direction:column;align-items:center;justify-content:center}
+.dblock .dd{font:700 23px Oswald;line-height:1;letter-spacing:.01em}
+.dblock .mm{font:600 9px Oswald;letter-spacing:.13em;color:var(--accent);margin-top:3px}
+.dtitle{font:600 17px Oswald;text-transform:uppercase;letter-spacing:.07em;line-height:1.1}
+.dsub{font-size:11px;color:var(--muted);margin-top:5px;letter-spacing:.01em}
+.dline{height:1px;flex:1;background:linear-gradient(90deg,var(--line),transparent)}
+.dcount{font:500 10px "JetBrains Mono",monospace;color:var(--dim);border:1px solid var(--line);border-radius:999px;padding:4px 9px}
+
+/* ---------- result rows ---------- */
+.rrow{position:relative;height:74px;border-radius:12px;border:1px solid rgba(255,255,255,.065);border-left:3px solid var(--cc,var(--line));background:linear-gradient(103deg,rgba(32,32,35,.72),rgba(16,16,19,.72));display:grid;grid-template-columns:1fr 156px 1fr 34px;align-items:center;gap:14px;padding:0 15px 0 19px;margin-bottom:9px;cursor:pointer;transition:background .18s,border-color .18s,transform .18s}
+.rrow:hover{background:linear-gradient(103deg,rgba(38,42,32,.9),rgba(18,18,21,.9));border-color:rgba(132,204,22,.32);border-left-color:var(--cc);transform:translateY(-1px)}
+.rteam{min-width:0;display:flex;flex-direction:column;gap:5px}
+.rteam.home{align-items:flex-end;text-align:right}
+.rteam.away{align-items:flex-start;text-align:left}
+.tname{font:600 17px Oswald;text-transform:uppercase;letter-spacing:.025em;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tname.win{color:#fff}
+.tname.lose{color:#71717a;font-weight:500}
+.tname.draw{color:#d4d4d8}
+.tname.live{color:#f4f4f5}
+.tcomp{font-size:10px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tcomp b{font:600 9px Oswald;letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
+.winmark{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);vertical-align:2px;margin-left:7px;box-shadow:0 0 8px rgba(132,204,22,.7)}
+
+.scorebox{height:56px;border-radius:10px;border:1px solid rgba(132,204,22,.19);background:radial-gradient(circle at 50% 0,rgba(132,204,22,.09),transparent 70%),#0d0d10;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.scorebox .nums{display:flex;align-items:center;gap:9px;font:700 25px "JetBrains Mono",monospace;line-height:1}
+.scorebox .dash{color:#52525b;font-size:18px;font-weight:500}
+.scorebox .n-win{color:#fff}
+.scorebox .n-lose{color:#71717a}
+.scorebox .n-draw{color:#d4d4d8}
+.scorebox .n-live{color:#bef264;text-shadow:0 0 14px rgba(132,204,22,.4)}
+.scorebox .state{font:600 9px Oswald;text-transform:uppercase;letter-spacing:.14em;color:var(--dim)}
+.scorebox.live{border-color:rgba(132,204,22,.6);box-shadow:0 0 0 1px rgba(132,204,22,.12),0 0 20px rgba(132,204,22,.16)}
+.scorebox.live .state{color:var(--accent)}
+.scorebox.susp{border-color:var(--line);background:#111114}
+.scorebox.susp .state{color:#a1a1aa}
+.scorebox.small .nums{font-size:19px;gap:7px}
+
+.arrow{width:32px;height:32px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;color:var(--dim);font-size:19px;line-height:1;transition:all .18s}
+.rrow:hover .arrow{border-color:var(--accent);color:var(--accent);background:rgba(132,204,22,.08)}
+
+.motorsport{display:flex;flex-direction:column;gap:6px;min-width:0}
+.motorsport .mtitle{font:600 17px Oswald;text-transform:uppercase;letter-spacing:.025em;color:#e4e4e7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.motorsport .msub{font-size:10px;color:var(--dim)}
+.pill-small{font:600 9px Oswald;letter-spacing:.1em;color:var(--accent);border:1px solid rgba(132,204,22,.32);background:rgba(132,204,22,.09);border-radius:999px;padding:3px 8px;justify-self:center}
+
+.footnote{display:flex;align-items:center;justify-content:space-between;margin-top:16px;padding-top:12px;border-top:1px dashed var(--line);font:500 10px "JetBrains Mono",monospace;color:var(--dim)}
+.footnote b{color:var(--accent);font-weight:600}
+</style>
+</head>
+<body>
+<div class="canvas">
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">S</div>
+      <div>
+        <div class="brand-name">Stream<b>Sync</b></div>
+        <div class="brand-sub">Agregador de emisiones · ES</div>
+      </div>
+    </div>
+    <div class="tools">
+      <div class="search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <span>Buscar equipo, competición o plataforma…</span>
+      </div>
+      <div class="lang">◉ ES · ESPAÑA ▾</div>
+      <div class="bell"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg><i>3</i></div>
+    </div>
+  </header>
+
+  <div class="container">
+    <nav class="mode-tabs">
+      <div class="mode-tab">Enlaces</div>
+      <div class="mode-tab active">Resultados</div>
+    </nav>
+
+    <nav class="sport-tabs">
+      <div class="sport-tab active">Todos</div>
+      <div class="sport-tab"><span class="ico">⚽</span> Fútbol</div>
+      <div class="sport-tab"><span class="ico">🏀</span> Baloncesto</div>
+      <div class="sport-tab"><span class="ico">🏎</span> Motor</div>
+      <div class="sport-tab"><span class="ico">🎾</span> Tenis</div>
+      <div class="sport-tab"><span class="ico">⛷</span> Invierno</div>
+    </nav>
+
+    <main class="results-app">
+      <div class="app-head"><h1>Últimos resultados</h1><span class="meta">14 DÍAS · <b>10 EVENTOS</b> · ESTADO ACTUALIZADO</span></div>
+
+      <div class="dgrouphead">
+        <div class="dblock"><span class="dd">25</span><span class="mm">NOV</span></div>
+        <div><div class="dtitle">Hoy · miércoles</div><div class="dsub">Resultados finales y partidos en curso</div></div>
+        <span class="dline"></span><span class="dcount">04 PARTIDOS</span>
+      </div>
+
+      <div class="rrow" style="--cc:#84cc16">
+        <div class="rteam home"><span class="tname win">Real Sociedad<i class="winmark"></i></span><span class="tcomp"><b>LALIGA EA SPORTS</b> · J12</span></div>
+        <div class="scorebox"><span class="nums"><span class="n-win">2</span><span class="dash">–</span><span class="n-lose">1</span></span><span class="state">Final</span></div>
+        <div class="rteam away"><span class="tname lose">FC Barcelona</span><span class="tcomp">Reale Arena · San Sebastián</span></div>
+        <div class="arrow">›</div>
+      </div>
+
+      <div class="rrow" style="--cc:#1673d1">
+        <div class="rteam home"><span class="tname draw">Liverpool FC</span><span class="tcomp"><b>PREMIER LEAGUE</b> · J13</span></div>
+        <div class="scorebox"><span class="nums"><span class="n-draw">1</span><span class="dash">–</span><span class="n-draw">1</span></span><span class="state">Final · empate</span></div>
+        <div class="rteam away"><span class="tname draw">Manchester City</span><span class="tcomp">Anfield · Liverpool</span></div>
+        <div class="arrow">›</div>
+      </div>
+
+      <div class="rrow" style="--cc:#8b5cf6">
+        <div class="rteam home"><span class="tname win">Boston Celtics<i class="winmark"></i></span><span class="tcomp"><b>NBA</b> · Temporada regular</span></div>
+        <div class="scorebox small"><span class="nums"><span class="n-win">108</span><span class="dash">–</span><span class="n-lose">101</span></span><span class="state">Final</span></div>
+        <div class="rteam away"><span class="tname lose">Los Angeles Lakers</span><span class="tcomp">TD Garden · Boston</span></div>
+        <div class="arrow">›</div>
+      </div>
+
+      <div class="rrow" style="--cc:#84cc16">
+        <div class="rteam home"><span class="tname live">Real Madrid</span><span class="tcomp"><b>CHAMPIONS LEAGUE</b> · Fase liga</span></div>
+        <div class="scorebox live"><span class="nums"><span class="n-live">1</span><span class="dash">–</span><span class="n-live">0</span></span><span class="state">● En juego · 67'</span></div>
+        <div class="rteam away"><span class="tname live">FC Porto</span><span class="tcomp">Santiago Bernabéu · Madrid</span></div>
+        <div class="arrow">›</div>
+      </div>
+
+      <div class="dgrouphead">
+        <div class="dblock"><span class="dd">24</span><span class="mm">NOV</span></div>
+        <div><div class="dtitle">Ayer · martes</div><div class="dsub">Resultados finales · un partido suspendido</div></div>
+        <span class="dline"></span><span class="dcount">03 EVENTOS</span>
+      </div>
+
+      <div class="rrow" style="--cc:#e11d2a">
+        <div class="rteam home"><span class="tname win">Atlético de Madrid<i class="winmark"></i></span><span class="tcomp"><b>LALIGA EA SPORTS</b> · J12</span></div>
+        <div class="scorebox"><span class="nums"><span class="n-win">3</span><span class="dash">–</span><span class="n-lose">1</span></span><span class="state">Final</span></div>
+        <div class="rteam away"><span class="tname lose">Sevilla FC</span><span class="tcomp">Metropolitano · Madrid</span></div>
+        <div class="arrow">›</div>
+      </div>
+
+      <div class="rrow" style="--cc:#a1a1aa">
+        <div class="rteam home"><span class="tname draw">Inter de Milán</span><span class="tcomp"><b>SERIE A</b> · J13</span></div>
+        <div class="scorebox susp"><span class="nums"><span class="n-draw">0</span><span class="dash">–</span><span class="n-draw">0</span></span><span class="state">Suspendido</span></div>
+        <div class="rteam away"><span class="tname draw">AC Milan</span><span class="tcomp">San Siro · Milán</span></div>
+        <div class="arrow">›</div>
+      </div>
+
+      <div class="rrow" style="--cc:#f59e0b">
+        <div class="motorsport"><span class="mtitle">GP de Las Américas · Carrera</span><span class="msub"><b style="font-family:Oswald;letter-spacing:.08em;color:var(--muted)">FORMULA 1</b> · Circuito de las Américas</span></div>
+        <div class="pill-small">Ver clasificación</div>
+        <div class="motorsport" style="align-items:flex-end"><span class="msub">Ganador · M. Verstappen</span></div>
+        <div class="arrow">›</div>
+      </div>
+
+      <div class="dgrouphead">
+        <div class="dblock"><span class="dd">23</span><span class="mm">NOV</span></div>
+        <div><div class="dtitle">Domingo · 23 nov</div><div class="dsub">Resultados finales</div></div>
+        <span class="dline"></span><span class="dcount">02 PARTIDOS</span>
+      </div>
+
+      <div class="rrow" style="--cc:#84cc16">
+        <div class="rteam home"><span class="tname win">Real Betis<i class="winmark"></i></span><span class="tcomp"><b>LALIGA EA SPORTS</b> · J12</span></div>
+        <div class="scorebox"><span class="nums"><span class="n-win">2</span><span class="dash">–</span><span class="n-lose">0</span></span><span class="state">Final</span></div>
+        <div class="rteam away"><span class="tname lose">Valencia CF</span><span class="tcomp">Benito Villamarín · Sevilla</span></div>
+        <div class="arrow">›</div>
+      </div>
+
+      <div class="footnote"><span>Fila completa clicable · icono minimalista para abrir el detalle</span><b>Actualizado hace 2 min</b></div>
+    </main>
+  </div>
+</div>
+</body>
+</html>

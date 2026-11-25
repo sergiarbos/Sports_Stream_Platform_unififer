@@ -101,6 +101,64 @@ class HomeViewTest(TestCase):
         self.assertNotIn(far_event, response.context["upcoming_events"])
 
 
+class CompetitionFilterTest(TestCase):
+    def setUp(self):
+        sport = make_sport()
+        self.la_liga = Competition.objects.create(
+            sport=sport, name="LaLiga", slug="la-liga", short_code="LL"
+        )
+        self.champions = make_competition(sport)
+        platform = make_platform()
+        self.la_liga_event = make_event(self.la_liga, hours_delta=+3)
+        self.champions_event = make_event(self.champions, hours_delta=+5)
+        make_broadcast(self.la_liga_event, platform)
+        make_broadcast(self.champions_event, platform)
+
+    def test_competitions_are_shown_only_for_a_selected_sport(self):
+        response = self.client.get(reverse("schedule:home"), {"sport": "football"})
+        self.assertIn(self.la_liga, response.context["competitions"])
+        self.assertIn(self.champions, response.context["competitions"])
+        self.assertContains(response, "COMPETICIÓN")
+        self.assertContains(response, "LaLiga")
+
+        response = self.client.get(reverse("schedule:home"))
+        self.assertFalse(response.context["competitions"].exists())
+        self.assertNotContains(response, "COMPETICIÓN")
+
+    def test_competition_filter_limits_events(self):
+        response = self.client.get(
+            reverse("schedule:home"), {"sport": "football", "competition": "la-liga"}
+        )
+        self.assertIn(self.la_liga_event, response.context["upcoming_events"])
+        self.assertNotIn(self.champions_event, response.context["upcoming_events"])
+
+    def test_filter_links_keep_sport_platform_and_competition(self):
+        response = self.client.get(
+            reverse("schedule:home"),
+            {"sport": "football", "platform": "dazn", "competition": "la-liga"},
+        )
+        self.assertContains(response, "sport=football&amp;platform=dazn&amp;competition=all")
+        self.assertContains(response, "sport=football&amp;platform=dazn&amp;competition=la-liga")
+
+    def test_competition_filter_also_applies_to_results(self):
+        finished = Event.objects.create(
+            competition=self.la_liga,
+            title="Finished match",
+            start_datetime=timezone.now() - timedelta(hours=5),
+            status=Event.STATUS_FINISHED,
+            score_home=2,
+            score_away=1,
+        )
+        make_broadcast(finished, Platform.objects.get(slug="dazn"))
+
+        response = self.client.get(
+            reverse("schedule:home"),
+            {"view_mode": "results", "sport": "football", "competition": "la-liga"},
+        )
+        self.assertIn(finished, response.context["results_events"])
+        self.assertNotContains(response, "Test Match")
+
+
 class MobileApiTest(TestCase):
     def setUp(self):
         sport = make_sport()

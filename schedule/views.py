@@ -7,7 +7,7 @@ from django.shortcuts import get_object_or_404, render
 from django.utils import timezone
 from django.views.decorators.http import require_GET
 
-from .models import Event, Platform, Sport
+from .models import Competition, Event, Platform, Sport
 
 SPANISH_MONTHS = {
     1: "enero",
@@ -81,6 +81,9 @@ def home(request):
                         platform (or "all"). Only platforms that actually
                         have at least one Spanish broadcast are listed
                         to avoid empty options.
+      ?competition=<slug> filters by competition (or "all"). Options are
+                        limited to the selected sport so the filter only
+                        shows competitions that actually have events.
     """
     sports = Sport.objects.all()
     platforms = (
@@ -93,6 +96,21 @@ def home(request):
 
     selected_sport_slug = request.GET.get("sport", "all")
     selected_platform_slug = request.GET.get("platform", "all")
+    selected_competition_slug = request.GET.get("competition", "all")
+
+    competitions = Competition.objects.none()
+    if selected_sport_slug != "all":
+        competition_filters = {
+            "sport__slug": selected_sport_slug,
+            "events__broadcasts__language__startswith": "es",
+        }
+        if view_mode == "results":
+            competition_filters["events__start_datetime__gte"] = timezone.now() - timedelta(days=14)
+        else:
+            competition_filters["events__start_datetime__lte"] = timezone.now() + timedelta(
+                days=Event.UPCOMING_WINDOW_DAYS
+            )
+        competitions = Competition.objects.filter(**competition_filters).distinct().order_by("name")
 
     if view_mode == "results":
         from django.db.models import Q
@@ -114,6 +132,8 @@ def home(request):
         )
         if selected_sport_slug != "all":
             qs = qs.filter(competition__sport__slug=selected_sport_slug)
+        if selected_competition_slug != "all":
+            qs = qs.filter(competition__slug=selected_competition_slug)
 
         results_events = qs.order_by("-start_datetime")
         results_groups = group_events_by_date(results_events, timezone.localtime(now_dt).date())
@@ -126,6 +146,8 @@ def home(request):
             "platforms": platforms,
             "selected_sport_slug": selected_sport_slug,
             "selected_platform_slug": selected_platform_slug,
+            "selected_competition_slug": selected_competition_slug,
+            "competitions": competitions,
             "view_mode": view_mode,
             "results_events": results_events,
             "results_groups": results_groups,
@@ -145,6 +167,8 @@ def home(request):
     )
     if selected_sport_slug != "all":
         events_qs = events_qs.filter(competition__sport__slug=selected_sport_slug)
+    if selected_competition_slug != "all":
+        events_qs = events_qs.filter(competition__slug=selected_competition_slug)
     if selected_platform_slug != "all":
         events_qs = events_qs.filter(
             broadcasts__platform__slug=selected_platform_slug,
@@ -197,6 +221,8 @@ def home(request):
         "platforms": platforms,
         "selected_sport_slug": selected_sport_slug,
         "selected_platform_slug": selected_platform_slug,
+        "selected_competition_slug": selected_competition_slug,
+        "competitions": competitions,
         "view_mode": view_mode,
         "live_events": live,
         "upcoming_events": upcoming,
