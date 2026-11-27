@@ -1,4 +1,4 @@
-{% load team_badges %}
+{% load i18n team_badges %}
 {% comment %}
 Tarjeta del panel de enlaces: se muestra cuando coincide con el ancla
 activa (#event-N) o cuando es la primera fila seleccionada por defecto.
@@ -9,6 +9,7 @@ Cada emisión se abre con una acción propia: IR AL CANAL.
   class="link-card is-{% if event.status == 'live' %}live{% elif event.status == 'finished' %}archive{% else %}upcoming{% endif %}{% if active %} is-active{% endif %}"
 >
   <a href="#" class="link-card-close" aria-label="Cerrar y volver al panel de enlaces" title="Cerrar">✕</a>
+  <button type="button" class="link-card-copy" data-copy-href="{% url 'schedule:event_details' event.id %}" aria-label="Copiar enlace a este evento" title="Copiar enlace">🔗</button>
 
   <div class="link-card-head">
     <div class="link-card-sport">
@@ -16,7 +17,7 @@ Cada emisión se abre con una acción propia: IR AL CANAL.
     </div>
     <div class="link-card-info">
       {% include "schedule/_status_pill.html" with event=event %}
-      <span class="link-card-when">{{ event.start_datetime|date:"d F, H:i" }}</span>
+      {% language "es" %}<span class="link-card-when js-time" data-iso="{{ event.start_datetime|date:'c' }}">{{ event.start_datetime|date:"d F, H:i" }}</span>{% endlanguage %}
       <div class="link-card-comp"><span class="comp-flag">{{ event.competition|comp_flag }}</span> {{ event.competition.name }}{% if event.round_name %} · {{ event.round_name }}{% endif %}</div>
       <div class="link-card-title" title="{{ event.title }}">
         {% if event.participant_home and event.participant_away %}
@@ -38,7 +39,7 @@ Cada emisión se abre con una acción propia: IR AL CANAL.
             <span class="redirect-btn-name">
               <span class="platform-dot" style="background:{{ broadcast.platform.color }}"></span>
               <span class="redirect-btn-platform">{{ broadcast.platform.name }}{% if broadcast.is_latam %} · LATAM{% endif %}</span>
-              <span class="redirect-btn-meta">{{ broadcast|broadcast_meta }}</span>
+              <span class="redirect-btn-meta{% if not broadcast.platform.requires_subscription %} is-free{% endif %}">{{ broadcast|broadcast_meta }}</span>
             </span>
             {% if url %}
               <span class="redirect-btn-arrow">IR AL CANAL ↗</span>

@@ -1,13 +1,19 @@
 {% load f1_flags team_badges %}
 {% if event.is_competition_start %}
-<div class="competition-subheader sport-{{ event.competition.sport.category }}">
+<div class="competition-subheader sport-{{ event.competition.sport.category }}" data-favorite-key="{{ event.competition.name|favorite_key }}">
   {% if event.competition.sport.icon %}<span class="sport-mark" aria-hidden="true">{{ event.competition.sport.icon }}</span>{% endif %}
   <span class="comp-flag">{{ event.competition|comp_flag }}</span>
   <span>{{ event.competition.name|upper }}</span>
   {% if event.round_name %}<span class="comp-round">· {{ event.round_name|upper }}</span>{% endif %}
 </div>
 {% endif %}
-<div class="result-row is-finished sport-{{ event.competition.sport.category }}">
+<div
+  class="result-row is-finished sport-{{ event.competition.sport.category }}"
+  data-search="{{ event.title|lower }} {{ event.competition.name|lower }} {% if event.participant_home %}{{ event.participant_home|lower }} {{ event.participant_home|team_short|lower }}{% endif %} {% if event.participant_away %}{{ event.participant_away|lower }} {{ event.participant_away|team_short|lower }}{% endif %} {{ event.round_name|lower }}"
+  data-group="resultados"
+  data-event-id="event-{{ event.id }}"
+  data-favorite-keys="{{ event|favorite_keys }}"
+>
   <div class="result-left">
     <span class="result-final">FINAL</span>
     <span class="result-when">{{ event|result_detail }}</span>

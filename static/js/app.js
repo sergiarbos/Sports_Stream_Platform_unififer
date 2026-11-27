@@ -2,13 +2,27 @@
   "use strict";
 
   const input = document.getElementById("event-search");
+  const suggestions = document.getElementById("search-suggestions");
   const rowEls = Array.from(
-    document.querySelectorAll(".schedule-row[data-search]"),
+    document.querySelectorAll(
+      ".schedule-row[data-search], .result-row[data-search]",
+    ),
   );
   const featured = document.querySelectorAll(".featured-card");
   const competitionHeaders = Array.from(
     document.querySelectorAll(".competition-subheader"),
   );
+  let searchMatchSet = null;
+  let activeSuggestionIndex = -1;
+  let favoritesOnly = false;
+  let favorites = new Set();
+  try {
+    favorites = new Set(
+      JSON.parse(localStorage.getItem("sports-favorites") || "[]"),
+    );
+  } catch (error) {
+    favorites = new Set();
+  }
 
   function syncCompetitionHeaders() {
     competitionHeaders.forEach((header) => {
@@ -34,19 +48,6 @@
     });
   }
 
-  let fuse = null;
-  if (typeof Fuse !== "undefined" && rowEls.length) {
-    const fuseData = rowEls.map((el, i) => ({
-      i,
-      text: el.dataset.search || "",
-    }));
-    fuse = new Fuse(fuseData, {
-      keys: ["text"],
-      threshold: 0.35, // 0 = exact, 1 = match anything
-      minMatchCharLength: 2,
-    });
-  }
-
   function normalize(text) {
     return text
       .toLowerCase()
@@ -54,42 +55,380 @@
       .replace(/[\u0300-\u036f]/g, "");
   }
 
+  let fuse = null;
+  if (typeof Fuse !== "undefined" && rowEls.length) {
+    const fuseData = rowEls.map((el, i) => ({
+      i,
+      text: normalize(el.dataset.search || ""),
+    }));
+    fuse = new Fuse(fuseData, {
+      keys: ["text"],
+      threshold: 0.35,
+      minMatchCharLength: 2,
+      ignoreLocation: true,
+    });
+  }
+
+  function matchingRowIndexes(query) {
+    if (fuse) {
+      return new Set(fuse.search(query).map((result) => result.item.i));
+    }
+    const norm = normalize(query);
+    return new Set(
+      rowEls
+        .map((el, i) =>
+          normalize(el.dataset.search || "").includes(norm) ? i : -1,
+        )
+        .filter((i) => i >= 0),
+    );
+  }
+
+  function hideSuggestions() {
+    if (!suggestions) return;
+    suggestions.hidden = true;
+    suggestions.innerHTML = "";
+    activeSuggestionIndex = -1;
+    if (input) input.setAttribute("aria-expanded", "false");
+  }
+
+  function jumpToRow(row) {
+    hideSuggestions();
+    const link = row.querySelector('a[href^="#event-"], a.result-open');
+    if (link) {
+      link.click();
+      return;
+    }
+    row.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
+  function renderSuggestions(query, matches) {
+    if (!suggestions || !query) return;
+    suggestions.innerHTML = "";
+    activeSuggestionIndex = -1;
+
+    if (!matches.length) {
+      const empty = document.createElement("div");
+      empty.className = "search-suggestion-empty";
+      empty.textContent = "Sin eventos para esa búsqueda";
+      suggestions.appendChild(empty);
+    } else {
+      const groups = [
+        ["proximos", "Próximos partidos"],
+        ["resultados", "Últimos resultados"],
+      ];
+      groups.forEach(([key, label]) => {
+        const items = matches
+          .filter((row) => row.dataset.group === key)
+          .slice(0, 5);
+        if (!items.length) return;
+        const heading = document.createElement("div");
+        heading.className = "search-suggestion-group";
+        heading.textContent = label;
+        suggestions.appendChild(heading);
+        items.forEach((row) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "search-suggestion";
+          button.setAttribute("role", "option");
+          button.textContent = (row.dataset.search || "Evento")
+            .replace(/\s+/g, " ")
+            .trim();
+          button.addEventListener("click", () => jumpToRow(row));
+          suggestions.appendChild(button);
+        });
+      });
+    }
+
+    suggestions.hidden = false;
+    if (input) input.setAttribute("aria-expanded", "true");
+  }
+
+  function matchesFavorites(row) {
+    if (!favoritesOnly || !favorites.size) return true;
+    const keys = (row.dataset.favoriteKeys || "").split(" ").filter(Boolean);
+    return keys.some((key) => favorites.has(key));
+  }
+
+  function applyVisibility() {
+    rowEls.forEach((row, i) => {
+      const visible =
+        (!searchMatchSet || searchMatchSet.has(i)) && matchesFavorites(row);
+      row.style.display = visible ? "" : "none";
+    });
+    featured.forEach((card) => {
+      card.style.display = searchMatchSet || favoritesOnly ? "none" : "";
+    });
+    syncCompetitionHeaders();
+  }
+
+  function saveFavorites() {
+    try {
+      localStorage.setItem(
+        "sports-favorites",
+        JSON.stringify(Array.from(favorites)),
+      );
+    } catch (error) {
+      return;
+    }
+  }
+
+  function makeStar(key) {
+    const star = document.createElement("button");
+    star.type = "button";
+    star.className = "fav-star";
+    star.dataset.favoriteKey = key;
+    star.setAttribute("aria-label", "Seguir equipo o competición");
+    star.textContent = favorites.has(key) ? "★" : "☆";
+    star.classList.toggle("is-favorite", favorites.has(key));
+    star.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (favorites.has(key)) favorites.delete(key);
+      else favorites.add(key);
+      saveFavorites();
+      syncFavoriteStars();
+      applyVisibility();
+    });
+    return star;
+  }
+
+  function syncFavoriteStars() {
+    document
+      .querySelectorAll(".fav-star[data-favorite-key]")
+      .forEach((star) => {
+        const active = favorites.has(star.dataset.favoriteKey);
+        star.textContent = active ? "★" : "☆";
+        star.classList.toggle("is-favorite", active);
+      });
+    const count = document.getElementById("favorites-count");
+    const pill = document.getElementById("favorites-filter");
+    if (count) count.textContent = String(favorites.size);
+    if (pill) {
+      pill.classList.toggle("is-empty", favorites.size === 0);
+      pill.disabled = favorites.size === 0 && !favoritesOnly;
+    }
+  }
+
+  function injectFavoriteStars() {
+    document
+      .querySelectorAll(
+        ".competition-tab[data-favorite-key], .competition-subheader[data-favorite-key]",
+      )
+      .forEach((target) => {
+        const key = target.dataset.favoriteKey;
+        if (!key) return;
+        if (target.classList.contains("competition-tab")) {
+          if (target.nextElementSibling?.classList.contains("fav-star")) return;
+          target.insertAdjacentElement("afterend", makeStar(key));
+          return;
+        }
+        if (target.querySelector(".fav-star")) return;
+        target.appendChild(makeStar(key));
+      });
+
+    document.querySelectorAll(".result-team[title]").forEach((team) => {
+      if (team.querySelector(".fav-star")) return;
+      const key = normalize(team.getAttribute("title")).replace(/\s+/g, "-");
+      team.appendChild(makeStar(key));
+    });
+
+    document
+      .querySelectorAll(".schedule-row[data-favorite-keys]")
+      .forEach((row) => {
+        const actions = row.querySelector(".schedule-row-actions");
+        if (!actions || row.querySelector(".fav-star")) return;
+        const key = (row.dataset.favoriteKeys || "").split(" ")[0];
+        if (key) actions.prepend(makeStar(key));
+      });
+  }
+
+  const favoritesFilter = document.getElementById("favorites-filter");
+  if (favoritesFilter) {
+    favoritesFilter.addEventListener("click", () => {
+      if (!favorites.size) return;
+      favoritesOnly = !favoritesOnly;
+      favoritesFilter.setAttribute("aria-pressed", String(favoritesOnly));
+      applyVisibility();
+    });
+  }
+
+  injectFavoriteStars();
+  syncFavoriteStars();
+
   if (input) {
     input.addEventListener("input", function () {
       const query = input.value.trim();
-
       if (!query) {
-        rowEls.forEach((row) => (row.style.display = ""));
-        featured.forEach((card) => (card.style.display = ""));
-        syncCompetitionHeaders();
+        searchMatchSet = null;
+        hideSuggestions();
+        applyVisibility();
         return;
       }
+      searchMatchSet = matchingRowIndexes(query);
+      renderSuggestions(
+        query,
+        Array.from(searchMatchSet)
+          .map((i) => rowEls[i])
+          .filter(Boolean),
+      );
+      applyVisibility();
+    });
 
-      featured.forEach((card) => (card.style.display = "none"));
+    input.addEventListener("keydown", function (event) {
+      if (!suggestions || suggestions.hidden) return;
+      const options = Array.from(
+        suggestions.querySelectorAll(".search-suggestion"),
+      );
+      if (!options.length) return;
 
-      let matchSet;
-      if (fuse) {
-        // Fuzzy search — tolerates typos
-        const results = fuse.search(query);
-        matchSet = new Set(results.map((r) => r.item.i));
-      } else {
-        // Fallback: normalized exact substring
-        const norm = normalize(query);
-        matchSet = new Set(
-          rowEls
-            .map((el, i) =>
-              normalize(el.dataset.search).includes(norm) ? i : -1,
-            )
-            .filter((i) => i >= 0),
+      if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+        event.preventDefault();
+        activeSuggestionIndex =
+          event.key === "ArrowDown"
+            ? (activeSuggestionIndex + 1) % options.length
+            : (activeSuggestionIndex - 1 + options.length) % options.length;
+        options.forEach((option, i) =>
+          option.classList.toggle("is-active", i === activeSuggestionIndex),
         );
+        options[activeSuggestionIndex].scrollIntoView({ block: "nearest" });
+      } else if (event.key === "Enter" && activeSuggestionIndex >= 0) {
+        event.preventDefault();
+        options[activeSuggestionIndex].click();
+      } else if (event.key === "Escape") {
+        event.stopPropagation();
+        hideSuggestions();
       }
+    });
 
-      rowEls.forEach((row, i) => {
-        row.style.display = matchSet.has(i) ? "" : "none";
-      });
-      syncCompetitionHeaders();
+    input.addEventListener("blur", () => {
+      window.setTimeout(hideSuggestions, 150);
     });
   }
+
+  const toast = document.getElementById("app-toast");
+  let toastTimer = null;
+
+  function showToast(message) {
+    if (!toast) return;
+    toast.textContent = message;
+    toast.hidden = false;
+    window.clearTimeout(toastTimer);
+    toastTimer = window.setTimeout(() => {
+      toast.hidden = true;
+    }, 2400);
+  }
+
+  async function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return;
+    }
+    const helper = document.createElement("textarea");
+    helper.value = text;
+    helper.setAttribute("readonly", "");
+    helper.style.position = "fixed";
+    helper.style.opacity = "0";
+    document.body.appendChild(helper);
+    helper.select();
+    document.execCommand("copy");
+    helper.remove();
+  }
+
+  document.querySelectorAll(".link-card-copy").forEach((button) => {
+    button.addEventListener("click", async (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const href = button.dataset.copyHref;
+      if (!href) return;
+      try {
+        await copyText(new URL(href, window.location.origin).href);
+        showToast("Enlace copiado al portapapeles");
+      } catch (error) {
+        showToast("No se pudo copiar el enlace");
+      }
+    });
+  });
+
+  const reportBtn = document.getElementById("report-error-btn");
+  if (reportBtn) {
+    reportBtn.addEventListener("click", () =>
+      showToast(
+        "Cuéntanos el error y lo revisaremos en la próxima actualización",
+      ),
+    );
+  }
+
+  const tzSelect = document.getElementById("tz-select");
+  const tzLabel = document.getElementById("tz-label");
+  let selectedTimeZone = "Europe/Madrid";
+  try {
+    selectedTimeZone =
+      localStorage.getItem("sports-timezone") || selectedTimeZone;
+  } catch (error) {
+    selectedTimeZone = "Europe/Madrid";
+  }
+
+  function updateLocalTimes() {
+    document.querySelectorAll(".js-time[data-iso]").forEach((node) => {
+      const value = new Date(node.dataset.iso);
+      if (Number.isNaN(value.getTime())) return;
+      node.textContent = new Intl.DateTimeFormat("es-ES", {
+        day: "numeric",
+        month: "long",
+        hour: "2-digit",
+        minute: "2-digit",
+        timeZone: selectedTimeZone,
+      }).format(value);
+    });
+    if (tzLabel && tzSelect) {
+      const option = tzSelect.options[tzSelect.selectedIndex];
+      tzLabel.textContent = option
+        ? option.text.toUpperCase()
+        : selectedTimeZone;
+      tzLabel.title = "Las horas se muestran en " + selectedTimeZone;
+    }
+  }
+
+  if (tzSelect) {
+    if (
+      Array.from(tzSelect.options).some((o) => o.value === selectedTimeZone)
+    ) {
+      tzSelect.value = selectedTimeZone;
+    } else {
+      selectedTimeZone = tzSelect.value;
+    }
+    tzSelect.addEventListener("change", () => {
+      selectedTimeZone = tzSelect.value;
+      try {
+        localStorage.setItem("sports-timezone", selectedTimeZone);
+      } catch (error) {
+        return;
+      }
+      updateLocalTimes();
+    });
+    updateLocalTimes();
+  }
+
+  const loadingSkeleton = document.getElementById("loading-skeleton");
+
+  function flashSkeleton(duration) {
+    if (!loadingSkeleton) return;
+    loadingSkeleton.hidden = false;
+    window.setTimeout(() => {
+      loadingSkeleton.hidden = true;
+    }, duration);
+  }
+
+  document
+    .querySelectorAll(
+      ".mode-tab, .sport-tab:not(#favorites-filter), .platform-tab, .competition-tab",
+    )
+    .forEach((link) => {
+      link.addEventListener("click", (event) => {
+        if (event.defaultPrevented || event.metaKey || event.ctrlKey) return;
+        if (loadingSkeleton) loadingSkeleton.hidden = false;
+      });
+    });
 
   /* ──────────────────────────────────────────────────────────────────────────
    * 1b. LANGUAGE SELECTOR DROPDOWN
@@ -173,6 +512,7 @@
   });
 
   const datePills = Array.from(document.querySelectorAll(".date-pill"));
+  const dateStrip = document.querySelector(".date-nav-pills");
 
   function setActiveDate(iso) {
     datePills.forEach((pill) => {
@@ -183,12 +523,32 @@
     });
   }
 
+  function centerActiveDate(behavior = "auto") {
+    const active = datePills.find((pill) =>
+      pill.classList.contains("is-active"),
+    );
+    if (!active || !dateStrip) return;
+    const stripBox = dateStrip.getBoundingClientRect();
+    const pillBox = active.getBoundingClientRect();
+    const left =
+      dateStrip.scrollLeft +
+      (pillBox.left - stripBox.left) -
+      (stripBox.width - pillBox.width) / 2;
+    dateStrip.scrollTo({ left: Math.max(0, left), behavior });
+  }
+
+  function syncDateUrl(iso) {
+    const url = new URL(window.location.href);
+    url.searchParams.set("date", iso);
+    history.pushState(null, "", url);
+  }
+
   datePills.forEach((pill) => {
     pill.addEventListener("click", () => {
+      flashSkeleton(280);
       setActiveDate(pill.dataset.dateIso);
-      const url = new URL(window.location.href);
-      url.searchParams.set("date", pill.dataset.dateIso);
-      history.pushState(null, "", url);
+      syncDateUrl(pill.dataset.dateIso);
+      centerActiveDate("smooth");
       const target = document.getElementById(pill.dataset.dateTarget);
       if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
     });
@@ -197,6 +557,7 @@
   document.querySelectorAll(".date-nav-arrow").forEach((arrow) => {
     arrow.addEventListener("click", () => {
       if (!datePills.length) return;
+      flashSkeleton(280);
       const step = Number(arrow.dataset.dateStep || 0);
       const activeIndex = datePills.findIndex((pill) =>
         pill.classList.contains("is-active"),
@@ -215,6 +576,8 @@
         Math.max(0, base + step),
       );
       setActiveDate(datePills[nextIndex].dataset.dateIso);
+      syncDateUrl(datePills[nextIndex].dataset.dateIso);
+      centerActiveDate("smooth");
       const target = document.getElementById(
         datePills[nextIndex].dataset.dateTarget,
       );
@@ -222,11 +585,8 @@
     });
   });
 
-  const activeDatePill = datePills.find((pill) =>
-    pill.classList.contains("is-active"),
-  );
-  if (activeDatePill)
-    activeDatePill.scrollIntoView({ block: "nearest", inline: "center" });
+  requestAnimationFrame(() => centerActiveDate());
+  window.addEventListener("resize", () => centerActiveDate());
 
   document.querySelectorAll(".link-card-close").forEach((btn) => {
     btn.addEventListener("click", function (e) {
@@ -342,7 +702,11 @@
         li.className = "bell-reminder-item";
         const when = new Intl.DateTimeFormat(
           document.documentElement.lang || "es",
-          { dateStyle: "medium", timeStyle: "short" },
+          {
+            dateStyle: "medium",
+            timeStyle: "short",
+            timeZone: selectedTimeZone,
+          },
         ).format(new Date(Number(reminder.fireAt)));
         li.innerHTML =
           '<span class="bell-reminder-body">' +
@@ -600,15 +964,17 @@
 
     // Escape → close dropdown or deselect event
     if (e.key === "Escape") {
-      if (bellDropdown && !bellDropdown.hidden) {
-        // Close bell dropdown
+      if (inInput && input && input.value) {
+        input.value = "";
+        input.dispatchEvent(new Event("input"));
+        input.blur();
+      } else if (bellDropdown && !bellDropdown.hidden) {
         bellDropdown.hidden = true;
         if (bellBtn) {
           bellBtn.setAttribute("aria-expanded", "false");
           bellBtn.focus();
         }
       } else if (document.querySelector(".link-card.is-active")) {
-        // Deselect active link card
         history.pushState(
           null,
           "",
@@ -616,9 +982,6 @@
         );
         selectEvent(null, false);
       } else if (inInput && input) {
-        // Clear search & blur
-        input.value = "";
-        input.dispatchEvent(new Event("input"));
         input.blur();
       }
     }

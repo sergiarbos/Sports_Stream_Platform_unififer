@@ -33,6 +33,51 @@ SPANISH_WEEKDAYS = (
     "sábado",
     "domingo",
 )
+TAB_ALIASES = {
+    "enlaces": "links",
+    "resultados": "results",
+    "links": "links",
+    "results": "results",
+}
+SPORT_ALIASES = {
+    "todos": "all",
+    "all": "all",
+    "futbol": "football",
+    "motor": "motorsport",
+    "baloncesto": "basketball",
+    "tenis": "tennis",
+}
+SPORT_PARAMS = {
+    "all": "todos",
+    "football": "futbol",
+    "motorsport": "motor",
+    "basketball": "baloncesto",
+    "tennis": "tenis",
+}
+
+
+def resolve_view_mode(request):
+    raw_tab = request.GET.get("tab") or request.GET.get("view_mode") or "links"
+    return TAB_ALIASES.get(raw_tab.lower(), "links")
+
+
+def resolve_sport_slug(request, sports):
+    raw_sport = request.GET.get("sport", "all").lower()
+    slug = SPORT_ALIASES.get(raw_sport, raw_sport)
+    valid_slugs = {sport.slug for sport in sports}
+    return slug if slug == "all" or slug in valid_slugs else "all"
+
+
+def query_params_for(view_mode, sport_slug, platform_slug, competition_slug, date_param=""):
+    params = {
+        "tab": "enlaces" if view_mode == "links" else "resultados",
+        "sport": SPORT_PARAMS.get(sport_slug, sport_slug),
+        "platform": platform_slug,
+        "competition": competition_slug,
+    }
+    if date_param:
+        params["date"] = date_param
+    return params
 
 
 def date_group_label(group_date, today, prefix=None):
@@ -164,13 +209,17 @@ def home(request):
         Platform.objects.filter(broadcasts__language__startswith="es").distinct().order_by("name")
     )
 
-    view_mode = request.GET.get("view_mode", "links")
+    view_mode = resolve_view_mode(request)
     if view_mode == "results":
         sports = sports.filter(category__in=[Sport.CATEGORY_FOOTBALL, Sport.CATEGORY_MOTORSPORT])
 
-    selected_sport_slug = request.GET.get("sport", "all")
+    selected_sport_slug = resolve_sport_slug(request, sports)
     selected_platform_slug = request.GET.get("platform", "all")
     selected_competition_slug = request.GET.get("competition", "all")
+    tab_param = "enlaces" if view_mode == "links" else "resultados"
+    sport_param = SPORT_PARAMS.get(selected_sport_slug, selected_sport_slug)
+    for sport in sports:
+        sport.query_slug = SPORT_PARAMS.get(sport.slug, sport.slug)
 
     competitions = Competition.objects.none()
     if selected_sport_slug != "all":
@@ -230,6 +279,8 @@ def home(request):
             "selected_competition_slug": selected_competition_slug,
             "competitions": competitions,
             "view_mode": view_mode,
+            "tab_param": tab_param,
+            "sport_param": sport_param,
             "results_events": results_events,
             "results_groups": results_groups,
             "date_links": build_date_links(results_groups, today, selected_date),
@@ -329,6 +380,7 @@ def home(request):
             "name": platform.name,
             "color": platform.color,
             "count": platform_counts.get(platform.id, 0),
+            "is_free": not platform.requires_subscription,
         }
         for platform in platforms
     ]
@@ -346,6 +398,8 @@ def home(request):
         "selected_competition_slug": selected_competition_slug,
         "competitions": competitions,
         "view_mode": view_mode,
+        "tab_param": tab_param,
+        "sport_param": sport_param,
         "live_events": live,
         "upcoming_events": upcoming,
         "upcoming_groups": upcoming_groups,

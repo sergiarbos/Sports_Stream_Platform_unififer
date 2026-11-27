@@ -4,18 +4,27 @@
 {% block content %}
 <div class="container">
 
+  <div class="loading-skeleton" id="loading-skeleton" aria-hidden="true" hidden>
+    <span class="skeleton-line skeleton-title"></span>
+    <span class="skeleton-line skeleton-tabs"></span>
+    <span class="skeleton-row"></span>
+    <span class="skeleton-row"></span>
+    <span class="skeleton-row"></span>
+  </div>
+
   <nav class="mode-tabs" style="display:flex; gap:10px; margin-bottom: 20px;">
-    <a href="?view_mode=links&amp;sport={{ selected_sport_slug }}&amp;platform={{ selected_platform_slug }}&amp;competition={{ selected_competition_slug }}{% if selected_date_param %}&amp;date={{ selected_date_param }}{% endif %}" class="mode-tab {% if view_mode == 'links' %}active{% endif %}">ENLACES</a>
-    <a href="?view_mode=results&amp;sport={{ selected_sport_slug }}&amp;platform={{ selected_platform_slug }}&amp;competition={{ selected_competition_slug }}{% if selected_date_param %}&amp;date={{ selected_date_param }}{% endif %}" class="mode-tab {% if view_mode == 'results' %}active{% endif %}">RESULTADOS</a>
+    <a href="?tab=enlaces&amp;sport={{ sport_param }}&amp;platform={{ selected_platform_slug }}&amp;competition={{ selected_competition_slug }}{% if selected_date_param %}&amp;date={{ selected_date_param }}{% endif %}" class="mode-tab {% if view_mode == 'links' %}active{% endif %}">ENLACES</a>
+    <a href="?tab=resultados&amp;sport={{ sport_param }}&amp;platform={{ selected_platform_slug }}&amp;competition={{ selected_competition_slug }}{% if selected_date_param %}&amp;date={{ selected_date_param }}{% endif %}" class="mode-tab {% if view_mode == 'results' %}active{% endif %}">RESULTADOS</a>
   </nav>
 
   <nav class="sport-tabs">
-    <a href="?view_mode={{ view_mode }}&amp;sport=all&amp;platform={{ selected_platform_slug }}&amp;competition=all{% if selected_date_param %}&amp;date={{ selected_date_param }}{% endif %}" class="sport-tab {% if selected_sport_slug == 'all' %}active{% endif %}">Todos</a>
+    <button type="button" class="favorites-tab" id="favorites-filter" aria-pressed="false" title="Ver solo equipos y competiciones seguidos">★ SIGUIENDO <span class="favorites-count" id="favorites-count">0</span></button>
+    <a href="?tab={{ tab_param }}&amp;sport=todos&amp;platform={{ selected_platform_slug }}&amp;competition=all{% if selected_date_param %}&amp;date={{ selected_date_param }}{% endif %}" class="sport-tab {% if selected_sport_slug == 'all' %}active{% endif %}">Todos</a>
     {% if view_mode == 'links' %}
       <a href="#live-section" class="sport-tab live-filter">EN DIRECTO ({{ live_count|default:0 }})</a>
     {% endif %}
     {% for sport in sports %}
-      <a href="?view_mode={{ view_mode }}&amp;sport={{ sport.slug }}&amp;platform={{ selected_platform_slug }}&amp;competition=all{% if selected_date_param %}&amp;date={{ selected_date_param }}{% endif %}" class="sport-tab {% if selected_sport_slug == sport.slug %}active{% endif %}">
+      <a href="?tab={{ tab_param }}&amp;sport={{ sport.query_slug }}&amp;platform={{ selected_platform_slug }}&amp;competition=all{% if selected_date_param %}&amp;date={{ selected_date_param }}{% endif %}" class="sport-tab {% if selected_sport_slug == sport.slug %}active{% endif %}">
         {{ sport.icon }} {{ sport.name }}
       </a>
     {% endfor %}
@@ -23,12 +32,13 @@
 
   {% if platforms and view_mode != 'results' %}
   <nav class="platform-tabs">
-    <a href="?view_mode={{ view_mode }}&amp;sport={{ selected_sport_slug }}&amp;platform=all&amp;competition={{ selected_competition_slug }}{% if selected_date_param %}&amp;date={{ selected_date_param }}{% endif %}" class="platform-tab {% if selected_platform_slug == 'all' %}active{% endif %}">Todas las plataformas</a>
+    <a href="?tab={{ tab_param }}&amp;sport={{ sport_param }}&amp;platform=all&amp;competition={{ selected_competition_slug }}{% if selected_date_param %}&amp;date={{ selected_date_param }}{% endif %}" class="platform-tab {% if selected_platform_slug == 'all' %}active{% endif %}">Todas las plataformas</a>
     {% for item in platform_filters %}
-      <a href="?view_mode={{ view_mode }}&amp;sport={{ selected_sport_slug }}&amp;platform={{ item.slug }}&amp;competition={{ selected_competition_slug }}{% if selected_date_param %}&amp;date={{ selected_date_param }}{% endif %}" class="platform-tab{% if selected_platform_slug == item.slug %} active{% endif %}{% if not item.count and selected_platform_slug != item.slug %} is-empty{% endif %}" title="{% if item.count %}{{ item.count }} emisión(es) este día{% else %}Sin emisiones este día{% endif %}">
+      <a href="?tab={{ tab_param }}&amp;sport={{ sport_param }}&amp;platform={{ item.slug }}&amp;competition={{ selected_competition_slug }}{% if selected_date_param %}&amp;date={{ selected_date_param }}{% endif %}" class="platform-tab{% if selected_platform_slug == item.slug %} active{% endif %}{% if not item.count and selected_platform_slug != item.slug %} is-empty{% endif %}" title="{% if item.count %}{{ item.count }} emisión(es) este día{% else %}Sin emisiones este día{% endif %}">
         <span class="platform-dot" style="background:{{ item.color }}"></span>
         {{ item.name }}
         {% if item.count %}<span class="platform-count">{{ item.count }}</span>{% endif %}
+        {% if item.is_free %}<span class="free-badge">GRATIS</span>{% endif %}
       </a>
     {% endfor %}
   </nav>
@@ -37,9 +47,9 @@
   {% if competitions %}
   <nav class="competition-tabs" aria-label="Filtrar por competición">
     <span class="filter-caption">COMPETICIÓN</span>
-    <a href="?view_mode={{ view_mode }}&amp;sport={{ selected_sport_slug }}&amp;platform={{ selected_platform_slug }}&amp;competition=all{% if selected_date_param %}&amp;date={{ selected_date_param }}{% endif %}" class="competition-tab {% if selected_competition_slug == 'all' %}active{% endif %}">Todas</a>
+    <a href="?tab={{ tab_param }}&amp;sport={{ sport_param }}&amp;platform={{ selected_platform_slug }}&amp;competition=all{% if selected_date_param %}&amp;date={{ selected_date_param }}{% endif %}" class="competition-tab {% if selected_competition_slug == 'all' %}active{% endif %}">Todas</a>
     {% for competition in competitions %}
-      <a href="?view_mode={{ view_mode }}&amp;sport={{ selected_sport_slug }}&amp;platform={{ selected_platform_slug }}&amp;competition={{ competition.slug }}{% if selected_date_param %}&amp;date={{ selected_date_param }}{% endif %}" class="competition-tab {% if selected_competition_slug == competition.slug %}active{% endif %}">
+      <a href="?tab={{ tab_param }}&amp;sport={{ sport_param }}&amp;platform={{ selected_platform_slug }}&amp;competition={{ competition.slug }}{% if selected_date_param %}&amp;date={{ selected_date_param }}{% endif %}" class="competition-tab {% if selected_competition_slug == competition.slug %}active{% endif %}" data-favorite-key="{{ competition.name|favorite_key }}">
         <span class="competition-badge" style="--comp-color:{{ competition.accent_color }}">{{ competition.badge_initials }}</span>
         <span class="comp-flag">{{ competition|comp_flag }}</span> {{ competition.name }}
       </a>
@@ -48,7 +58,7 @@
   {% endif %}
 
   {% if selected_sport_slug != 'all' or selected_platform_slug != 'all' or selected_competition_slug != 'all' or selected_date_param %}
-  <a href="?view_mode={{ view_mode }}&amp;sport=all&amp;platform=all&amp;competition=all" class="clear-filters">Limpiar filtros ✕</a>
+  <a href="?tab={{ tab_param }}&amp;sport=todos&amp;platform=all&amp;competition=all" class="clear-filters">Limpiar filtros ✕</a>
   {% endif %}
 
   {% if featured_events %}
@@ -145,7 +155,7 @@
         </div>
       {% endfor %}
     {% else %}
-      <div class="empty-note">No hay resultados en los últimos 14 días. <a href="?view_mode=results&amp;sport=all&amp;platform=all&amp;competition=all" class="clear-filters">Limpiar filtros ✕</a></div>
+      <div class="empty-note">No hay resultados en los últimos 14 días. <a href="?tab=resultados&amp;sport=todos&amp;platform=all&amp;competition=all" class="clear-filters">Limpiar filtros ✕</a></div>
     {% endif %}
   </div>
   {% endif %}

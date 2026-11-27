@@ -145,11 +145,28 @@ def session_label(event):
     return SESSION_LABELS.get(session.lower(), session)
 
 
+def favorite_key(value):
+    return normalize_team_name(value).replace(" ", "-")
+
+
+def favorite_keys(event):
+    values = (
+        getattr(event, "participant_home", ""),
+        getattr(event, "participant_away", ""),
+        getattr(event.competition, "name", ""),
+        getattr(event.competition, "slug", ""),
+    )
+    return " ".join(dict.fromkeys(favorite_key(value) for value in values if value))
+
+
 def result_note(event):
     result_text = (getattr(event, "result_text", "") or "").strip()
     round_name = (getattr(event, "round_name", "") or "").strip()
     if result_text and not result_text.isdigit():
         return result_text
+    sport = getattr(getattr(event, "competition", None), "sport", None)
+    if getattr(sport, "category", "") == "motorsport":
+        return ""
     if round_name and not round_name.isdigit() and round_name.lower() != result_text.lower():
         return round_name
     return ""

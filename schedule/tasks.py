@@ -102,6 +102,9 @@ def auto_import_all_sports():
                     "status": event_data["status"],
                     "participant_home": event_data.get("participant_home", ""),
                     "participant_away": event_data.get("participant_away", ""),
+                    "result_text": event_data.get("result_text", ""),
+                    "score_home": event_data.get("score_home"),
+                    "score_away": event_data.get("score_away"),
                 },
             )
             total_imported += 1

@@ -23,15 +23,16 @@ from django.core.cache import cache
 from .adapters import BaseSourceAdapter
 
 JOLPICA_BASE_URL = "https://api.jolpi.ca/ergast/f1"
+JOLPICA_ALPHA_URL = "https://api.jolpi.ca/f1/alpha"
 
-# API key → human-readable session label
+# API key → (human-readable session label, Alpha session code)
 SESSION_MAP = [
-    ("FirstPractice", "Free Practice 1"),
-    ("SecondPractice", "Free Practice 2"),
-    ("ThirdPractice", "Free Practice 3"),
-    ("Sprint", "Sprint"),
-    ("SprintQualifying", "Sprint Qualifying"),
-    ("Qualifying", "Qualifying"),
+    ("FirstPractice", "Free Practice 1", "FP1"),
+    ("SecondPractice", "Free Practice 2", "FP2"),
+    ("ThirdPractice", "Free Practice 3", "FP3"),
+    ("Sprint", "Sprint", "SR"),
+    ("SprintQualifying", "Sprint Qualifying", "SQ"),
+    ("Qualifying", "Qualifying", "Q"),
 ]
 
 
@@ -51,6 +52,24 @@ def _status(dt):
     return "finished"
 
 
+def _format_session_result(result):
+    driver = result.get("driver") or result.get("Driver") or {}
+    name = (
+        driver.get("family_name")
+        or driver.get("familyName")
+        or driver.get("abbreviation")
+        or driver.get("code")
+        or "?"
+    )
+    position = (
+        result.get("position_text") or result.get("positionText") or result.get("position") or "1"
+    )
+    timing = result.get("time") or result.get("timing") or result.get("Timing") or {}
+    time = timing.get("time") or timing.get("millis") or "" if isinstance(timing, dict) else timing
+    label = f"{position}º {name}"
+    return f"{label} · {time}" if time else label
+
+
 class JolpicaF1Adapter(BaseSourceAdapter):
     source_id = "jolpica_f1"
 
@@ -65,6 +84,47 @@ class JolpicaF1Adapter(BaseSourceAdapter):
         data = response.json()
         cache.set(cache_key, data, ttl)
         return data
+
+    def _alpha_session_results(self, season):
+        try:
+            data = self._cached_get(
+                f"{JOLPICA_ALPHA_URL}/schedules/{season}/",
+                f"jolpica:alpha:schedules:{season}",
+            )
+        except Exception:
+            return {}
+
+        targets = []
+        now = datetime.now(UTC)
+        for event in data.get("data", {}).get("events", []):
+            round_val = str(event.get("round", {}).get("number", ""))
+            if not round_val:
+                continue
+            for session in event.get("schedule", []):
+                code = session.get("code")
+                url = session.get("results_url")
+                if code not in {"FP1", "FP2", "FP3", "SR", "SQ", "Q", "R"} or not url:
+                    continue
+                try:
+                    started = datetime.fromisoformat(
+                        session.get("timestamp", "").replace("Z", "+00:00")
+                    )
+                except ValueError:
+                    continue
+                if started <= now:
+                    targets.append((round_val, code, url, started))
+
+        targets.sort(key=lambda item: item[3], reverse=True)
+        results = {}
+        for round_val, code, url, _ in targets[:60]:
+            try:
+                result_data = self._cached_get(url, f"jolpica:alpha:results:{round_val}:{code}")
+            except Exception:
+                continue
+            items = result_data.get("data", {}).get("results", [])
+            if items:
+                results[(round_val, code)] = _format_session_result(items[0])
+        return results
 
     def fetch_events(self, season="current", **kwargs):
         url = f"{JOLPICA_BASE_URL}/{season}/races/?format=json"
@@ -87,6 +147,9 @@ class JolpicaF1Adapter(BaseSourceAdapter):
                 top_3 = [f"{res['position']}º {res['Driver']['familyName']}" for res in results[:3]]
                 results_by_round[round_val] = ", ".join(top_3)
 
+        alpha_season = races[0].get("season") if races else season
+        alpha_results = self._alpha_session_results(alpha_season)
+
         events = []
 
         for race in races:
@@ -96,7 +159,7 @@ class JolpicaF1Adapter(BaseSourceAdapter):
             round_label = f"Round {round_val}"
 
             # --- Additional sessions (FP1, FP2, FP3, Qualifying, Sprint…) ---
-            for api_key, session_label in SESSION_MAP:
+            for api_key, session_label, alpha_code in SESSION_MAP:
                 session = race.get(api_key)
                 if not session:
                     continue
@@ -108,6 +171,7 @@ class JolpicaF1Adapter(BaseSourceAdapter):
                         "start_datetime": dt,
                         "external_id": f"f1-{season_val}-{round_val}-{api_key.lower()}",
                         "status": _status(dt),
+                        "result_text": alpha_results.get((str(round_val), alpha_code), ""),
                     }
                 )
 
@@ -120,7 +184,8 @@ class JolpicaF1Adapter(BaseSourceAdapter):
                     "start_datetime": race_dt,
                     "external_id": f"f1-{season_val}-{round_val}-race",
                     "status": _status(race_dt),
-                    "result_text": results_by_round.get(round_val, ""),
+                    "result_text": alpha_results.get((str(round_val), "R"), "")
+                    or results_by_round.get(round_val, ""),
                 }
             )
 

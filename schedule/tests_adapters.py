@@ -11,6 +11,8 @@ from schedule.services.thesportsdb import TheSportsDBAdapter
 
 JOLPICA_RACES_URL = "https://api.jolpi.ca/ergast/f1/2026/races/?format=json"
 JOLPICA_RESULTS_URL = "https://api.jolpi.ca/ergast/f1/2026/results/?format=json"
+JOLPICA_ALPHA_SCHEDULES_URL = "https://api.jolpi.ca/f1/alpha/schedules/2026/"
+JOLPICA_ALPHA_FP1_URL = "https://api.jolpi.ca/f1/alpha/results/1/FP1/"
 
 JOLPICA_RACE_FIXTURE = {
     "MRData": {
@@ -44,6 +46,35 @@ JOLPICA_RESULTS_FIXTURE = {
                 }
             ]
         }
+    }
+}
+
+JOLPICA_ALPHA_SCHEDULES_FIXTURE = {
+    "data": {
+        "events": [
+            {
+                "round": {"number": 1},
+                "schedule": [
+                    {
+                        "code": "FP1",
+                        "timestamp": "2026-02-28T11:30:00Z",
+                        "results_url": JOLPICA_ALPHA_FP1_URL,
+                    }
+                ],
+            }
+        ]
+    }
+}
+
+JOLPICA_ALPHA_FP1_FIXTURE = {
+    "data": {
+        "results": [
+            {
+                "position": "1",
+                "driver": {"family_name": "Leclerc"},
+                "time": "1:30.123",
+            }
+        ]
     }
 }
 
@@ -137,6 +168,22 @@ class TestJolpicaF1Adapter(TestCase):
 
         race = next(e for e in events if e["title"] == "Bahrain Grand Prix")
         self.assertIn("Verstappen", race.get("result_text", ""))
+
+    @resp.activate
+    def test_session_result_uses_alpha_api(self):
+        resp.add(resp.GET, JOLPICA_RACES_URL, json=JOLPICA_RACE_FIXTURE, status=200)
+        resp.add(resp.GET, JOLPICA_RESULTS_URL, json=JOLPICA_RESULTS_FIXTURE, status=200)
+        resp.add(
+            resp.GET,
+            JOLPICA_ALPHA_SCHEDULES_URL,
+            json=JOLPICA_ALPHA_SCHEDULES_FIXTURE,
+            status=200,
+        )
+        resp.add(resp.GET, JOLPICA_ALPHA_FP1_URL, json=JOLPICA_ALPHA_FP1_FIXTURE, status=200)
+
+        events = JolpicaF1Adapter().fetch_events(season="2026")
+        fp1 = next(e for e in events if "Free Practice 1" in e["title"])
+        self.assertEqual(fp1["result_text"], "1º Leclerc · 1:30.123")
 
     @resp.activate
     def test_handles_results_api_error_gracefully(self):

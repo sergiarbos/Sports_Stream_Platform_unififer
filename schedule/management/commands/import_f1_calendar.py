@@ -45,6 +45,7 @@ class Command(BaseCommand):
                     "round_name": race["round_name"],
                     "start_datetime": race["start_datetime"],
                     "status": race["status"],
+                    "result_text": race.get("result_text", ""),
                 },
             )
             created_or_updated += 1

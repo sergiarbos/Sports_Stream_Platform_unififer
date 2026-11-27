@@ -9,7 +9,7 @@ from unittest.mock import patch
 
 from django.test import TestCase
 from django.urls import reverse
-from django.utils import timezone
+from django.utils import timezone, translation
 
 from .models import Broadcast, Competition, Event, Platform, Sport
 from .utils import (
@@ -28,6 +28,7 @@ from .utils import (
     team_initials,
     team_text_style,
 )
+from .views import SPANISH_MONTHS
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -98,6 +99,35 @@ class HomeViewTest(TestCase):
         response = self.client.get(reverse("schedule:home"))
         self.assertEqual(response.status_code, 200)
 
+    def test_new_navigation_controls_are_rendered(self):
+        response = self.client.get(reverse("schedule:home"))
+        for fragment in [
+            "Buscar equipo, piloto o torneo...",
+            'id="search-suggestions"',
+            'class="link-card-copy"',
+            'id="loading-skeleton"',
+            'id="tz-select"',
+            "Aviso legal",
+            "Contacto / reportar error",
+        ]:
+            self.assertContains(response, fragment)
+
+    def test_free_platform_badge_is_shown(self):
+        free = Platform.objects.create(
+            name="RTVE",
+            slug="rtve",
+            website_url="https://rtve.es",
+            color="#000",
+            requires_subscription=False,
+        )
+        make_broadcast(make_event(Competition.objects.get(slug="champions")), free)
+
+        response = self.client.get(
+            reverse("schedule:home"), {"sport": "football", "platform": "rtve"}
+        )
+        self.assertContains(response, "GRATIS")
+        self.assertContains(response, "redirect-btn-meta is-free")
+
     def test_upcoming_event_appears_in_context(self):
         response = self.client.get(reverse("schedule:home"))
         self.assertIn(self.event, response.context["upcoming_events"])
@@ -149,6 +179,14 @@ class HomeViewTest(TestCase):
         ids = [event.id for event in response.context["featured_events"]]
         self.assertEqual(len(ids), len(set(ids)))
 
+    def test_interface_stays_in_spanish(self):
+        with translation.override("en"):
+            response = self.client.get(reverse("schedule:home"))
+        html = response.content.decode()
+        self.assertIn("<span>ES</span>", html)
+        self.assertIn("English · próximamente", html)
+        self.assertIn(SPANISH_MONTHS[timezone.localtime(self.event.start_datetime).month], html)
+
     def test_event_beyond_30_days_is_excluded(self):
         comp = Competition.objects.get(slug="champions")
         platform = Platform.objects.get(slug="dazn")
@@ -166,6 +204,12 @@ class HomeViewTest(TestCase):
 class CompetitionFilterTest(TestCase):
     def setUp(self):
         sport = make_sport()
+        Sport.objects.create(
+            name="Formula 1",
+            slug="motorsport",
+            category=Sport.CATEGORY_MOTORSPORT,
+            order=1,
+        )
         self.la_liga = Competition.objects.create(
             sport=sport, name="LaLiga", slug="la-liga", short_code="LL"
         )
@@ -199,8 +243,27 @@ class CompetitionFilterTest(TestCase):
             reverse("schedule:home"),
             {"sport": "football", "platform": "dazn", "competition": "la-liga"},
         )
-        self.assertContains(response, "sport=football&amp;platform=dazn&amp;competition=all")
-        self.assertContains(response, "sport=football&amp;platform=dazn&amp;competition=la-liga")
+        self.assertContains(
+            response, "tab=enlaces&amp;sport=futbol&amp;platform=dazn&amp;competition=all"
+        )
+        self.assertContains(
+            response, "tab=enlaces&amp;sport=futbol&amp;platform=dazn&amp;competition=la-liga"
+        )
+
+    def test_spanish_query_aliases_are_accepted(self):
+        response = self.client.get(
+            reverse("schedule:home"),
+            {"tab": "resultados", "sport": "motor", "date": "2026-11-27"},
+        )
+        self.assertEqual(response.context["view_mode"], "results")
+        self.assertEqual(response.context["selected_sport_slug"], "motorsport")
+        self.assertContains(response, "tab=resultados&amp;sport=motor")
+
+        legacy = self.client.get(
+            reverse("schedule:home"), {"view_mode": "results", "sport": "football"}
+        )
+        self.assertEqual(legacy.context["view_mode"], "results")
+        self.assertEqual(legacy.context["selected_sport_slug"], "football")
 
     def test_competition_filter_also_applies_to_results(self):
         finished = Event.objects.create(
@@ -263,6 +326,17 @@ class TeamPresentationTest(TestCase):
 
         event.round_name = "Jornada 5"
         self.assertEqual(result_note(event), "Jornada 5")
+
+    def test_motorsport_result_note_uses_driver_instead_of_round(self):
+        sport = Sport.objects.create(
+            name="Formula 1", slug="f1", category=Sport.CATEGORY_MOTORSPORT, order=1
+        )
+        event = make_event(make_competition(sport), hours_delta=-5, status=Event.STATUS_FINISHED)
+        event.round_name = "Round 1"
+        self.assertEqual(result_note(event), "")
+
+        event.result_text = "1º Norris · 1:17.252"
+        self.assertEqual(result_note(event), "1º Norris · 1:17.252")
 
     def test_competition_flags(self):
         self.assertEqual(competition_flag("champions-league"), "🇪🇺")

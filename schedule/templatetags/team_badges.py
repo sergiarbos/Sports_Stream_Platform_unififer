@@ -10,6 +10,12 @@ from schedule.utils import (
     team_initials,
 )
 from schedule.utils import (
+    favorite_key as favorite_key_util,
+)
+from schedule.utils import (
+    favorite_keys as favorite_keys_util,
+)
+from schedule.utils import (
     live_minute as live_minute_util,
 )
 from schedule.utils import (
@@ -92,3 +98,13 @@ def result_note(event):
 @register.simple_tag
 def local_timezone_label():
     return local_timezone_label_util()
+
+
+@register.filter
+def favorite_key(value):
+    return favorite_key_util(value)
+
+
+@register.filter
+def favorite_keys(event):
+    return favorite_keys_util(event)

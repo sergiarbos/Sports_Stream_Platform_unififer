@@ -5,7 +5,7 @@ sola vez en sus cabeceras; aquí solo aparecen hora, equipo y las plataformas
 que emiten el evento. Toda la fila abre el panel lateral.
 {% endcomment %}
 {% if event.is_competition_start %}
-<div class="competition-subheader sport-{{ event.competition.sport.category }}">
+<div class="competition-subheader sport-{{ event.competition.sport.category }}" data-favorite-key="{{ event.competition.name|favorite_key }}">
   {% if event.competition.sport.icon %}<span class="sport-mark" aria-hidden="true">{{ event.competition.sport.icon }}</span>{% endif %}
   <span class="comp-flag">{{ event.competition|comp_flag }}</span>
   <span>{{ event.competition.name|upper }}</span>
@@ -14,8 +14,10 @@ que emiten el evento. Toda la fila abre el panel lateral.
 {% endif %}
 <div
   class="schedule-row is-{{ card_type }} sport-{{ event.competition.sport.category }}"
-  data-search="{{ event.title|lower }} {{ event.competition.name|lower }}"
+  data-search="{{ event.title|lower }} {{ event.competition.name|lower }} {% if event.participant_home %}{{ event.participant_home|lower }} {{ event.participant_home|team_short|lower }}{% endif %} {% if event.participant_away %}{{ event.participant_away|lower }} {{ event.participant_away|team_short|lower }}{% endif %} {{ event.round_name|lower }}"
+  data-group="{% if card_type == 'archive' %}resultados{% else %}proximos{% endif %}"
   data-event-id="event-{{ event.id }}"
+  data-favorite-keys="{{ event|favorite_keys }}"
 >
   <div class="schedule-row-when">
     {% if card_type == "live" %}

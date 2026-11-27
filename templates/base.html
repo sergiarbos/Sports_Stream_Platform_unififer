@@ -11,43 +11,41 @@
   {# Fuse.js — fuzzy search library (loaded before app.js) #}
   <script src="https://cdn.jsdelivr.net/npm/fuse.js@7/dist/fuse.min.js"></script>
   {# Bump ?v= whenever style.css or app.js changes #}
-  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=14">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=15">
 </head>
 <body>
   <header class="topbar">
     <div class="topbar-inner">
       <div class="topbar-id"></div>
       <div class="topbar-tools">
-        <label class="search-box" for="event-search">
-          <svg class="search-icon" viewBox="0 0 20 20" aria-hidden="true"><circle cx="9" cy="9" r="6.5" stroke="currentColor" stroke-width="1.6" fill="none"/><line x1="14" y1="14" x2="18.5" y2="18.5" stroke="currentColor" stroke-width="1.6"/></svg>
-          <input id="event-search" type="text" placeholder="Busca equipo, piloto o competición…" autocomplete="off" aria-label="Buscar eventos" aria-keyshortcuts="/ Control+K Meta+K">
-          <kbd class="search-shortcut" aria-hidden="true">/</kbd>
-        </label>
+        <div class="search-wrap">
+          <label class="search-box" for="event-search">
+            <svg class="search-icon" viewBox="0 0 20 20" aria-hidden="true"><circle cx="9" cy="9" r="6.5" stroke="currentColor" stroke-width="1.6" fill="none"/><line x1="14" y1="14" x2="18.5" y2="18.5" stroke="currentColor" stroke-width="1.6"/></svg>
+            <input id="event-search" type="text" placeholder="Buscar equipo, piloto o torneo..." autocomplete="off" aria-label="Buscar eventos" aria-keyshortcuts="/ Control+K Meta+K" aria-expanded="false" aria-controls="search-suggestions">
+            <kbd class="search-shortcut" aria-hidden="true">/</kbd>
+          </label>
+          <div class="search-suggestions" id="search-suggestions" role="listbox" aria-label="Sugerencias de eventos" hidden></div>
+        </div>
 
-        <span class="tz-label" title="Todas las horas se muestran en la zona horaria local del servidor">{% local_timezone_label %}</span>
+        <span class="tz-label" id="tz-label" title="Todas las horas se muestran en la zona horaria local del servidor">{% local_timezone_label %}</span>
 
         {# ── Language selector ─────────────────────────────────────── #}
         <div class="lang-selector" id="lang-selector">
-          <button type="button" class="lang-btn" id="lang-btn" aria-haspopup="true" aria-expanded="false" title="Cambiar idioma">
-            {% get_current_language as current_lang %}
+          <button type="button" class="lang-btn" id="lang-btn" aria-haspopup="true" aria-expanded="false" title="Idioma de la interfaz">
             <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" width="16" height="16">
               <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/>
               <path d="M12 3c-2 3-3 5.5-3 9s1 6 3 9m0-18c2 3 3 5.5 3 9s-1 6-3 9M3 12h18" stroke="currentColor" stroke-width="1.6"/>
             </svg>
-            <span>{{ current_lang|upper }}</span>
+            <span>ES</span>
           </button>
           <div class="lang-dropdown" id="lang-dropdown" hidden>
-            {% get_available_languages as langs %}
-            {% for lang_code, lang_name in langs %}
-              <form action="{% url 'set_language' %}" method="post" class="lang-form">
-                {% csrf_token %}
-                <input type="hidden" name="language" value="{{ lang_code }}">
-                <input type="hidden" name="next" value="{{ request.path }}">
-                <button type="submit" class="lang-option {% if lang_code == current_lang %}is-active{% endif %}">
-                  {{ lang_name }}
-                </button>
-              </form>
-            {% endfor %}
+            <form action="{% url 'set_language' %}" method="post" class="lang-form">
+              {% csrf_token %}
+              <input type="hidden" name="language" value="es">
+              <input type="hidden" name="next" value="{{ request.get_full_path }}">
+              <button type="submit" class="lang-option is-active">Español</button>
+            </form>
+            <span class="lang-option is-disabled" title="Traducción completa pendiente">English · próximamente</span>
           </div>
         </div>
 
@@ -83,7 +81,7 @@
             <p class="bell-dropdown-empty" id="bell-dropdown-empty" hidden>
               Nada en directo ahora — revisa los próximos eventos.
             </p>
-            <a href="?view_mode=links#live-section" class="bell-dropdown-cta" id="bell-dropdown-cta">
+            <a href="?tab=enlaces#live-section" class="bell-dropdown-cta" id="bell-dropdown-cta">
               Ver todos los eventos en directo →
             </a>
             <div class="bell-reminders">
@@ -105,8 +103,29 @@
 
   {% block content %}{% endblock %}
 
+  <footer class="site-footer">
+    <div class="site-footer-inner">
+      <span class="site-footer-legal">© {% now "Y" %} StreamSync · Aviso legal: horarios y emisiones pueden cambiar sin previo aviso.</span>
+      <button type="button" class="site-footer-report" id="report-error-btn">Contacto / reportar error</button>
+      <label class="tz-picker" for="tz-select">
+        <span>Zona horaria</span>
+        <select id="tz-select">
+          <option value="Europe/Madrid">Madrid</option>
+          <option value="UTC">UTC</option>
+          <option value="America/Argentina/Buenos_Aires">Buenos Aires</option>
+          <option value="America/Bogota">Bogotá</option>
+          <option value="America/Mexico_City">Ciudad de México</option>
+          <option value="America/Santiago">Santiago</option>
+          <option value="America/New_York">Nueva York</option>
+        </select>
+      </label>
+    </div>
+  </footer>
+
+  <div class="toast" id="app-toast" role="status" aria-live="polite" hidden></div>
+
   {# SW registration must come before app.js so scheduleReminder() is available #}
   <script src="{% static 'js/sw-register.js' %}?v=2"></script>
-  <script src="{% static 'js/app.js' %}?v=10"></script>
+  <script src="{% static 'js/app.js' %}?v=11"></script>
 </body>
 </html>

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load i18n %}
 
 {% block title %}Detalles - {{ event.title }} | StreamSync{% endblock %}
 
@@ -16,7 +17,7 @@
   </div>
 
   <div class="details-hero">
-    <div class="details-date">{{ event.start_datetime|date:"d M Y · H:i" }}</div>
+    {% language "es" %}<div class="details-date js-time" data-iso="{{ event.start_datetime|date:'c' }}">{{ event.start_datetime|date:"d M Y · H:i" }}</div>{% endlanguage %}
 
     {% if event.competition.sport.category == "football" %}
       <div class="details-teams-score">
