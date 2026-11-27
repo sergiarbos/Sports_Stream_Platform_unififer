@@ -5,14 +5,15 @@ sola vez en sus cabeceras; aquí solo aparecen hora, equipo y las plataformas
 que emiten el evento. Toda la fila abre el panel lateral.
 {% endcomment %}
 {% if event.is_competition_start %}
-<div class="competition-subheader">
+<div class="competition-subheader sport-{{ event.competition.sport.category }}">
+  {% if event.competition.sport.icon %}<span class="sport-mark" aria-hidden="true">{{ event.competition.sport.icon }}</span>{% endif %}
   <span class="comp-flag">{{ event.competition|comp_flag }}</span>
   <span>{{ event.competition.name|upper }}</span>
   {% if event.round_name %}<span class="comp-round">· {{ event.round_name|upper }}</span>{% endif %}
 </div>
 {% endif %}
 <div
-  class="schedule-row is-{{ card_type }}"
+  class="schedule-row is-{{ card_type }} sport-{{ event.competition.sport.category }}"
   data-search="{{ event.title|lower }} {{ event.competition.name|lower }}"
   data-event-id="event-{{ event.id }}"
 >

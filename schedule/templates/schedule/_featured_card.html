@@ -21,6 +21,9 @@ sobre un escudo con los colores del club (sin logotipos con derechos).
       </div>
       {% endif %}
     </div>
+    {% with session=event|session_label %}
+      {% if session %}<span class="featured-session">{{ session }} · {{ event.start_datetime|date:"H:i" }}</span>{% endif %}
+    {% endwith %}
   </div>
   <span class="featured-arrow" aria-hidden="true">→</span>
 </a>

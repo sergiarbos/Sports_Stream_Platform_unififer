@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import date, timedelta
 
 import requests
 from django.conf import settings
@@ -49,25 +49,31 @@ def date_group_label(group_date, today, prefix=None):
 
 
 def group_events_by_date(events, today, prefix=None):
-    groups = []
+    by_date = {}
     for event in events:
         event_date = timezone.localtime(event.start_datetime).date()
-        if not groups or groups[-1]["date"] != event_date:
-            groups.append(
-                {
-                    "date": event_date,
-                    "label": date_group_label(event_date, today, prefix),
-                    "events": [],
-                }
-            )
-        groups[-1]["events"].append(event)
-    return groups
+        by_date.setdefault(event_date, []).append(event)
+    for event_date in by_date:
+        by_date[event_date].sort(key=lambda item: item.start_datetime)
+    return [
+        {
+            "date": event_date,
+            "label": date_group_label(event_date, today, prefix),
+            "events": by_date[event_date],
+        }
+        for event_date in sorted(by_date)
+    ]
 
 
-def build_date_links(groups, today):
+def build_date_links(groups, today, selected_date=None):
     links = []
+    seen = set()
     for group in sorted(groups, key=lambda item: item["date"]):
         group_date = group["date"]
+        iso = group_date.isoformat()
+        if iso in seen:
+            continue
+        seen.add(iso)
         if group_date == today:
             label = "Hoy"
         elif group_date == today + timedelta(days=1):
@@ -75,9 +81,34 @@ def build_date_links(groups, today):
         elif group_date == today - timedelta(days=1):
             label = "Ayer"
         else:
-            label = f"{SPANISH_WEEKDAYS[group_date.weekday()][:3].capitalize()} {group_date.day}"
-        links.append({"iso": group_date.isoformat(), "label": label})
+            weekday = SPANISH_WEEKDAYS[group_date.weekday()][:3].capitalize()
+            month = SPANISH_MONTHS[group_date.month][:3]
+            label = f"{weekday} {group_date.day} {month}"
+        links.append(
+            {
+                "iso": iso,
+                "label": label,
+                "full_label": date_group_label(group_date, today),
+                "is_active": selected_date is not None and group_date == selected_date,
+            }
+        )
     return links
+
+
+def resolve_selected_date(groups, today, raw_date, prefer_latest=False):
+    available = sorted({group["date"] for group in groups})
+    if raw_date:
+        try:
+            candidate = date.fromisoformat(raw_date)
+        except ValueError:
+            candidate = None
+        if candidate in available:
+            return candidate
+    if today in available:
+        return today
+    if not available:
+        return None
+    return available[-1] if prefer_latest else available[0]
 
 
 def build_panel_hint(link_events, now):
@@ -178,10 +209,15 @@ def home(request):
         if selected_competition_slug != "all":
             qs = qs.filter(competition__slug=selected_competition_slug)
 
-        results_events = qs.order_by("-start_datetime")
-        mark_competition_sections(results_events)
+        results_events = list(qs.order_by("start_datetime"))
         today = timezone.localtime(now_dt).date()
         results_groups = group_events_by_date(results_events, today)
+        selected_date_param = request.GET.get("date", "")
+        selected_date = resolve_selected_date(
+            results_groups, today, selected_date_param, prefer_latest=True
+        )
+        for group in results_groups:
+            mark_competition_sections(group["events"])
 
         # Compute live_count so the bell badge is populated in results view too
         live_count = Event.objects.filter(status=Event.STATUS_LIVE).count()
@@ -196,7 +232,9 @@ def home(request):
             "view_mode": view_mode,
             "results_events": results_events,
             "results_groups": results_groups,
-            "date_links": build_date_links(results_groups, today),
+            "date_links": build_date_links(results_groups, today, selected_date),
+            "active_date": selected_date,
+            "selected_date_param": selected_date_param,
             "live_count": live_count,
         }
         return render(request, "schedule/home.html", context)
@@ -255,17 +293,51 @@ def home(request):
     today = timezone.localtime(now).date()
     upcoming_groups = group_events_by_date(upcoming, today)
     past_groups = group_events_by_date(past, today, "A LA CARTA")
+    all_groups = upcoming_groups + past_groups
+    selected_date_param = request.GET.get("date", "")
+    selected_date = resolve_selected_date(all_groups, today, selected_date_param)
 
     # Featured strip (top banner): prioritises currently live events;
     # fills up with the nearest upcoming ones if there aren't enough.
-    featured = (live + upcoming)[:2]
+    featured = []
+    featured_ids = set()
+    for event in live + upcoming:
+        if event.id in featured_ids:
+            continue
+        featured.append(event)
+        featured_ids.add(event.id)
+        if len(featured) == 2:
+            break
 
     # Links panel (right column): same order as the left-hand schedule
     # so that the "Get links" anchor always stays in view.
     link_events = live + upcoming + past
 
+    platform_counts = {}
+    for event in link_events:
+        if timezone.localtime(event.start_datetime).date() != selected_date:
+            continue
+        for broadcast in event.broadcasts.all():
+            if broadcast.language.startswith("es"):
+                platform_counts[broadcast.platform_id] = (
+                    platform_counts.get(broadcast.platform_id, 0) + 1
+                )
+    platform_filters = [
+        {
+            "platform": platform,
+            "slug": platform.slug,
+            "name": platform.name,
+            "color": platform.color,
+            "count": platform_counts.get(platform.id, 0),
+        }
+        for platform in platforms
+    ]
+
     context = {
-        "date_links": build_date_links(upcoming_groups + past_groups, today),
+        "date_links": build_date_links(all_groups, today, selected_date),
+        "active_date": selected_date,
+        "selected_date_param": selected_date_param,
+        "platform_filters": platform_filters,
         "panel_hint": build_panel_hint(link_events, now),
         "sports": sports,
         "platforms": platforms,

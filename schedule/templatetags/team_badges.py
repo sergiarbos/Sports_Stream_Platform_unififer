@@ -13,10 +13,19 @@ from schedule.utils import (
     live_minute as live_minute_util,
 )
 from schedule.utils import (
+    local_timezone_label as local_timezone_label_util,
+)
+from schedule.utils import (
     platform_code as platform_code_util,
 )
 from schedule.utils import (
     result_detail as result_detail_util,
+)
+from schedule.utils import (
+    result_note as result_note_util,
+)
+from schedule.utils import (
+    session_label as session_label_util,
 )
 
 register = template.Library()
@@ -68,3 +77,18 @@ def result_detail(event):
 def es_broadcasts(event):
     broadcasts = event.broadcasts.all()
     return [broadcast for broadcast in broadcasts if broadcast.language.startswith("es")][:2]
+
+
+@register.filter
+def session_label(event):
+    return session_label_util(event)
+
+
+@register.filter
+def result_note(event):
+    return result_note_util(event)
+
+
+@register.simple_tag
+def local_timezone_label():
+    return local_timezone_label_util()

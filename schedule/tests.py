@@ -21,6 +21,8 @@ from .utils import (
     mark_competition_sections,
     platform_code,
     result_detail,
+    result_note,
+    session_label,
     short_team_name,
     team_colors,
     team_initials,
@@ -99,6 +101,53 @@ class HomeViewTest(TestCase):
     def test_upcoming_event_appears_in_context(self):
         response = self.client.get(reverse("schedule:home"))
         self.assertIn(self.event, response.context["upcoming_events"])
+
+    def test_date_links_are_unique_ordered_and_have_one_active_pill(self):
+        comp = Competition.objects.get(slug="champions")
+        platform = Platform.objects.get(slug="dazn")
+        tomorrow_event = make_event(comp, hours_delta=+26)
+        make_broadcast(tomorrow_event, platform)
+
+        response = self.client.get(reverse("schedule:home"), {"sport": "football"})
+        links = response.context["date_links"]
+        isos = [link["iso"] for link in links]
+        self.assertEqual(isos, sorted(set(isos)))
+        active = [link for link in links if link["is_active"]]
+        self.assertEqual(len(active), 1)
+        self.assertContains(response, 'class="date-pill is-active"')
+
+        tomorrow = timezone.localtime(tomorrow_event.start_datetime).date().isoformat()
+        selected = self.client.get(
+            reverse("schedule:home"),
+            {"sport": "football", "date": tomorrow},
+        )
+        self.assertEqual(
+            [link["iso"] for link in selected.context["date_links"] if link["is_active"]],
+            [tomorrow],
+        )
+
+    def test_platform_filters_report_empty_platforms_for_active_day(self):
+        comp = Competition.objects.get(slug="champions")
+        dazn = Platform.objects.get(slug="dazn")
+        espn = Platform.objects.create(
+            name="ESPN", slug="espn", website_url="https://espn.com", color="#000"
+        )
+        make_broadcast(make_event(comp, hours_delta=+26), espn)
+
+        response = self.client.get(reverse("schedule:home"), {"sport": "football"})
+        counts = {item["slug"]: item["count"] for item in response.context["platform_filters"]}
+        self.assertEqual(counts[dazn.slug], 1)
+        self.assertEqual(counts[espn.slug], 0)
+        self.assertContains(response, 'class="platform-tab is-empty"')
+
+    def test_featured_events_do_not_repeat_event_ids(self):
+        comp = Competition.objects.get(slug="champions")
+        platform = Platform.objects.get(slug="dazn")
+        make_broadcast(make_event(comp, hours_delta=+4), platform)
+
+        response = self.client.get(reverse("schedule:home"))
+        ids = [event.id for event in response.context["featured_events"]]
+        self.assertEqual(len(ids), len(set(ids)))
 
     def test_event_beyond_30_days_is_excluded(self):
         comp = Competition.objects.get(slug="champions")
@@ -181,7 +230,10 @@ class TeamPresentationTest(TestCase):
             ("PSG", "PSG", "PSG"),
             ("Club Atlético de Madrid", "Atlético", "ATM"),
             ("Sabah FK", "Sabah FK", "SF"),
-            ("VfB Stuttgart", "VfB Stuttgart", "VFB"),
+            ("VfB Stuttgart", "VFB Stuttgart", "VFB"),
+            ("SV Werder Bremen", "SV Werder Bremen", "SWB"),
+            ("Club Brugge KV", "Brugge KV", "BK"),
+            ("Lille OSC", "Lille OSC", "LO"),
             ("Viking FK", "Viking FK", "VF"),
             ("PSV", "PSV", "PSV"),
             ("SSC Napoli", "SSC Napoli", "SSC"),
@@ -199,6 +251,18 @@ class TeamPresentationTest(TestCase):
         self.assertIn("--team-text: #0a0a0a", team_colors("Villarreal"))
         self.assertIn("--team-text: #ffffff", team_colors("FC Barcelona"))
         self.assertEqual(team_text_style("Villarreal")[0], "#0a0a0a")
+
+    def test_session_and_result_note_formatting(self):
+        event = make_event(
+            make_competition(make_sport()), hours_delta=-5, status=Event.STATUS_FINISHED
+        )
+        event.title = "Qatar Grand Prix · Free Practice 1"
+        event.round_name = "5"
+        self.assertEqual(session_label(event), "FP1")
+        self.assertEqual(result_note(event), "")
+
+        event.round_name = "Jornada 5"
+        self.assertEqual(result_note(event), "Jornada 5")
 
     def test_competition_flags(self):
         self.assertEqual(competition_flag("champions-league"), "🇪🇺")
@@ -289,7 +353,7 @@ class ListPresentationTest(TestCase):
         response = self.client.get(reverse("schedule:home"), {"sport": "football"})
         html = response.content.decode()
 
-        self.assertEqual(html.count('class="competition-subheader"'), 1)
+        self.assertEqual(html.count('class="competition-subheader sport-'), 1)
         self.assertContains(response, 'Inter <span class="vs-sep">vs</span> SK Slavia Praha')
         self.assertContains(response, 'title="FC Internazionale Milano vs Slavia Praga"')
         self.assertContains(response, "FCB")
@@ -315,6 +379,27 @@ class ListPresentationTest(TestCase):
         )
         self.assertContains(response, 'class="result-open"')
         self.assertNotContains(response, "DETALLES")
+
+    def test_numeric_round_is_not_repeated_below_the_score(self):
+        finished = Event.objects.create(
+            competition=Competition.objects.get(slug="champions"),
+            title="Inter vs Stuttgart",
+            participant_home="Inter de Milán",
+            participant_away="VfB Stuttgart",
+            start_datetime=timezone.now() - timedelta(hours=5),
+            status=Event.STATUS_FINISHED,
+            round_name="5",
+            score_home=None,
+            score_away=None,
+        )
+        make_broadcast(finished, Platform.objects.get(slug="dazn"))
+
+        response = self.client.get(
+            reverse("schedule:home"), {"view_mode": "results", "sport": "football"}
+        )
+        html = response.content.decode()
+        self.assertIn('<span class="comp-round">· 5</span>', html)
+        self.assertNotIn('class="result-note">5</span>', html)
 
     def test_rows_do_not_repeat_competition_subtitle(self):
         response = self.client.get(reverse("schedule:home"), {"sport": "football"})

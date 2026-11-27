@@ -92,6 +92,14 @@ TEAM_STYLES = {
 }
 
 IGNORED_TEAM_WORDS = {"fc", "cf", "ac", "as", "if", "club", "de", "del", "la", "el", "the"}
+TEAM_ACRONYM_RE = re.compile(r"\b(sv|kv|osc|fk|fc|vfb|psv|ssc|sk)\b", re.IGNORECASE)
+SESSION_LABELS = {
+    "free practice 1": "FP1",
+    "free practice 2": "FP2",
+    "free practice 3": "FP3",
+    "sprint qualifying": "SPR Q",
+    "qualifying": "QUALY",
+}
 
 
 def normalize_team_name(name):
@@ -122,11 +130,34 @@ def team_style(name):
 
 
 def short_team_name(name):
-    return team_style(name)[0]
+    return TEAM_ACRONYM_RE.sub(lambda match: match.group(1).upper(), team_style(name)[0])
 
 
 def team_initials(name):
     return team_style(name)[1]
+
+
+def session_label(event):
+    title = str(getattr(event, "title", "") or "")
+    if " · " not in title:
+        return ""
+    session = title.split(" · ", 1)[1].strip()
+    return SESSION_LABELS.get(session.lower(), session)
+
+
+def result_note(event):
+    result_text = (getattr(event, "result_text", "") or "").strip()
+    round_name = (getattr(event, "round_name", "") or "").strip()
+    if result_text and not result_text.isdigit():
+        return result_text
+    if round_name and not round_name.isdigit() and round_name.lower() != result_text.lower():
+        return round_name
+    return ""
+
+
+def local_timezone_label():
+    abbreviation = timezone.localtime(timezone.now()).strftime("%Z") or "LOCAL"
+    return f"HORA LOCAL ({abbreviation})"
 
 
 def _luminance(hex_color):

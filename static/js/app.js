@@ -174,8 +174,21 @@
 
   const datePills = Array.from(document.querySelectorAll(".date-pill"));
 
+  function setActiveDate(iso) {
+    datePills.forEach((pill) => {
+      const active = pill.dataset.dateIso === iso;
+      pill.classList.toggle("is-active", active);
+      if (active) pill.setAttribute("aria-current", "date");
+      else pill.removeAttribute("aria-current");
+    });
+  }
+
   datePills.forEach((pill) => {
     pill.addEventListener("click", () => {
+      setActiveDate(pill.dataset.dateIso);
+      const url = new URL(window.location.href);
+      url.searchParams.set("date", pill.dataset.dateIso);
+      history.pushState(null, "", url);
       const target = document.getElementById(pill.dataset.dateTarget);
       if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
     });
@@ -185,24 +198,35 @@
     arrow.addEventListener("click", () => {
       if (!datePills.length) return;
       const step = Number(arrow.dataset.dateStep || 0);
-      const currentIndex = datePills.findIndex((pill) => {
+      const activeIndex = datePills.findIndex((pill) =>
+        pill.classList.contains("is-active"),
+      );
+      const visibleIndex = datePills.findIndex((pill) => {
         const target = document.getElementById(pill.dataset.dateTarget);
         if (!target) return false;
         const top = target.getBoundingClientRect().top;
         return top >= -8 && top <= 120;
       });
+      const currentIndex = activeIndex >= 0 ? activeIndex : visibleIndex;
       const base =
         currentIndex < 0 ? (step > 0 ? 0 : datePills.length - 1) : currentIndex;
       const nextIndex = Math.min(
         datePills.length - 1,
         Math.max(0, base + step),
       );
+      setActiveDate(datePills[nextIndex].dataset.dateIso);
       const target = document.getElementById(
         datePills[nextIndex].dataset.dateTarget,
       );
       if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
     });
   });
+
+  const activeDatePill = datePills.find((pill) =>
+    pill.classList.contains("is-active"),
+  );
+  if (activeDatePill)
+    activeDatePill.scrollIntoView({ block: "nearest", inline: "center" });
 
   document.querySelectorAll(".link-card-close").forEach((btn) => {
     btn.addEventListener("click", function (e) {
@@ -237,6 +261,11 @@
   const bellEmpty = document.getElementById("bell-dropdown-empty");
   const bellCount = document.getElementById("live-bell-count");
   const bellCta = document.getElementById("bell-dropdown-cta");
+  const bellReminderList = document.getElementById("bell-reminders-list");
+  const bellReminderEmpty = document.getElementById("bell-reminders-empty");
+  const bellReminderCount = document.getElementById("bell-reminders-count");
+  const bellNotifyBtn = document.getElementById("bell-notify-btn");
+  const bellExportBtn = document.getElementById("bell-export-btn");
 
   if (bellBtn && bellDropdown) {
     function updateBadge(count) {
@@ -298,10 +327,140 @@
       }
     }
 
+    function renderReminders(reminders) {
+      if (!bellReminderList) return;
+      const upcoming = (reminders || [])
+        .filter((reminder) => Number(reminder.fireAt) > Date.now())
+        .sort((a, b) => Number(a.fireAt) - Number(b.fireAt));
+      bellReminderList.innerHTML = "";
+      if (bellReminderCount)
+        bellReminderCount.textContent = String(upcoming.length);
+      if (bellReminderEmpty) bellReminderEmpty.hidden = upcoming.length > 0;
+
+      upcoming.forEach((reminder) => {
+        const li = document.createElement("li");
+        li.className = "bell-reminder-item";
+        const when = new Intl.DateTimeFormat(
+          document.documentElement.lang || "es",
+          { dateStyle: "medium", timeStyle: "short" },
+        ).format(new Date(Number(reminder.fireAt)));
+        li.innerHTML =
+          '<span class="bell-reminder-body">' +
+          '<span class="bell-reminder-title">' +
+          escHtml(reminder.title || "Evento deportivo") +
+          "</span>" +
+          '<span class="bell-reminder-when">' +
+          escHtml(when) +
+          "</span>" +
+          "</span>" +
+          '<button type="button" class="bell-reminder-cancel" data-reminder-id="' +
+          escHtml(String(reminder.id)) +
+          '" aria-label="Quitar aviso de ' +
+          escHtml(reminder.title || "evento") +
+          '">✕</button>';
+        bellReminderList.appendChild(li);
+      });
+    }
+
+    function refreshReminders() {
+      renderReminders(window._savedReminders || []);
+      if (typeof window.getReminders === "function") window.getReminders();
+    }
+
+    function updateNotifyButton() {
+      if (!bellNotifyBtn) return;
+      if (!("Notification" in window)) {
+        bellNotifyBtn.textContent = "Notificaciones no disponibles";
+        bellNotifyBtn.disabled = true;
+      } else if (Notification.permission === "granted") {
+        bellNotifyBtn.textContent = "Notificaciones activas";
+        bellNotifyBtn.disabled = true;
+      } else if (Notification.permission === "denied") {
+        bellNotifyBtn.textContent = "Notificaciones bloqueadas";
+        bellNotifyBtn.disabled = true;
+      } else {
+        bellNotifyBtn.textContent = "Activar notificaciones";
+        bellNotifyBtn.disabled = false;
+      }
+    }
+
+    function icsEscape(value) {
+      return String(value || "")
+        .replace(/\\/g, "\\\\")
+        .replace(/;/g, "\\;")
+        .replace(/,/g, "\\,")
+        .replace(/\r?\n/g, "\\n");
+    }
+
+    function icsDate(timestamp) {
+      return new Date(timestamp)
+        .toISOString()
+        .replace(/[-:]/g, "")
+        .replace(/\.\d{3}/, "");
+    }
+
+    function exportRemindersIcs() {
+      const reminders = (window._savedReminders || []).filter(
+        (reminder) => Number(reminder.fireAt) > Date.now(),
+      );
+      if (!reminders.length) {
+        if (bellExportBtn) {
+          const label = bellExportBtn.textContent;
+          bellExportBtn.textContent = "Sin avisos que exportar";
+          setTimeout(() => {
+            bellExportBtn.textContent = label;
+          }, 1800);
+        }
+        return;
+      }
+
+      const lines = [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//Sports Stream Platform//Avisos//ES",
+        "CALSCALE:GREGORIAN",
+      ];
+      const stamp = icsDate(Date.now());
+      reminders.forEach((reminder) => {
+        const start = icsDate(Number(reminder.fireAt));
+        lines.push(
+          "BEGIN:VEVENT",
+          "UID:reminder-" + reminder.id + "@sports-stream",
+          "DTSTAMP:" + stamp,
+          "DTSTART:" + start,
+          "DTEND:" + icsDate(Number(reminder.fireAt) + 3600000),
+          "SUMMARY:" + icsEscape(reminder.title || "Evento deportivo"),
+          "DESCRIPTION:" + icsEscape(reminder.comp || "Aviso de evento"),
+        );
+        if (reminder.url)
+          lines.push(
+            "URL:" +
+              icsEscape(new URL(reminder.url, window.location.href).href),
+          );
+        lines.push("END:VEVENT");
+      });
+      lines.push("END:VCALENDAR");
+
+      const blob = new Blob([lines.join("\r\n")], {
+        type: "text/calendar;charset=utf-8",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "avisos-deportivos.ics";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }
+
     function openDropdown() {
       bellDropdown.hidden = false;
       bellBtn.setAttribute("aria-expanded", "true");
       renderDropdownItems(window._liveBellEvents || []);
+      renderReminders(window._savedReminders || []);
+      refreshReminders();
+      updateNotifyButton();
     }
 
     function closeDropdown() {
@@ -324,6 +483,30 @@
       }
     });
 
+    document.addEventListener("remindersUpdated", (e) => {
+      renderReminders((e.detail && e.detail.reminders) || []);
+    });
+
+    if (bellReminderList) {
+      bellReminderList.addEventListener("click", (e) => {
+        const button = e.target.closest(".bell-reminder-cancel");
+        if (!button) return;
+        if (typeof window.cancelReminder === "function")
+          window.cancelReminder(button.dataset.reminderId);
+        refreshReminders();
+      });
+    }
+
+    if (bellNotifyBtn) {
+      bellNotifyBtn.addEventListener("click", () => {
+        if (!("Notification" in window)) return;
+        Notification.requestPermission().then(updateNotifyButton);
+      });
+    }
+
+    if (bellExportBtn)
+      bellExportBtn.addEventListener("click", exportRemindersIcs);
+
     function fetchLiveStatus() {
       fetch("/api/live-status/")
         .then((res) => (res.ok ? res.json() : null))
@@ -339,6 +522,8 @@
     const initialCount = parseInt(bellCount.textContent, 10) || 0;
     window._liveBellEvents = window._liveBellEvents || [];
     updateBadge(initialCount);
+    updateNotifyButton();
+    refreshReminders();
     setInterval(fetchLiveStatus, 60000);
     fetchLiveStatus();
   }

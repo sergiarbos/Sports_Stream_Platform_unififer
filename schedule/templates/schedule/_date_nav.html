@@ -3,7 +3,7 @@
   <button type="button" class="date-nav-arrow" data-date-step="-1" aria-label="Día anterior">‹</button>
   <span class="date-nav-pills">
     {% for link in date_links %}
-    <button type="button" class="date-pill" data-date-target="date-{{ link.iso }}">{{ link.label }}</button>
+    <button type="button" class="date-pill{% if link.is_active %} is-active{% endif %}" data-date-target="date-{{ link.iso }}" data-date-iso="{{ link.iso }}" title="{{ link.full_label }}" {% if link.is_active %}aria-current="date"{% endif %}>{{ link.label }}</button>
     {% endfor %}
   </span>
   <button type="button" class="date-nav-arrow" data-date-step="1" aria-label="Día siguiente">›</button>

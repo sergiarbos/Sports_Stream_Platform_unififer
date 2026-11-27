@@ -1,12 +1,13 @@
 {% load f1_flags team_badges %}
 {% if event.is_competition_start %}
-<div class="competition-subheader">
+<div class="competition-subheader sport-{{ event.competition.sport.category }}">
+  {% if event.competition.sport.icon %}<span class="sport-mark" aria-hidden="true">{{ event.competition.sport.icon }}</span>{% endif %}
   <span class="comp-flag">{{ event.competition|comp_flag }}</span>
   <span>{{ event.competition.name|upper }}</span>
   {% if event.round_name %}<span class="comp-round">· {{ event.round_name|upper }}</span>{% endif %}
 </div>
 {% endif %}
-<div class="result-row is-finished">
+<div class="result-row is-finished sport-{{ event.competition.sport.category }}">
   <div class="result-left">
     <span class="result-final">FINAL</span>
     <span class="result-when">{{ event|result_detail }}</span>
@@ -17,11 +18,9 @@
       {% if event.competition.sport.category == "motorsport" or not event.participant_home or not event.participant_away %}
         <div class="result-single">
           <span class="result-title">{{ event.title|add_flag }}</span>
-          {% if event.result_text %}
-          <span class="result-top3">{{ event.result_text }}</span>
-          {% elif event.round_name %}
-          <span class="result-top3">{{ event.round_name }}</span>
-          {% endif %}
+          {% with note=event|result_note %}
+            {% if note %}<span class="result-top3">{{ note }}</span>{% endif %}
+          {% endwith %}
         </div>
       {% elif event.score_home is not None and event.score_away is not None and event.score_home > event.score_away %}
         {% with home_state="is-winner" away_state="is-loser" %}
@@ -77,11 +76,9 @@
         </div>
       {% endif %}
     </div>
-    {% if event.result_text and event.competition.sport.category != "motorsport" %}
-    <span class="result-note">{{ event.result_text }}</span>
-    {% elif event.round_name %}
-    <span class="result-note">{{ event.round_name }}</span>
-    {% endif %}
+    {% with note=event|result_note %}
+      {% if note and event.competition.sport.category != "motorsport" %}<span class="result-note">{{ note }}</span>{% endif %}
+    {% endwith %}
   </div>
 
   <a href="{% url 'schedule:event_details' event.id %}" class="result-open" aria-label="Ver detalle de {{ event.title }}">↗</a>

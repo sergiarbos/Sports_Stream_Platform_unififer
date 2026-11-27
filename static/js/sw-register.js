@@ -11,7 +11,7 @@
     window.scheduleReminder = function () {};
     window.cancelReminder = function () {};
     window.getReminders = function (cb) {
-      cb([]);
+      if (cb) cb([]);
     };
     return;
   }
@@ -43,20 +43,27 @@
       document.dispatchEvent(
         new CustomEvent("reminderSaved", { detail: { id: data.id } }),
       );
+      sendToSW({ type: "GET_REMINDERS" });
     }
 
     if (data.type === "REMINDERS_LIST") {
-      // Restore "is-set" state on reminder bell buttons
-      var ids = (data.reminders || []).map(function (r) {
+      window._savedReminders = data.reminders || [];
+      var ids = window._savedReminders.map(function (r) {
         return String(r.id);
       });
       document.querySelectorAll(".reminder-bell-btn").forEach(function (btn) {
         var eventId = String(btn.dataset.eventId || "");
-        if (ids.includes(eventId)) {
-          btn.classList.add("is-set");
-          btn.title = "Reminder set — click to cancel";
-        }
+        var isSet = ids.includes(eventId);
+        btn.classList.toggle("is-set", isSet);
+        btn.title = isSet
+          ? "Recordatorio activado — pulsa para cancelar"
+          : "Añadir recordatorio";
       });
+      document.dispatchEvent(
+        new CustomEvent("remindersUpdated", {
+          detail: { reminders: window._savedReminders },
+        }),
+      );
     }
   });
 

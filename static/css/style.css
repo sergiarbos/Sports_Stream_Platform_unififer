@@ -142,6 +142,15 @@ input {
   min-width: 0;
 }
 
+.tz-label {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
 .search-box {
   display: flex;
   align-items: center;
@@ -439,7 +448,8 @@ input {
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
   z-index: 1000;
-  overflow: hidden;
+  max-height: min(72vh, 560px);
+  overflow-y: auto;
   animation: dropdown-in 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
   transform-origin: top right;
 }
@@ -567,9 +577,125 @@ input {
   background: rgba(var(--accent-rgb), 0.08);
 }
 
-.reminder-bell-btn {
+.bell-reminders {
+  border-top: 1px solid rgba(var(--accent-rgb), 0.15);
+  padding: 12px 16px 14px;
+}
+
+.bell-reminders-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--accent);
+  font-family: "Oswald", sans-serif;
+  font-size: 0.76rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.bell-reminders-count {
+  color: var(--text-muted);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.66rem;
+}
+
+.bell-reminders-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  max-height: 160px;
+  overflow-y: auto;
+}
+
+.bell-reminder-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.bell-reminder-body {
+  min-width: 0;
+  flex: 1;
+}
+
+.bell-reminder-title {
+  display: block;
+  color: var(--text-primary);
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bell-reminder-when {
+  display: block;
+  color: var(--text-muted);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.62rem;
+}
+
+.bell-reminder-cancel {
   background: none;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.72rem;
+  line-height: 1;
+  padding: 4px 7px;
+}
+
+.bell-reminder-cancel:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.bell-reminders-empty {
+  margin: 8px 0 0;
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  line-height: 1.4;
+}
+
+.bell-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.bell-action {
+  flex: 1;
+  padding: 8px 6px;
+  background: var(--surface-sunken);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-family: "Oswald", sans-serif;
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  transition:
+    border-color 0.15s,
+    color 0.15s;
+}
+
+.bell-action:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.bell-action:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.reminder-bell-btn {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   cursor: pointer;
   padding: 4px;
   color: var(--text-muted);
@@ -585,11 +711,13 @@ input {
 
 .reminder-bell-btn:hover {
   color: var(--accent-upcoming);
+  border-color: var(--accent-upcoming);
   transform: scale(1.2);
 }
 
 .reminder-bell-btn.is-set {
   color: var(--accent-upcoming);
+  border-color: var(--accent-upcoming);
 }
 
 .reminder-bell-btn svg {
@@ -685,6 +813,20 @@ input {
   flex-shrink: 0;
 }
 
+.platform-tab.is-empty {
+  opacity: 0.4;
+}
+
+.platform-tab.is-empty:hover {
+  opacity: 0.75;
+}
+
+.platform-count {
+  color: var(--accent);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.62rem;
+}
+
 /* ---------- Competition filter (shown once a sport is selected) ---------- */
 
 .competition-tabs {
@@ -734,6 +876,30 @@ input {
   border-color: var(--text-primary);
   color: var(--bg-deep);
   font-weight: 600;
+}
+
+.clear-filters {
+  display: inline-flex;
+  align-items: center;
+  color: var(--text-muted);
+  font-family: "Oswald", sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border-bottom: 1px dashed rgba(255, 255, 255, 0.25);
+  margin-bottom: 14px;
+  transition:
+    color 0.15s,
+    border-color 0.15s;
+}
+
+.clear-filters:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.empty-note .clear-filters {
+  margin: 0 0 0 4px;
 }
 
 .competition-badge {
@@ -814,6 +980,15 @@ input {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.featured-session {
+  align-self: flex-start;
+  color: var(--accent);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.66rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .featured-matchup {
@@ -984,9 +1159,47 @@ input {
   background: rgba(var(--accent-rgb), 0.08);
 }
 
+.date-pill.is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #0a0a0a;
+  font-weight: 700;
+}
+
+.date-pill.is-active:hover {
+  background: #a3e635;
+  border-color: #a3e635;
+  color: #0a0a0a;
+}
+
 .comp-flag {
   margin-right: 2px;
   font-size: 0.95em;
+}
+
+.sport-football {
+  --sport-color: #84cc16;
+}
+
+.sport-motorsport {
+  --sport-color: #f97316;
+}
+
+.sport-basketball {
+  --sport-color: #fb923c;
+}
+
+.sport-tennis {
+  --sport-color: #38bdf8;
+}
+
+.sport-winter_sports {
+  --sport-color: #a78bfa;
+}
+
+.sport-mark {
+  font-size: 0.9em;
+  line-height: 1;
 }
 
 .competition-subheader {
@@ -994,6 +1207,13 @@ input {
   align-items: center;
   gap: 7px;
   margin: 12px 0 8px;
+  padding-left: 9px;
+  border-left: 2px solid var(--sport-color, transparent);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--sport-color, transparent) 8%, transparent),
+    transparent 60%
+  );
   font-family: "Oswald", sans-serif;
   font-size: 0.74rem;
   font-weight: 600;
@@ -1072,7 +1292,11 @@ input {
   grid-template-columns: 58px 1fr auto;
   align-items: center;
   gap: 14px;
-  background: var(--surface);
+  background: color-mix(
+    in srgb,
+    var(--sport-color, var(--surface)) 5%,
+    var(--surface)
+  );
   border: 1px solid var(--line);
   border-left: 3px solid var(--status-line);
   border-radius: 10px;
@@ -1245,9 +1469,9 @@ input {
   place-items: center;
   width: 28px;
   height: 28px;
-  border: 1px solid var(--line);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 50%;
-  color: var(--text-muted);
+  color: var(--text-primary);
   font-size: 0.85rem;
   line-height: 1;
   transition:
@@ -1632,6 +1856,10 @@ input {
     max-width: none;
   }
 
+  .tz-label {
+    display: none;
+  }
+
   .link-card {
     padding: 18px 16px 16px;
   }
@@ -1740,7 +1968,7 @@ input {
 .results-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 .result-row {
@@ -1754,10 +1982,10 @@ input {
     rgba(9, 9, 11, 0.6)
   );
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-left: 3px solid var(--status-line);
-  border-radius: 16px;
-  padding: 14px 20px;
-  margin-bottom: 12px;
+  border-left: 3px solid var(--sport-color, var(--status-line));
+  border-radius: 12px;
+  padding: 8px 18px;
+  margin-bottom: 0;
   cursor: pointer;
   box-shadow:
     0 8px 20px rgba(0, 0, 0, 0.25),
@@ -1782,7 +2010,7 @@ input {
     rgba(9, 9, 11, 0.8)
   );
   border-color: rgba(var(--accent-rgb), 0.3);
-  border-left-color: var(--status-line);
+  border-left-color: var(--sport-color, var(--status-line));
   transform: translateY(-2px);
   box-shadow:
     0 12px 24px rgba(0, 0, 0, 0.35),
@@ -1819,7 +2047,7 @@ input {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
 }
 
 .result-matchup {
@@ -1844,19 +2072,19 @@ input {
   justify-content: center;
   gap: 8px;
   font-family: "JetBrains Mono", monospace;
-  font-size: 1.6rem;
+  font-size: 1.45rem;
   font-weight: 700;
   color: var(--text-primary);
   margin: 0 10px;
   background: rgba(var(--accent-rgb), 0.1);
-  padding: 6px 16px;
+  padding: 4px 14px;
   border-radius: 8px;
   border: 1px solid rgba(var(--accent-rgb), 0.2);
 }
 
 .result-score .score-number {
   color: var(--text-primary);
-  font-size: 1.6rem;
+  font-size: 1.45rem;
 }
 
 .result-score .score-dash {

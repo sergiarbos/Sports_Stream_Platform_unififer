@@ -1,4 +1,4 @@
-{% load static i18n %}
+{% load static i18n team_badges %}
 <!DOCTYPE html>
 <html lang="{{ LANGUAGE_CODE }}">
 <head>
@@ -11,7 +11,7 @@
   {# Fuse.js — fuzzy search library (loaded before app.js) #}
   <script src="https://cdn.jsdelivr.net/npm/fuse.js@7/dist/fuse.min.js"></script>
   {# Bump ?v= whenever style.css or app.js changes #}
-  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=13">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=14">
 </head>
 <body>
   <header class="topbar">
@@ -23,6 +23,8 @@
           <input id="event-search" type="text" placeholder="Busca equipo, piloto o competición…" autocomplete="off" aria-label="Buscar eventos" aria-keyshortcuts="/ Control+K Meta+K">
           <kbd class="search-shortcut" aria-hidden="true">/</kbd>
         </label>
+
+        <span class="tz-label" title="Todas las horas se muestran en la zona horaria local del servidor">{% local_timezone_label %}</span>
 
         {# ── Language selector ─────────────────────────────────────── #}
         <div class="lang-selector" id="lang-selector">
@@ -72,7 +74,7 @@
             >{{ live_count|default:0 }}</span>
           </button>
 
-          <div class="bell-dropdown" id="bell-dropdown" role="dialog" aria-label="Eventos en directo" hidden>
+          <div class="bell-dropdown" id="bell-dropdown" role="dialog" aria-label="Avisos y eventos en directo" hidden>
             <div class="bell-dropdown-header">
               <span class="live-dot"></span>
               <span class="bell-dropdown-title">EN DIRECTO AHORA</span>
@@ -84,6 +86,15 @@
             <a href="?view_mode=links#live-section" class="bell-dropdown-cta" id="bell-dropdown-cta">
               Ver todos los eventos en directo →
             </a>
+            <div class="bell-reminders">
+              <div class="bell-reminders-title">TUS PRÓXIMOS AVISOS <span class="bell-reminders-count" id="bell-reminders-count">0</span></div>
+              <ul class="bell-reminders-list" id="bell-reminders-list" role="list"></ul>
+              <p class="bell-reminders-empty" id="bell-reminders-empty">Aún no has guardado avisos. Pulsa la campana de un evento para añadirlo.</p>
+              <div class="bell-actions">
+                <button type="button" class="bell-action" id="bell-notify-btn">Activar notificaciones</button>
+                <button type="button" class="bell-action" id="bell-export-btn">Exportar .ics</button>
+              </div>
+            </div>
           </div>
         </div>
         {# ─────────────────────────────────────────────────────────────── #}
@@ -95,7 +106,7 @@
   {% block content %}{% endblock %}
 
   {# SW registration must come before app.js so scheduleReminder() is available #}
-  <script src="{% static 'js/sw-register.js' %}?v=1"></script>
-  <script src="{% static 'js/app.js' %}?v=9"></script>
+  <script src="{% static 'js/sw-register.js' %}?v=2"></script>
+  <script src="{% static 'js/app.js' %}?v=10"></script>
 </body>
 </html>
